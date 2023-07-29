@@ -23,7 +23,7 @@ namespace ChessBot.Engine {
 		public const int flagMask = 0b1111000000000000;
 
 		// ! Must refactor to use a { PieceMoved, PieceTaken } structure to easily implement EnPassant
-		// * Look at SebLague's implementation
+		//	Look at SebLague's implementation
 
 		public Move(ushort moveValue) {
 			this.moveValue = moveValue;

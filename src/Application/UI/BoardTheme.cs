@@ -10,11 +10,11 @@ namespace ChessBot.Application{
         public static Color selectedLight = HexToColor("#ecc57b");
         public static Color selectedDark = HexToColor("#c89e50");
 
-        public static Color moveFromLight = HexToColor("#cfac6a");
-        public static Color moveFromDark = HexToColor("#c59e36");
+        public static Color moveFromLight = HexToColor("#cfac6a");	//	represents moves made by opponent ()
+        public static Color moveFromDark = HexToColor("#c59e36");	//	represents moves made by opponent ()
 
-        public static Color moveToLight = HexToColor("#ddd07c");
-        public static Color moveToDark = HexToColor("#c5ad60");
+        public static Color moveToLight = HexToColor("#ddd07c");	//	represents moves made by opponent ()
+        public static Color moveToDark = HexToColor("#c5ad60");	//	represents moves made by opponent ()
 
         public static Color legalLight = HexToColor("#59abdd");
         public static Color legalDark = HexToColor("#3e90c3");
@@ -26,7 +26,7 @@ namespace ChessBot.Application{
 
 		public static Color HexToColor(string hex) {
 
-			// trim # from front of hex
+			// trim "#" from front of hex
 			hex = hex[1..];
 
 			int[] arr = {6, 8};

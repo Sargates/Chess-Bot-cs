@@ -1,4 +1,4 @@
-namespace ChessBot.Engine.Helpers {
+namespace ChessBot.Helpers {
 	public static class PieceHelper {
 
 		public const int None = 0b000;

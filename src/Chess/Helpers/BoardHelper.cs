@@ -1,4 +1,6 @@
-namespace ChessBot.Engine {	
+using ChessBot.Engine;
+
+namespace ChessBot.Helpers {
 	public class BoardHelper {
 		public const string fileNames = "abcdefgh";
 		public const string rankNames = "12345678";
