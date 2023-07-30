@@ -59,7 +59,7 @@ namespace ChessBot.Application {
 
 				Raylib.EndMode2D();
 
-				//	Draw menu here
+				//* Draw menu here
 
 				Raylib.EndDrawing();
 			}

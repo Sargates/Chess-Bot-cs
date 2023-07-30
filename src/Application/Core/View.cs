@@ -71,7 +71,7 @@ namespace ChessBot.Application {
 					} else if (! validMove.IsNull ) { // Case 3
 						board.DeselectActiveSquare();
 						model.MakeMove(validMove);
-						//	ANIMATION HERE
+						//* ANIMATION HERE
 					} else if (board.selectedIndex != -1 && squareClicked == board.selectedIndex) { // Case 5
 						board.isDraggingPiece = true;
 					} else if (validMove.IsNull && PieceHelper.GetType(clickedPiece) != PieceHelper.None) { // Case 6
@@ -97,14 +97,14 @@ namespace ChessBot.Application {
 				board.isDraggingPiece = false;
 			}
 
-			//	Case 1: 	No square is selected, and square clicked is out of bounds 			=> call DeselectActiveSquare ✓
-			//	Case 2: 	No square is selected and piece is clicked 							=> Set selectedIndex to square clicked ✘
-			//	Case 3: 	Square is selected and square clicked is a valid move				=> call model.MakeMove ✘
-			//	Case 4: 	Square is selected and square clicked is not a valid move			=> Deselect piece and fallthrough to case 7 ✘
-			//	Case 5: 	Square is selected and square clicked == selected index				=> set isDragging to true ✘
-			//	Case 6: 	Square is selected and clicked piece is the same color				=> Subset of Case 7 ✓
-			//	Case 7: 	Square is selected and clicked piece is not in the valid moves		=> Superset of case 4 ✘
-			//	Case 7.1: 	If clicked square is a piece, select that square
+			//* Case 1: 	No square is selected, and square clicked is out of bounds 			=> call DeselectActiveSquare ✓
+			//* Case 2: 	No square is selected and piece is clicked 							=> Set selectedIndex to square clicked ✘
+			//* Case 3: 	Square is selected and square clicked is a valid move				=> call model.MakeMove ✘
+			//* Case 4: 	Square is selected and square clicked is not a valid move			=> Deselect piece and fallthrough to case 7 ✘
+			//* Case 5: 	Square is selected and square clicked == selected index				=> set isDragging to true ✘
+			//* Case 6: 	Square is selected and clicked piece is the same color				=> Subset of Case 7 ✓
+			//* Case 7: 	Square is selected and clicked piece is not in the valid moves		=> Superset of case 4 ✘
+			//* Case 7.1: 	If clicked square is a piece, select that square
 		}
 	}
 }

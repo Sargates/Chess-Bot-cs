@@ -76,8 +76,8 @@ namespace ChessBot.Application {
 
 
 		public void DrawPiecesOnBoard(Board board) {
-			//	This is kind of nasty to have this inside of the draw method but it's the only way to 
-			//	add some QOL functionality without cluttering up other things
+			//* This is kind of nasty to have this inside of the draw method but it's the only way to 
+			//* add some QOL functionality without cluttering up other things
 			for (int i=0; i<64;i++) {
 				int x = i & 0b111; int y = (7-i >> 3);
 
@@ -101,7 +101,7 @@ namespace ChessBot.Application {
 			movesForSelected = new Move[0];
 		}
 
-		public void DrawPiece(int piece, Vector2 posTopLeft, float alpha = 1) { //	Copied from SebLague
+		public void DrawPiece(int piece, Vector2 posTopLeft, float alpha = 1) { //* Copied from SebLague
             if (piece != PieceHelper.None)
             {
                 int type = PieceHelper.GetType(piece);
@@ -113,7 +113,7 @@ namespace ChessBot.Application {
                 Raylib.DrawTexturePro(piecesTexture, srcRect, targRect, new Vector2(0, 0), 0, tint);
             }
         }
-		static Rectangle GetPieceTextureRect(int pieceType, bool isWhite) //	Copied from SebLague
+		static Rectangle GetPieceTextureRect(int pieceType, bool isWhite) //* Copied from SebLague
         {
             const int size = 666;
             return new Rectangle(size * pieceImageOrder[pieceType - 1], isWhite ? 0 : size, size, size);
