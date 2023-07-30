@@ -1,12 +1,12 @@
 using ChessBot.Engine;
 using ChessBot.Helpers;
 
-class Gamestate {
+public class Gamestate {
 
 	private static Stack<Gamestate> history = new Stack<Gamestate>();
 
 	public Board board { get; }
-	public Move move { get; }
+	public Move? move { get; }
 	public string boardRepr { get; }
 	public char colorToMove { get; }
 	public string castles { get; }
@@ -14,34 +14,62 @@ class Gamestate {
 	public int halfMoveCount { get; }
 	public int fullMoveCount { get; }
 
+	public const int whiteKingCastle  = 0b1000;
+	public const int whiteQueenCastle = 0b0100;
+	public const int blackKingCastle  = 0b0010;
+	public const int blackQueenCastle = 0b0001;
 
 
-	private Gamestate(Board board, Move recentMove) { // Should be assembled before moving piece
+
+	private Gamestate(Board board, Move recentMove) { // Should be assembled after moving and changing `whiteToMove`
 		//	Assemble FEN notation
 		//	Example:
 		//	rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 		this.board = board;
 		this.move = recentMove;
-		
-		boardRepr = GenBoardRepr(board);
-		colorToMove = board.whiteToMove ? 'w' : 'b';
-		
-		//	Handle Castles
-		int allCastles = 0;
-		foreach (char c in history.Peek().castles.ToCharArray()) {
-			allCastles += c switch {
-				'W' => 0b1000,
-				'B' => 0b0100,
-				'w' => 0b0010,
-				'b' => 0b0001,
-			};
-		}
 
-		// if (recentMove.StartSquare)
+		/*
+		This class is just going to be a FEN class, it's called Gamestate but it's 
+		just going to be a class that holds the fen string of the current board state
+		No dealing with bullshit like when to instantiate the gamestate
+		Before the move is made on the board, the current gamestate will be given the move that is to be made
+		Call `currentGamestate.SetMove()` before making the move, update the gamestate within each call of `MovePiece()`
+		The number of gamestates will be ordered like this:
+		StateHistory	0 1 2 3 4 5 6 7 8 9  10
+						 / / / / / / / / /  /
+		MoveHistory		1 2 3 4 5 6 7 8 9 10
+
+		0th gamestate is the initial gamestate, in Controller.cs or Model.cs: StartNewGame clears the FEN history (logging to file is optional)
+		and instantiates the board with the given gamestate.
+		1st move is the move made on the 0th gamestate, i.e making the 1st Move on the 0th Gamestate will yield the 1st Gamestate
+
+		I am going to bed
+		*/
+
+
+		
+		// boardRepr = GenBoardRepr(board);
+		// colorToMove = !board.whiteToMove ? 'w' : 'b';
+		
+		// //	Handle Castles
+		// int allCastles = 0;
+		// foreach (char c in history.Peek().castles.ToCharArray()) {
+		// 	allCastles += FENCastleToEnum(c);
+		// }
 
 
 
 		Gamestate.PushHistory(this);
+	}
+
+	public static int FENCastleToEnum(char castle) {
+		return castle switch {
+			'W' => whiteKingCastle,
+			'B' => whiteQueenCastle,
+			'w' => blackKingCastle,
+			'b' => blackQueenCastle,
+			_ => throw new Exception("Shut up compiler!")
+		};
 	}
 
 	public static string GenBoardRepr(Board board) {
@@ -87,6 +115,7 @@ class Gamestate {
 		return o;
 	}
 
+	
 	public static string ToFEN(Board board, Move recentMove) {
 		Gamestate temp = new Gamestate(board, recentMove);
 		// manipulate temp to get fen notation
@@ -95,6 +124,7 @@ class Gamestate {
 	}
 
 	public static void PushHistory(Gamestate i) {
+		if (i.move == null)
 		history.Push(i);
 	}
 

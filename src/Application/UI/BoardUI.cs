@@ -16,6 +16,7 @@ namespace ChessBot.Application {
 		public int selectedIndex = -1;
 		public Move[] movesForSelected = new Move[0];
 		public Color[] squareColors = new Color[64];
+		public bool isDraggingPiece = false;
 
 
 		public BoardUI() {
@@ -77,7 +78,6 @@ namespace ChessBot.Application {
 		public void DrawPiecesOnBoard(Board board) {
 			//	This is kind of nasty to have this inside of the draw method but it's the only way to 
 			//	add some QOL functionality without cluttering up other things
-			bool isMousePressed = Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT);
 			for (int i=0; i<64;i++) {
 				int x = i & 0b111; int y = (7-i >> 3);
 
@@ -85,15 +85,20 @@ namespace ChessBot.Application {
 
 				Vector2 renderPosition = (indexVector - new Vector2(4, -3)) * squareSize;
 
-				if (selectedIndex == i && isMousePressed) {
+				if (selectedIndex == i && isDraggingPiece) {
 					continue;
 				}
 
 				DrawPiece(board.GetSquare(i), renderPosition);
 			}
-			if (selectedIndex != -1 && isMousePressed) {
+			if (selectedIndex != -1 && isDraggingPiece) {
 				DrawPiece(board.GetSquare(selectedIndex), Raylib.GetMousePosition()-View.screenSize/2-new Vector2(squareSize)/2);
 			}
+		}
+
+		public void DeselectActiveSquare() {
+			selectedIndex = -1;
+			movesForSelected = new Move[0];
 		}
 
 		public void DrawPiece(int piece, Vector2 posTopLeft, float alpha = 1) { //	Copied from SebLague

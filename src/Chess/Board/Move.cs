@@ -37,9 +37,21 @@ namespace ChessBot.Engine {
 			this.moveValue = (ushort) ((startSquare & 0x3F) | (targetSquare & 0x3F) << 6 | (flag & 0xF) << 12);
 		}
 
-		public bool Equals(Move other) {
-			return this.StartSquare == other.StartSquare && this.TargetSquare == other.TargetSquare;
+		public override bool Equals(object? obj) {
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != this.GetType()) return false;
+				return Equals((Move) obj);
 		}
+
+		public override int GetHashCode() => base.GetHashCode();
+
+		public bool Equals(Move other) {
+			return (this.moveValue & (targetSquareMask | startSquareMask)) == (other.moveValue & (targetSquareMask | startSquareMask));
+		}
+
+		public static bool operator ==(Move a, Move b) => (a.moveValue & ~flagMask) == (b.moveValue & ~flagMask);
+		public static bool operator !=(Move a, Move b) => (a.moveValue & ~flagMask) != (b.moveValue & ~flagMask);
 
 		public bool IsPromotion => MoveFlag >= PromoteToQueenFlag;
 

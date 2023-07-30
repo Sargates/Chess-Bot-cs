@@ -5,6 +5,7 @@ namespace ChessBot.Engine {
 	public class Board {
 
 		public int[] board;
+		// public readonly Gamestate state;
 
 		public bool whiteToMove;
 		public int enPassantIndex;
@@ -12,7 +13,7 @@ namespace ChessBot.Engine {
 
 		public Board() {
 
-			// TODO: Add FEN string loading, StartNewGame should be in Controller.cs, board should just be able to load a fen string in place
+			// TODO: Add FEN string loading, StartNewGame should be in Controller/Model.cs, board should just be able to load a fen string in place
 			board = new int[64];
 			board[0]  = PieceHelper.Rook 	| PieceHelper.White;
 			board[1]  = PieceHelper.Knight 	| PieceHelper.White;
@@ -35,7 +36,7 @@ namespace ChessBot.Engine {
 			board[48] = PieceHelper.Pawn 	| PieceHelper.Black;
 			board[49] = PieceHelper.Pawn 	| PieceHelper.Black;
 			board[50] = PieceHelper.Pawn 	| PieceHelper.Black;
-			board[27] = PieceHelper.Pawn 	| PieceHelper.Black;
+			board[51] = PieceHelper.Pawn 	| PieceHelper.Black;
 			board[52] = PieceHelper.Pawn 	| PieceHelper.Black;
 			board[53] = PieceHelper.Pawn 	| PieceHelper.Black;
 			board[54] = PieceHelper.Pawn 	| PieceHelper.Black;
@@ -66,48 +67,7 @@ namespace ChessBot.Engine {
 			board[movedFrom] = PieceHelper.None;
 		}
 
-		public void MakeMove(Move move) { //	Wrapper method for MovePiece, calls MovePiece and handles things like board history, 50 move rule, 3 move repition, 
-			int movedFrom = move.StartSquare;
-			int movedTo = move.TargetSquare;
-			int moveFlag = move.MoveFlag;
-
-			int pieceMoved = GetSquare(movedFrom);
-			int pieceTaken = (moveFlag==Move.EnPassantCaptureFlag) ? (opponentColour|PieceHelper.Pawn) : GetSquare(movedTo);
-
-
-
-			MovePiece(pieceMoved, movedFrom, movedTo);
-
-			
-			if (moveFlag == Move.EnPassantCaptureFlag) {
-				board[enPassantIndex - forwardDir(activeColor)] = 0;
-			}
-
-
-
-			
-			enPassantIndex = 0; // Ok to set this to 0 here because of how En-Passant works
-			if (moveFlag == Move.PawnTwoUpFlag) {
-				enPassantIndex = movedFrom + forwardDir(activeColor);
-			}
-			
-			whiteToMove = !whiteToMove; // ForwardDir / anything related to the active color will be the same up until this point
-
-			
-		}
-		public void UnmakeMove(Move move) {
-
-			int movedFrom = move.TargetSquare;
-			int movedTo = move.StartSquare;
-			int moveFlag = move.MoveFlag;
-
-			int pieceMoved = GetSquare(movedFrom);
-			int pieceTaken = GetSquare(movedTo);
-
-			MovePiece(pieceMoved, movedFrom, movedTo);
-			whiteToMove = !whiteToMove;
-		}
-
+		
 		public int GetSquare(int index) {
 			if (! (0 <= index && index < 64) ) { throw new Exception("Board index out of bounds"); }
 			

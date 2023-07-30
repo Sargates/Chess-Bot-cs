@@ -8,25 +8,17 @@ namespace ChessBot.Engine {
 
 			int piece = board.GetSquare(index);
 
-			// `color` equals the color of `piece`, if `piece` is a null piece, get `activeColor`
+			// `color` is the color of `piece`, if `piece` is a null piece, get `activeColor`
 			int color = piece == PieceHelper.None ? board.activeColor : PieceHelper.GetColor(piece);
 
 
 			// !!! Game crashes when pawn is at edge of board, need to find way to check these pieces, (precomputed move data?)
 
-			// Coord coord = new Coord(index);
-			// Coord pawnOneUp = new Coord(index + board.forwardDir(color));
-			// if ((coord+pawnOneUp).IsInBounds() && board.GetSquare(pawnOneUp.SquareIndex) == PieceHelper.None) { // ! add pinning capabilities
-			// 	moves.Add(new Move(index, index + board.forwardDir(color)));
-			// 	if (BoardHelper.RankIndex(index) == (color == PieceHelper.White ? 1 : 6) && board.GetSquare(index + 2*board.forwardDir(color)) == PieceHelper.None) {
-			// 		moves.Add(new Move(index, index + 2*board.forwardDir(color), Move.PawnTwoUpFlag));
-			// 	}
-			// }
-
 
 			int pawnOneUp = board.GetSquare(index + board.forwardDir(color));
 			if (pawnOneUp == PieceHelper.None) { // ! add pinning capabilities
 				moves.Add(new Move(index, index + board.forwardDir(color)));
+				
 				if (BoardHelper.RankIndex(index) == (color == PieceHelper.White ? 1 : 6) && board.GetSquare(index + 2*board.forwardDir(color)) == PieceHelper.None) {
 					moves.Add(new Move(index, index + 2*board.forwardDir(color), Move.PawnTwoUpFlag));
 				}
@@ -35,13 +27,13 @@ namespace ChessBot.Engine {
 			int pawnAttackPositive = board.GetSquare(index + board.forwardDir(color) + 1);
 			if ((PieceHelper.GetType(pawnAttackPositive) != PieceHelper.None) && PieceHelper.GetColor(pawnAttackPositive) != color ) { // ! add pinning capabilities
 				moves.Add(new Move(index, index + board.forwardDir(color) + 1));
-			} else if ((index + board.forwardDir(color) + 1) == board.enPassantIndex) {
+			} else if ((index + board.forwardDir(color) + 1) == board.enPassantIndex && PieceHelper.GetColor(board.GetSquare(index + 1)) != color) {
 				moves.Add(new Move(index, index + board.forwardDir(color) + 1, Move.EnPassantCaptureFlag));
 			}
 			int pawnAttackNegative = board.GetSquare(index + board.forwardDir(color) - 1);
 			if ((PieceHelper.GetType(pawnAttackNegative) != PieceHelper.None) && PieceHelper.GetColor(pawnAttackNegative) != color ) { // ! add pinning capabilities
 				moves.Add(new Move(index, index + board.forwardDir(color) - 1));
-			} else if ((index + board.forwardDir(color) - 1) == board.enPassantIndex) {
+			} else if ((index + board.forwardDir(color) - 1) == board.enPassantIndex && PieceHelper.GetColor(board.GetSquare(index - 1)) != color) {
 				moves.Add(new Move(index, index + board.forwardDir(color) - 1, Move.EnPassantCaptureFlag));
 			}
 
@@ -211,6 +203,9 @@ namespace ChessBot.Engine {
 					moves.Add(new Move(index, newPos.SquareIndex));
 				}
 			}
+
+			
+
 			foreach (Move move in moves) {
 				ConsoleHelper.WriteLine($"{BoardHelper.IndexToSquareName(move.StartSquare)} {BoardHelper.IndexToSquareName(move.TargetSquare)} {move.MoveFlag}", ConsoleColor.DarkMagenta);
 			}

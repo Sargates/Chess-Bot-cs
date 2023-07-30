@@ -1,3 +1,6 @@
+using Raylib_cs;
+
+
 namespace ChessBot.Engine {
 	public readonly struct Player {
 		public readonly char color;
@@ -7,5 +10,7 @@ namespace ChessBot.Engine {
 		public Player(char color) {
 			this.color = color;
 		}
+
+		public void HandleInput() {}
 	}
 }
