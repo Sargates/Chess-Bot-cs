@@ -5,11 +5,12 @@ using ChessBot.Helpers;
 namespace ChessBot.Engine {
 	public struct Gamestate {
 
-		private static Stack<Gamestate> history = new Stack<Gamestate>();
+		private Stack<Gamestate> history = new Stack<Gamestate>();
+		private Stack<Gamestate> future = new Stack<Gamestate>();
 
 		public Move? move;
-		public string boardRepr;
-		public char colorToMove;
+		public string fenBoard;
+		public char fenColor;
 		public int castlePrivsBin;
 		public string castlePrivs;
 		public string enpassantSquare;
@@ -28,8 +29,8 @@ namespace ChessBot.Engine {
 			// Console.WriteLine(splitFenString);
 
 			// try {
-				boardRepr = splitFenString[0];
-				colorToMove = splitFenString[1][0];
+				fenBoard = splitFenString[0];
+				fenColor = splitFenString[1][0];
 				castlePrivsBin = 0;
 				castlePrivs = "";
 				foreach (char c in splitFenString[2]) {
@@ -93,7 +94,7 @@ namespace ChessBot.Engine {
 				}
 			}
 
-			boardRepr = o;
+			fenBoard = o;
 		}
 
 		public static int BoardCharToEnum(char pieceEnum) {
@@ -156,24 +157,47 @@ namespace ChessBot.Engine {
 
 
 		public string ToFEN() {
-			string colorToMove = this.colorToMove.ToString();
+			string colorToMove = this.fenColor.ToString();
 			string halfMoveCount = $"{this.halfMoveCount}";
 			string fullMoveCount = $"{this.fullMoveCount}";
 
-			return $"{boardRepr} {colorToMove} {GetCastlePrivs()} {enpassantSquare} {halfMoveCount} {fullMoveCount}";
+			return $"{fenBoard} {colorToMove} {GetCastlePrivs()} {enpassantSquare} {halfMoveCount} {fullMoveCount}";
+		}
+
+		public override string ToString() {
+			return ToFEN();
+		}
+
+		public Stack<Gamestate> GetHistory() {
+			return history;
+		}
+		public Stack<Gamestate> GetFuture() {
+			return future;
 		}
 
 		public void PushHistory() {
-			if (this.move == null)
+			// if (this.move == null)
 			history.Push(this);
 		}
 
-		public static Gamestate PeekHistory() {
+		public Gamestate PeekHistory() {
 			return history.Peek();
 		}
 
-		public static Gamestate PopHistory() {
+		public Gamestate PopHistory() {
 			return history.Pop();
+		}
+
+		public void PushFuture() {
+			future.Push(this);
+		}
+
+		public Gamestate PeekFuture() {
+			return future.Peek();
+		}
+
+		public Gamestate PopFuture() {
+			return future.Pop();
 		}
 	}
 }

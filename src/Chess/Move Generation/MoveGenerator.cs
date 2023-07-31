@@ -199,6 +199,8 @@ namespace ChessBot.Engine {
 			bool kingSide = (board.state.castlePrivsBin & flagKing) == flagKing;
 			bool queenSide = (board.state.castlePrivsBin & flagQueen) == flagQueen;
 
+			//! Handle Double checks
+
 			// bool isInCheck = isAttacked(index);
 			// kingSide = kingSide && isInCheck;
 			// queenSide = queenSide && isInCheck;
@@ -207,7 +209,7 @@ namespace ChessBot.Engine {
 				for (int i=0; i<kingSideDeltas.Length; i++) {
 					Coord newPos = coord + kingSideDeltas[i];
 					ConsoleHelper.WriteLine($"King side, {newPos.SquareIndex}");
-					// if (isAttacked(newPos.SquareIndex)) { kingSide = false; break; }
+					// if (isSquareAttacked(newPos.SquareIndex, color)) { kingSide = false; break; }
 					if (board.GetSquare(newPos.SquareIndex) != PieceHelper.None) { kingSide = false; break; }
 				}
 			}			
@@ -216,7 +218,7 @@ namespace ChessBot.Engine {
 				for (int i=0; i<queenSideDeltas.Length; i++) {
 					Coord newPos = coord + queenSideDeltas[i];
 					ConsoleHelper.WriteLine($"Queen side, {newPos.SquareIndex}");
-					// if (i == 2) { if (isAttacked(newPos.SquareIndex)) { queenSide = false; break; } }
+					// if (i != 2) { if (isSquareAttacked(newPos.SquareIndex, color)) { queenSide = false; break; } }
 					if (board.GetSquare(newPos.SquareIndex) != PieceHelper.None) { queenSide = false; break; }
 				}
 			}
@@ -268,6 +270,9 @@ namespace ChessBot.Engine {
 			return moves;
 		}
 
+		public static bool isSquareAttacked() {
+			return false;
+		}
 
 	}
 }

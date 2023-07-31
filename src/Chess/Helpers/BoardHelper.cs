@@ -43,6 +43,7 @@ namespace ChessBot.Helpers {
 			return fileNames[FileIndex(index)]+""+rankNames[RankIndex(index)];
 		}
 		public static int NameToSquareIndex(string square) {
+			if (square == "-") { return -1; }
 			char file = square[0];
 			char rank = square[1];
 			return 8*rankNames.IndexOf(rank) + fileNames.IndexOf(file);

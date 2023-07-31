@@ -32,7 +32,7 @@ namespace ChessBot.Application {
 				board.board[board.enPassantIndex - board.forwardDir(color)] = 0;
 			}
 
-			board.enPassantIndex = -1; // Ok to set this to 0 here because of how En-Passant works
+			board.enPassantIndex = -1; // Ok to set this to -1 here because of how En-Passant works
 			// Set Enpassant square
 			if (moveFlag == Move.PawnTwoUpFlag) {
 				board.enPassantIndex = movedFrom + board.forwardDir(color);
@@ -46,6 +46,7 @@ namespace ChessBot.Application {
 
 			board.state.UpdateBoardRepr(board);
 
+			// If move is a castle, move rook
 			if (moveFlag == Move.CastleFlag) {
 				if (color == PieceHelper.White) {
 					switch (movedTo) {
@@ -69,6 +70,7 @@ namespace ChessBot.Application {
 				}
 			}
 
+			// If piece moved is a king or a rook, update castle perms
 			if (PieceHelper.GetType(pieceMoved) == PieceHelper.King) {
 				if (color == PieceHelper.White) {
 					board.state.RemoveCastle(Gamestate.whiteKingCastle);
@@ -106,16 +108,14 @@ namespace ChessBot.Application {
 			board.state.fullMoveCount += 1;
 
 			board.whiteToMove = !board.whiteToMove; // ForwardDir / anything related to the active color will be the same up until this point
-			board.state.colorToMove = board.whiteToMove ? 'w' : 'b';
+			board.state.fenColor = board.whiteToMove ? 'w' : 'b';
 			
 			board.state.SetRecentMove(move);
 
 			Console.WriteLine(board.state.ToFEN());
+			board.state.GetFuture().Clear();
 			board.state.PushHistory();
 		}
-
-		public int GetColor(int piece) => PieceHelper.GetColor(piece);
-		public int GetType(int piece) => PieceHelper.GetType(piece);
 
 		public void UnmakeMove(Move move) {
 
@@ -129,6 +129,31 @@ namespace ChessBot.Application {
 			board.MovePiece(pieceMoved, movedFrom, movedTo);
 			board.whiteToMove = !board.whiteToMove;
 		}
+
+		public void PopHistory() {
+			if (board.state.GetHistory().Count <= 1) {
+				Console.WriteLine("Cannot pop history instance, empty history");
+				return;
+			}
+			board.state.PopHistory().PushFuture();
+			board.state = board.state.PeekHistory();
+			board.UpdateFromState();
+
+		}
+		public void PopFuture() {
+			if (board.state.GetFuture().Count <= 0) {
+				Console.WriteLine("Cannot pop future instance, empty futures");
+				return;
+			}
+			board.state.PopFuture().PushHistory();
+			board.state = board.state.PeekHistory();
+			board.UpdateFromState();
+
+		}
+
+		public int GetColor(int piece) => PieceHelper.GetColor(piece);
+		public int GetType(int piece) => PieceHelper.GetType(piece);
+
 
 
 		public void StartNewGame(string fenString) {

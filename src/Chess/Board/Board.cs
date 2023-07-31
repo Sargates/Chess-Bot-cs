@@ -15,13 +15,20 @@ namespace ChessBot.Engine {
 
 			// TODO: Add FEN string loading, StartNewGame should be in Controller/Model.cs, board should just be able to load a fen string in place
 			state = new Gamestate(fen);
-			board = BoardFromFen(state.boardRepr);
+			board = BoardFromFen(state.fenBoard);
 
 			Console.WriteLine(state.ToFEN());
 
-			whiteToMove = state.colorToMove == 'w';
+			whiteToMove = state.fenColor == 'w';
 		}
 
+
+		public void UpdateFromState() {
+			board = BoardFromFen(state.fenBoard);
+			whiteToMove = state.fenColor == 'w';
+			enPassantIndex = BoardHelper.NameToSquareIndex(state.enpassantSquare);
+			
+		}
 
 		public static int[] BoardFromFen(string fen) {
 			int[] board = new int[64];

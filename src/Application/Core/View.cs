@@ -5,7 +5,7 @@ using ChessBot.Helpers;
 
 namespace ChessBot.Application {
 	public class View {
-		public BoardUI board;
+		public BoardUI ui;
 		public static Vector2 screenSize;
 		public Model model;
 		public Animation? activeAnimation;
@@ -13,17 +13,17 @@ namespace ChessBot.Application {
 
 		// Animation? 
 		public View(Vector2 screenSize, Model model) {
-			board = new BoardUI();
+			ui = new BoardUI();
 			View.screenSize = screenSize;
 			this.model = model;
 			this.model.enforceColorToMove = true;
 		}
 
 		public void Update() {
-			board.DrawBoardBorder();
-			board.DrawBoardSquares();
-			board.DrawPiecesOnBoard(model.board);
-			board.ResetBoardColors();
+			ui.DrawBoardBorder();
+			ui.DrawBoardSquares();
+			ui.DrawPiecesOnBoard(model.board);
+			ui.ResetBoardColors();
 
 
 			HandleMouseInput();
@@ -35,7 +35,27 @@ namespace ChessBot.Application {
 			int pressedKey = Raylib.GetKeyPressed();
 			while (pressedKey != 0) {
 
-				
+				switch (pressedKey) {
+					case (int) KeyboardKey.KEY_Z :{
+						ui.DeselectActiveSquare();
+						model.PopHistory();
+						break;
+					}
+					case (int) KeyboardKey.KEY_X :{
+						ui.DeselectActiveSquare();
+						model.PopFuture();
+						break;
+					}
+					case (int) KeyboardKey.KEY_P :{
+						Console.WriteLine(model.board.state.PeekHistory());
+						Console.WriteLine(model.board.state.GetHistory().Count);
+						Console.WriteLine(model.board.state.GetFuture().Count);
+						break;
+					}
+					default: {
+						break;
+					}
+				}
 				
 				
 				
@@ -50,7 +70,7 @@ namespace ChessBot.Application {
 			squareClicked = -1;
 			Move validMove = new Move(0);
 			bool leftReleased, leftPressed, rightPressed;
-			bool isSquareSelectedBeforeClick = board.selectedIndex != -1;
+			bool isSquareSelectedBeforeClick = ui.selectedIndex != -1;
 			leftPressed = Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT);
 			leftReleased = Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT);
 			rightPressed = Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT);
@@ -58,7 +78,7 @@ namespace ChessBot.Application {
 			if (leftPressed || leftReleased) {
 				Vector2 pos = Raylib.GetMousePosition() - screenSize/2;
 
-				Vector2 boardPos = (pos/board.squareSize)+new Vector2(4);
+				Vector2 boardPos = (pos/ui.squareSize)+new Vector2(4);
 				
 				if ((0 <= boardPos.X && boardPos.X < 8 && 0 <= boardPos.Y && boardPos.Y < 8) ) {
 					squareClicked = 8*((int)(8-boardPos.Y))+(int)boardPos.X;
@@ -66,13 +86,13 @@ namespace ChessBot.Application {
 				} // If the interaction (click/release) is in bounds, set square clicked and clicked piece, otherwise they will be -1 and {PieceHelper.None}
 
 				if (squareClicked == -1) { // Case 1
-					board.DeselectActiveSquare();
+					ui.DeselectActiveSquare();
 					return;
 				} // Passes guard clause if the click was in bounds
 
-				if (board.selectedIndex != -1) {
-					foreach (Move move in board.movesForSelected) {
-						if (move == new Move(board.selectedIndex, squareClicked)) {
+				if (ui.selectedIndex != -1) {
+					foreach (Move move in ui.movesForSelected) {
+						if (move == new Move(ui.selectedIndex, squareClicked)) {
 							validMove = move;
 							break;
 						}
@@ -81,44 +101,44 @@ namespace ChessBot.Application {
 
 				if (leftPressed) {
 					if (! validMove.IsNull ) { // Case 3
-						board.DeselectActiveSquare();
+						ui.DeselectActiveSquare();
 						model.MakeMove(validMove);
 						//* ANIMATION HERE
 					} else
-					if (board.selectedIndex != -1 && squareClicked == board.selectedIndex) { // Case 5
-						board.isDraggingPiece = true;
+					if (ui.selectedIndex != -1 && squareClicked == ui.selectedIndex) { // Case 5
+						ui.isDraggingPiece = true;
 					} else
-					if (board.selectedIndex == -1 && clickedPiece != PieceHelper.None) { // Case 2
+					if (ui.selectedIndex == -1 && clickedPiece != PieceHelper.None) { // Case 2
 						if (model.enforceColorToMove && PieceHelper.GetColor(clickedPiece) == model.board.activeColor) {
-							board.selectedIndex = squareClicked;
-							board.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
-							board.isDraggingPiece = true;
+							ui.selectedIndex = squareClicked;
+							ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
+							ui.isDraggingPiece = true;
 						}
 					} else
 					if (validMove.IsNull && PieceHelper.GetType(clickedPiece) != PieceHelper.None) { // Case 6
 						if (model.enforceColorToMove && PieceHelper.GetColor(clickedPiece) == model.board.activeColor) {
-							board.selectedIndex = squareClicked;
-							board.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
-							board.isDraggingPiece = true;
+							ui.selectedIndex = squareClicked;
+							ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
+							ui.isDraggingPiece = true;
 						}
 					} else
 					if (validMove.IsNull) { // Case 4
-						board.DeselectActiveSquare();
+						ui.DeselectActiveSquare();
 					}
 
 				} else if (leftReleased) {
-					board.isDraggingPiece = false;
+					ui.isDraggingPiece = false;
 
 					if (! validMove.IsNull) {
-						board.DeselectActiveSquare();
+						ui.DeselectActiveSquare();
 						model.MakeMove(validMove);
 					}
 				}
 			}
 
 			if (rightPressed) {
-				board.DeselectActiveSquare();
-				board.isDraggingPiece = false;
+				ui.DeselectActiveSquare();
+				ui.isDraggingPiece = false;
 			}
 
 			//* Case 1: 	No square is selected, and square clicked is out of bounds 			=> call DeselectActiveSquare ✓
