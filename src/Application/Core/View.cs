@@ -16,6 +16,7 @@ namespace ChessBot.Application {
 			board = new BoardUI();
 			View.screenSize = screenSize;
 			this.model = model;
+			this.model.enforceColorToMove = true;
 		}
 
 		public void Update() {
@@ -25,16 +26,31 @@ namespace ChessBot.Application {
 			board.ResetBoardColors();
 
 
-			HandleInput();
+			HandleMouseInput();
+			HandleKeyboardInput();
 
 		}
 
-		public void HandleInput() {
+		public void HandleKeyboardInput() {
+			int pressedKey = Raylib.GetKeyPressed();
+			while (pressedKey != 0) {
+
+				
+				
+				
+				
+				
+				pressedKey = Raylib.GetKeyPressed();
+			}
+		}
+
+		public void HandleMouseInput() {
 			// TODO Test how ineffective it would be to constantly update mousePos and check if mouse is on a square
 			int clickedPiece=0;
 			squareClicked = -1;
 			Move validMove = new Move(0);
 			bool leftReleased, leftPressed, rightPressed;
+			bool isSquareSelectedBeforeClick = board.selectedIndex != -1;
 			leftPressed = Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT);
 			leftReleased = Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT);
 			rightPressed = Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT);
@@ -64,21 +80,29 @@ namespace ChessBot.Application {
 				}
 
 				if (leftPressed) {
-					if (board.selectedIndex == -1 && clickedPiece != PieceHelper.None) { // Case 2
-						board.selectedIndex = squareClicked;
-						board.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
-						board.isDraggingPiece = true;
-					} else if (! validMove.IsNull ) { // Case 3
+					if (! validMove.IsNull ) { // Case 3
 						board.DeselectActiveSquare();
 						model.MakeMove(validMove);
 						//* ANIMATION HERE
-					} else if (board.selectedIndex != -1 && squareClicked == board.selectedIndex) { // Case 5
+					} else
+					if (board.selectedIndex != -1 && squareClicked == board.selectedIndex) { // Case 5
 						board.isDraggingPiece = true;
-					} else if (validMove.IsNull && PieceHelper.GetType(clickedPiece) != PieceHelper.None) { // Case 6
-						board.selectedIndex = squareClicked;
-						board.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
-						board.isDraggingPiece = true;
-					} else if (validMove.IsNull) { // Case 4
+					} else
+					if (board.selectedIndex == -1 && clickedPiece != PieceHelper.None) { // Case 2
+						if (model.enforceColorToMove && PieceHelper.GetColor(clickedPiece) == model.board.activeColor) {
+							board.selectedIndex = squareClicked;
+							board.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
+							board.isDraggingPiece = true;
+						}
+					} else
+					if (validMove.IsNull && PieceHelper.GetType(clickedPiece) != PieceHelper.None) { // Case 6
+						if (model.enforceColorToMove && PieceHelper.GetColor(clickedPiece) == model.board.activeColor) {
+							board.selectedIndex = squareClicked;
+							board.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
+							board.isDraggingPiece = true;
+						}
+					} else
+					if (validMove.IsNull) { // Case 4
 						board.DeselectActiveSquare();
 					}
 

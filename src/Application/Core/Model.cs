@@ -5,9 +5,11 @@ namespace ChessBot.Application {
 	public class Model {
 
 		public Board board;
-		
+		public bool enforceColorToMove = false;
+
 		public Model() {
-			board = new Board("r1b1r1k1/ppqn1pbp/2pp1np1/4p3/1PP5/P2PPN2/1B1NBPPP/R2Q1RK1 w - - 1 11");
+			board = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+			// board = new Board("rnb1nrk1/1pq3bp/p2p2p1/2pPp3/P1P1Pp2/2NBBN2/1PQ2PPP/R4RK1 w - - 0 13");
 		}
 
 		public void MakeMove(Move move) { //* Wrapper method for MovePiece, calls MovePiece and handles things like board history, 50 move rule, 3 move repition, 
@@ -16,28 +18,104 @@ namespace ChessBot.Application {
 			int moveFlag = move.MoveFlag;
 
 			int pieceMoved = board.GetSquare(movedFrom);
-			int pieceTaken = (moveFlag==Move.EnPassantCaptureFlag) ? (board.opponentColour|PieceHelper.Pawn) : board.GetSquare(movedTo);
+			int color = GetColor(pieceMoved);
+			int type = GetType(pieceMoved);
+			int pieceTaken = (moveFlag==Move.EnPassantCaptureFlag) ? (board.opponentColour(color)|PieceHelper.Pawn) : board.GetSquare(movedTo);
 
-			// board.state;
+
 
 
 			board.MovePiece(pieceMoved, movedFrom, movedTo);
 
-			if (moveFlag == Move.EnPassantCaptureFlag) { // If the move was an enpassant capture
-				board.board[board.enPassantIndex - board.forwardDir(PieceHelper.GetColor(pieceMoved))] = 0;
+			// If the move was an enpassant capture
+			if (moveFlag == Move.EnPassantCaptureFlag) {
+				board.board[board.enPassantIndex - board.forwardDir(color)] = 0;
 			}
 
-			board.enPassantIndex = 0; // Ok to set this to 0 here because of how En-Passant works
+			board.enPassantIndex = -1; // Ok to set this to 0 here because of how En-Passant works
+			// Set Enpassant square
 			if (moveFlag == Move.PawnTwoUpFlag) {
-				board.enPassantIndex = movedFrom + board.forwardDir(PieceHelper.GetColor(pieceMoved));
-				Console.WriteLine(movedFrom + "" + board.forwardDir(PieceHelper.GetColor(pieceMoved)));
+				board.enPassantIndex = movedFrom + board.forwardDir(color);
+			}
+
+			// Is a promotion
+			if (type == PieceHelper.Pawn && BoardHelper.RankIndex(movedTo) == (color==PieceHelper.White ? 7 : 0)) {
+				board.board[movedTo] = PieceHelper.Queen|color;
 			}
 
 
-			
+			board.state.UpdateBoardRepr(board);
+
+			if (moveFlag == Move.CastleFlag) {
+				if (color == PieceHelper.White) {
+					switch (movedTo) {
+						case BoardHelper.c1:
+							board.MovePiece(PieceHelper.Rook, BoardHelper.a1, BoardHelper.d1);
+							break;
+						case BoardHelper.g1:
+							board.MovePiece(PieceHelper.Rook, BoardHelper.h1, BoardHelper.f1);
+							break;
+					}
+				}
+				if (color == PieceHelper.Black) {
+					switch (movedTo) {
+						case BoardHelper.c8:
+							board.MovePiece(PieceHelper.Rook, BoardHelper.a8, BoardHelper.d8);
+							break;
+						case BoardHelper.g8:
+							board.MovePiece(PieceHelper.Rook, BoardHelper.h8, BoardHelper.f8);
+							break;
+					}
+				}
+			}
+
+			if (PieceHelper.GetType(pieceMoved) == PieceHelper.King) {
+				if (color == PieceHelper.White) {
+					board.state.RemoveCastle(Gamestate.whiteKingCastle);
+					board.state.RemoveCastle(Gamestate.whiteQueenCastle);
+				}
+				if (color == PieceHelper.Black) {
+					board.state.RemoveCastle(Gamestate.blackKingCastle);
+					board.state.RemoveCastle(Gamestate.blackQueenCastle);
+				}
+
+			}
+			if (PieceHelper.GetType(pieceMoved) == PieceHelper.Rook) {
+				if (color == PieceHelper.White) {
+					if (movedFrom == BoardHelper.a1) {
+						board.state.RemoveCastle(Gamestate.whiteQueenCastle);
+					}
+					if (movedFrom == BoardHelper.h1) {
+						board.state.RemoveCastle(Gamestate.whiteKingCastle);
+					}
+				}
+				if (color == PieceHelper.Black) {
+					if (movedFrom == BoardHelper.a8) {
+						board.state.RemoveCastle(Gamestate.blackQueenCastle);
+					}
+					if (movedFrom == BoardHelper.h8) {
+						board.state.RemoveCastle(Gamestate.blackKingCastle);
+					}
+				}
+			}
+
+			board.state.castlePrivs = board.state.GetCastlePrivs();
+			board.state.enpassantSquare = (board.enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(board.enPassantIndex);
+			if (pieceTaken == PieceHelper.None || PieceHelper.GetType(pieceMoved) == PieceHelper.Pawn) { board.state.halfMoveCount += 1; }
+			else { board.state.halfMoveCount = 0; }
+			board.state.fullMoveCount += 1;
+
 			board.whiteToMove = !board.whiteToMove; // ForwardDir / anything related to the active color will be the same up until this point
+			board.state.colorToMove = board.whiteToMove ? 'w' : 'b';
 			
+			board.state.SetRecentMove(move);
+
+			Console.WriteLine(board.state.ToFEN());
+			board.state.PushHistory();
 		}
+
+		public int GetColor(int piece) => PieceHelper.GetColor(piece);
+		public int GetType(int piece) => PieceHelper.GetType(piece);
 
 		public void UnmakeMove(Move move) {
 

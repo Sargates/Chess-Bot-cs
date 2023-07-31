@@ -5,22 +5,28 @@ namespace ChessBot.Engine {
 	public class Board {
 
 		public int[] board;
-		public readonly Gamestate state;
+		public Gamestate state;
 
 		public bool whiteToMove;
 		public int enPassantIndex;
 
 
-		public Board(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
+		public Board(string fen) {
 
 			// TODO: Add FEN string loading, StartNewGame should be in Controller/Model.cs, board should just be able to load a fen string in place
-			board = new int[64];
 			state = new Gamestate(fen);
+			board = BoardFromFen(state.boardRepr);
+
+			Console.WriteLine(state.ToFEN());
+
+			whiteToMove = state.colorToMove == 'w';
+		}
 
 
+		public static int[] BoardFromFen(string fen) {
+			int[] board = new int[64];
 			int file = 0; int rank = 7;
-			Console.WriteLine(state.boardRepr);
-			foreach (char c in state.boardRepr) {
+			foreach (char c in fen) {
 				if (c == '/') {rank -= 1; file = 0; continue;}
 				int index = 8*rank+file;
 
@@ -34,13 +40,12 @@ namespace ChessBot.Engine {
 				file += 1;
 			}
 
-
-
-			whiteToMove = state.colorToMove == 'w';
+			return board;
 		}
 
 		public int activeColor => whiteToMove ? PieceHelper.White : PieceHelper.Black;
-        public int opponentColour => whiteToMove ? PieceHelper.Black : PieceHelper.White;
+
+        public int opponentColour(int color) => color ^ PieceHelper.White;
 		public int forwardDir(int color) => color == PieceHelper.White ? 8 : -8;
 
 
@@ -50,6 +55,7 @@ namespace ChessBot.Engine {
 			int temp = board[movedTo];
 			board[movedTo] = board[movedFrom];
 			board[movedFrom] = PieceHelper.None;
+
 		}
 
 		

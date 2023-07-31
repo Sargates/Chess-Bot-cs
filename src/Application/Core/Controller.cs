@@ -16,7 +16,7 @@ namespace ChessBot.Application {
 		static Camera2D cam;
 		Model model;
 		View view;
-		double timeClicked=0;
+
 
 
 		public static void Main() {
@@ -32,6 +32,7 @@ namespace ChessBot.Application {
             cam.zoom = 1.0f;
 
 			Controller controller = new Controller();
+
 
 			controller.MainLoop();
 		}
@@ -51,7 +52,7 @@ namespace ChessBot.Application {
 				
 				Raylib.BeginDrawing();
 				Raylib.ClearBackground(new Color(22, 22, 22, 255));
-				// Raylib.DrawFPS(10, 10);
+				Raylib.DrawFPS(10, 10);
 				Raylib.BeginMode2D(cam);
 
 				
