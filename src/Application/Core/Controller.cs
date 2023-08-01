@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Globalization;
 using ChessBot.Engine;
 using ChessBot.Helpers;
+using ChessBot.Engine.Stockfish;
 
 
 namespace ChessBot.Application {
@@ -45,7 +46,8 @@ namespace ChessBot.Application {
 		public void MainLoop() {
 			float dt = 0f;
 
-			Stockfish stockfish = new Stockfish();
+			Stockfish stockfish = new Stockfish("./resources/stockfish-windows-x86-64-avx2.exe");
+			
 
 			while (!Raylib.WindowShouldClose()) {
 				dt = Raylib.GetFrameTime();
@@ -60,7 +62,9 @@ namespace ChessBot.Application {
 
 				if (view.waitingOnFish) {
 
-					string bestmove = stockfish.GetBestMove(model.board.state.ToFEN());
+
+					stockfish.SetFenPosition(model.board.state.ToFEN());
+					string bestmove = stockfish.GetBestMoveTime(300);
 
 					Move move = new Move(BoardHelper.NameToSquareIndex(bestmove.Substring(0, 2)), BoardHelper.NameToSquareIndex(bestmove.Substring(2, 2)));
 					Console.WriteLine($"{move.StartSquare}, {move.TargetSquare}");
