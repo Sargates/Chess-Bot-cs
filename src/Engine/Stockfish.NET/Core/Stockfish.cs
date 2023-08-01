@@ -69,7 +69,7 @@ namespace ChessBot.Engine.Stockfish {
         public Stockfish(
             string path,
             int depth = 2,
-            Settings settings = null)
+            Settings? settings = null)
         {
             Depth = depth;
             _stockfish = new StockfishProcess(path);
@@ -190,6 +190,7 @@ namespace ChessBot.Engine.Stockfish {
         private List<string> readLineAsList()
         {
             var data = _stockfish.ReadLine();
+			if (data == null) { data = ""; }
             return data.Split(' ').ToList();
         }
 
@@ -226,6 +227,7 @@ namespace ChessBot.Engine.Stockfish {
                 }
 
                 var data = _stockfish.ReadLine();
+				if (data == null) { data = ""; }
                 if (data.Contains("+") || data.Contains("|"))
                 {
                     lines++;
@@ -279,7 +281,7 @@ namespace ChessBot.Engine.Stockfish {
         /// </summary>
         /// <returns></returns>
         /// <exception cref="MaxTriesException"></exception>
-        public string GetBestMove()
+        public string? GetBestMove()
         {
             go();
             var tries = 0;
@@ -328,7 +330,7 @@ namespace ChessBot.Engine.Stockfish {
                 {
                     if (data[1] == "(none)")
                     {
-                        return null;
+                        return "";
                     }
 
                     return data[1];

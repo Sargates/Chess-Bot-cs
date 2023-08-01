@@ -61,7 +61,7 @@ namespace ChessBot.Engine.Stockfish {
         /// This method is allowing to read stdout of Stockfish process
         /// </summary>
         /// <returns></returns>
-        public string ReadLine()
+        public string? ReadLine()
         {
             if (_process.StandardOutput == null)
             {

@@ -7,6 +7,7 @@
 
         public Evaluation()
         {
+			Type = "";
         }
 
         public Evaluation(string type, int value)

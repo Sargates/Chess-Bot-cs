@@ -65,6 +65,9 @@ namespace ChessBot.Application {
 
 					stockfish.SetFenPosition(model.board.state.ToFEN());
 					string bestmove = stockfish.GetBestMoveTime(300);
+					if (bestmove == "") {
+						throw new Exception("Stockfish did not return a best move");
+					}
 
 					Move move = new Move(BoardHelper.NameToSquareIndex(bestmove.Substring(0, 2)), BoardHelper.NameToSquareIndex(bestmove.Substring(2, 2)));
 					Console.WriteLine($"{move.StartSquare}, {move.TargetSquare}");
