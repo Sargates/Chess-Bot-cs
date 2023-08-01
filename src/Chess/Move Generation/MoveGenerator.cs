@@ -1,17 +1,18 @@
 using ChessBot.Helpers;
+using ChessBot.Application;
 namespace ChessBot.Engine {
 	public class MoveGenerator {
 
 		public static readonly Coord[] kingSideDeltas = { new Coord(1, 0), new Coord(2, 0) };
 		public static readonly Coord[] queenSideDeltas = { new Coord(-1, 0), new Coord(-2, 0), new Coord(-3, 0) };
 
-		public static Move[] GetPawnMoves(Board board, int index) {
+		public static List<Move> GetPawnMoves(Board board, int index) {
 			List<Move> moves = new List<Move>();
 
-			int piece = board.GetSquare(index);
+			Piece piece = board.GetSquare(index);
 
 			// `color` is the color of `piece`, if `piece` is a null piece, get `activeColor`
-			int color = piece == PieceHelper.None ? board.activeColor : PieceHelper.GetColor(piece);
+			int color = piece == Piece.None ? board.activeColor : piece.Color;
 
 
 			// !!! Game crashes when pawn is at edge of board, need to find way to check these pieces, (precomputed move data?)
@@ -20,65 +21,59 @@ namespace ChessBot.Engine {
 			Coord coord = new Coord(index);
 			Coord delta = new Coord(board.forwardDir(color));
 			Coord newPos = coord+delta;
-			int pawnOneUp = board.GetSquare(newPos.SquareIndex);
-			if (newPos.IsInBounds() && pawnOneUp == PieceHelper.None) { // ! add pinning capabilities
+			Piece pawnOneUp = board.GetSquare(newPos.SquareIndex);
+			if (newPos.IsInBounds() && pawnOneUp == Piece.None) { // ! add pinning capabilities
 				moves.Add(new Move(index, index + board.forwardDir(color)));
 				
-				if (BoardHelper.RankIndex(index) == (color == PieceHelper.White ? 1 : 6) && board.GetSquare(index + 2*board.forwardDir(color)) == PieceHelper.None) {
+				if (BoardHelper.RankIndex(index) == (color == Piece.White ? 1 : 6) && board.GetSquare(index + 2*board.forwardDir(color)) == Piece.None) {
 					moves.Add(new Move(index, index + 2*board.forwardDir(color), Move.PawnTwoUpFlag));
 				}
 			}
 
 			delta = new Coord(board.forwardDir(color) + 1);
 			newPos = coord+delta;
-			int pawnAttackPositive = board.GetSquare(newPos.SquareIndex);
-			if ((PieceHelper.GetType(pawnAttackPositive) != PieceHelper.None) && PieceHelper.GetColor(pawnAttackPositive) != color ) { // ! add pinning capabilities
+			Piece pawnAttackPositive = board.GetSquare(newPos.SquareIndex);
+			if ((pawnAttackPositive.Type != Piece.None) && pawnAttackPositive.Color != color ) { // ! add pinning capabilities
 				moves.Add(new Move(index, newPos.SquareIndex));
-			} else if ((newPos.SquareIndex) == board.enPassantIndex && PieceHelper.GetColor(board.GetSquare(index + 1)) != color) {
+			} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index + 1) != color)) {
 				moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
 			}
 
 			delta = new Coord(board.forwardDir(color) - 1);
 			newPos = coord+delta;
-			int pawnAttackNegative = board.GetSquare(newPos.SquareIndex);
-			if ((PieceHelper.GetType(pawnAttackNegative) != PieceHelper.None) && PieceHelper.GetColor(pawnAttackNegative) != color ) { // ! add pinning capabilities
+			Piece pawnAttackNegative = board.GetSquare(newPos.SquareIndex);
+			if ((pawnAttackNegative.Type != Piece.None) && pawnAttackNegative.Color != color ) { // ! add pinning capabilities
 				moves.Add(new Move(index, newPos.SquareIndex));
-			} else if ((newPos.SquareIndex) == board.enPassantIndex && PieceHelper.GetColor(board.GetSquare(index - 1)) != color) {
+			} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index - 1) != color)) {
 				moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
 			}
 
-			return moves.ToArray();
+			return moves;
 		}
 
-		public static Move[] GetKnightMoves(Board board, int index) {
+		public static List<Move> GetKnightMoves(Board board, int index) {
 			List<Move> moves = new List<Move>();
 
-			int piece = board.GetSquare(index);
-			int type = PieceHelper.GetType(piece);
-			int color = PieceHelper.GetColor(piece);
+			Piece piece = board.GetSquare(index);
 			Coord coord = new Coord(index);
 			foreach ((int x, int y) in new (int x, int y)[] { (-2, 1), (-1, 2), (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1) }) {
 				Coord delta = new Coord(x, y);
 				Coord newPos = coord + delta;
 				if (! newPos.IsInBounds()) { continue; } // Passes guard clause if in bounds
 
-				int newPiece = board.GetSquare(newPos.SquareIndex);
-				int newType = PieceHelper.GetType(newPiece);
-				int newColor = PieceHelper.GetColor(newPiece);
+				Piece newPiece = board.GetSquare(newPos.SquareIndex);
 
-				if (newType == PieceHelper.None || newColor != color) { // ! add pinning capabilities
+				if (newPiece.Type == Piece.None || newPiece.Color != piece.Color) { // ! add pinning capabilities
 					moves.Add(new Move(index, newPos.SquareIndex));
 				}
 			}
 
-			return moves.ToArray();
+			return moves;
 		}
-		public static Move[] GetBishopMoves(Board board, int index) {
+		public static List<Move> GetBishopMoves(Board board, int index) {
 			List<Move> moves = new List<Move>();
 
-			int piece = board.GetSquare(index);
-			int type = PieceHelper.GetType(piece);
-			int color = PieceHelper.GetColor(piece);
+			Piece piece = board.GetSquare(index);
 			Coord coord = new Coord(index);
 			// Iterate over each direction in moveset and scale by number [1-7]
 			foreach ((int x, int y) in new (int x, int y)[] { (1, 1), (1, -1), (-1, -1), (-1, 1) }) {
@@ -88,15 +83,13 @@ namespace ChessBot.Engine {
 					if (! newPos.IsInBounds()) { break; } // Passes guard clause if in bounds
 					
 
-					int newPiece = board.GetSquare(newPos.SquareIndex);
-					int newType = PieceHelper.GetType(newPiece);
-					int newColor = PieceHelper.GetColor(newPiece);
+					Piece newPiece = board.GetSquare(newPos.SquareIndex);
 					
 					
-					if (newType == PieceHelper.None) { // ! add pinning capabilities
+					if (newPiece.Type == Piece.None) { // ! add pinning capabilities
 						moves.Add(new Move(index, newPos.SquareIndex));
 						continue;
-					} else if (newColor != color) {
+					} else if (newPiece.Color != piece.Color) {
 						moves.Add(new Move(index, newPos.SquareIndex));
 						break;
 					}
@@ -104,14 +97,12 @@ namespace ChessBot.Engine {
 				}
 			}
 
-			return moves.ToArray();
+			return moves;
 		}
-		public static Move[] GetRookMoves(Board board, int index) {
+		public static List<Move> GetRookMoves(Board board, int index) {
 			List<Move> moves = new List<Move>();
 
-			int piece = board.GetSquare(index);
-			int type = PieceHelper.GetType(piece);
-			int color = PieceHelper.GetColor(piece);
+			Piece piece = board.GetSquare(index);
 			Coord coord = new Coord(index);
 			// Iterate over each direction in moveset and scale by number [1-7]
 			foreach ((int x, int y) in new (int x, int y)[] { (0, 1), (1, 0), (0, -1), (-1, 0) }) {
@@ -121,15 +112,13 @@ namespace ChessBot.Engine {
 					if (! newPos.IsInBounds()) { break; } // Passes guard clause if in bounds
 					
 
-					int newPiece = board.GetSquare(newPos.SquareIndex);
-					int newType = PieceHelper.GetType(newPiece);
-					int newColor = PieceHelper.GetColor(newPiece);
+					Piece newPiece = board.GetSquare(newPos.SquareIndex);
 					
 					
-					if (newType == PieceHelper.None) { // ! add pinning capabilities
+					if (newPiece.Type == Piece.None) { // ! add pinning capabilities
 						moves.Add(new Move(index, newPos.SquareIndex));
 						continue;
-					} else if (newColor != color) {
+					} else if (newPiece.Color != piece.Color) {
 						moves.Add(new Move(index, newPos.SquareIndex));
 						break;
 					}
@@ -137,14 +126,12 @@ namespace ChessBot.Engine {
 				}
 			}
 
-			return moves.ToArray();
+			return moves;
 		}
-		public static Move[] GetQueenMoves(Board board, int index) {
+		public static List<Move> GetQueenMoves(Board board, int index) {
 			List<Move> moves = new List<Move>();
 
-			int piece = board.GetSquare(index);
-			int type = PieceHelper.GetType(piece);
-			int color = PieceHelper.GetColor(piece);
+			Piece piece = board.GetSquare(index);
 			Coord coord = new Coord(index);
 
 			// Iterate over each direction in moveset and scale by number [1-7]
@@ -155,15 +142,13 @@ namespace ChessBot.Engine {
 					if (! newPos.IsInBounds()) { break; } // Passes guard clause if in bounds
 
 
-					int newPiece = board.GetSquare(newPos.SquareIndex);
-					int newType = PieceHelper.GetType(newPiece);
-					int newColor = PieceHelper.GetColor(newPiece);
+					Piece newPiece = board.GetSquare(newPos.SquareIndex);
 
 					
-					if (newType == PieceHelper.None) { // ! add pinning capabilities
+					if (newPiece.Type == Piece.None) { // ! add pinning capabilities
 						moves.Add(new Move(index, newPos.SquareIndex));
 						continue;
-					} else if (newColor != color) {
+					} else if (newPiece.Color != piece.Color) {
 						moves.Add(new Move(index, newPos.SquareIndex));
 						break;
 					}
@@ -171,58 +156,55 @@ namespace ChessBot.Engine {
 				}
 			}
 
-			return moves.ToArray();
+			return moves;
 		}
-		public static Move[] GetKingMoves(Board board, int index) {
+		public static List<Move> GetKingMoves(Board board, int index) {
 			List<Move> moves = new List<Move>();
 
-			int piece = board.GetSquare(index);
-			int type = PieceHelper.GetType(piece);
-			int color = PieceHelper.GetColor(piece);
+			Piece piece = board.GetSquare(index);
 			Coord coord = new Coord(index);
 			foreach ((int x, int y) in new (int x, int y)[] { (1, 1), (1, -1), (-1, -1), (-1, 1), (0, 1), (1, 0), (0, -1), (-1, 0) }) {
 				Coord delta = new Coord(x, y);
 				Coord newPos = coord + delta;
 				if (! newPos.IsInBounds()) { continue; } // Passes guard clause if in bounds
 
-				int newPiece = board.GetSquare(newPos.SquareIndex);
-				int newType = PieceHelper.GetType(newPiece);
-				int newColor = PieceHelper.GetColor(newPiece);
+				Piece newPiece = board.GetSquare(newPos.SquareIndex);
 
-				if (newType == PieceHelper.None || newColor != color) { // ! add pinning capabilities
+				if (newPiece.Type == Piece.None || newPiece.Color != piece.Color) { // ! add pinning capabilities
 					moves.Add(new Move(index, newPos.SquareIndex));
 				}
 			}
 
-			int flagKing = color == PieceHelper.White ? Gamestate.whiteKingCastle : Gamestate.blackKingCastle;
-			int flagQueen = color == PieceHelper.White ? Gamestate.whiteQueenCastle : Gamestate.blackQueenCastle;
+			int flagKing = piece.Color == Piece.White ? Gamestate.whiteKingCastle : Gamestate.blackKingCastle;
+			int flagQueen = piece.Color == Piece.White ? Gamestate.whiteQueenCastle : Gamestate.blackQueenCastle;
 			bool kingSide = (board.state.castlePrivsBin & flagKing) == flagKing;
 			bool queenSide = (board.state.castlePrivsBin & flagQueen) == flagQueen;
 
 			//! Handle Double checks
 
-			// bool isInCheck = isAttacked(index);
-			// kingSide = kingSide && isInCheck;
-			// queenSide = queenSide && isInCheck;
+			// var checkData = GetCheckData(board, index, piece.Color);
+			// bool isInCheck = checkData.Item1;
+			// List<(int, int)> gaming = checkData.Item2;
+			// List<(int, int)> gaming2  = checkData.Item3;
 
 			if (kingSide) {
 				for (int i=0; i<kingSideDeltas.Length; i++) {
 					Coord newPos = coord + kingSideDeltas[i];
-					ConsoleHelper.WriteLine($"King side, {newPos.SquareIndex}");
-					// if (isSquareAttacked(newPos.SquareIndex, color)) { kingSide = false; break; }
-					if (board.GetSquare(newPos.SquareIndex) != PieceHelper.None) { kingSide = false; break; }
+					// ConsoleHelper.WriteLine($"King side, {newPos.SquareIndex}");
+					if (IsSquareAttacked(board, newPos.SquareIndex, piece.Color)) { kingSide = false; break; }
+					if (board.GetSquare(newPos.SquareIndex) != Piece.None) { kingSide = false; break; }
 				}
 			}			
 
 			if (queenSide) {
 				for (int i=0; i<queenSideDeltas.Length; i++) {
 					Coord newPos = coord + queenSideDeltas[i];
-					ConsoleHelper.WriteLine($"Queen side, {newPos.SquareIndex}");
-					// if (i != 2) { if (isSquareAttacked(newPos.SquareIndex, color)) { queenSide = false; break; } }
-					if (board.GetSquare(newPos.SquareIndex) != PieceHelper.None) { queenSide = false; break; }
+					// ConsoleHelper.WriteLine($"Queen side, {newPos.SquareIndex}");
+					if (i != 2) { if (IsSquareAttacked(board, newPos.SquareIndex, piece.Color)) { queenSide = false; break; } }
+					if (board.GetSquare(newPos.SquareIndex) != Piece.None) { queenSide = false; break; }
 				}
 			}
-			
+
 			//* Check king interval for checks
 			//* Check king interval for clearance
 			if (kingSide) {
@@ -236,42 +218,133 @@ namespace ChessBot.Engine {
 				moves.Add(new Move(index, newPos.SquareIndex, Move.CastleFlag));
 			}
 
-			
-			return moves.ToArray();
+			return moves;
 		}
 
+
 		// TODO: Add method to sum number of moves to an given depth (recursive? iterative?)
-		public static Move[] GetMoves(Board board, int index) { // ! check edgecases
+		public static Move[] GetMoves(Model model, int index) { // ! check edgecases
 
 			// !!! Add pinning capabilities
 			// !!! Make sure moving in opposite direction of pin doesnt work; moving in same direction as pin does
 
-			int piece = board.GetSquare(index);
-			int type = PieceHelper.GetType(piece);
-			int color = PieceHelper.GetColor(piece);
+			Piece piece = model.board.GetSquare(index);
 
 			// ConsoleHelper.WriteLine($"PieceEnum = {Convert.ToString(piece, 2)}");
 
-			Move[] moves = type switch {
-				PieceHelper.Pawn => GetPawnMoves(board, index),
-				PieceHelper.Knight => GetKnightMoves(board, index),
-				PieceHelper.Bishop => GetBishopMoves(board, index),
-				PieceHelper.Rook => GetRookMoves(board, index),
-				PieceHelper.Queen => GetQueenMoves(board, index),
-				PieceHelper.King => GetKingMoves(board, index),
+			List<Move> moves = piece.Type switch {
+				Piece.Pawn => GetPawnMoves(model.board, index),
+				Piece.Knight => GetKnightMoves(model.board, index),
+				Piece.Bishop => GetBishopMoves(model.board, index),
+				Piece.Rook => GetRookMoves(model.board, index),
+				Piece.Queen => GetQueenMoves(model.board, index),
+				Piece.King => GetKingMoves(model.board, index),
 				_ => throw new Exception("Invalid piece type")
 			};
 
-			// ConsoleHelper.WriteLine($"{PieceHelper.EnumToRepr[piece]}");
-			// foreach (Move move in moves) {
-			// 	ConsoleHelper.WriteLine($"{BoardHelper.IndexToSquareName(move.StartSquare)} {BoardHelper.IndexToSquareName(move.TargetSquare)} {move.MoveFlag}", ConsoleColor.DarkMagenta);
-			// }
+			for (int i=moves.Count-1; i>-1; i--) {
+				Move move = moves[i];
+				model.MakeMove(move, true);
+				int kingPos = piece.Color == Piece.White ? model.board.whiteKingPos : model.board.blackKingPos;
+				// Console.WriteLine(kingPos);
+				var checkData = GetCheckData(model.board, kingPos, piece.Color);
+				bool isInCheck = checkData.Item1;
+				List<(int, int)> gaming = checkData.Item2;
+				List<(int, int)> gaming2  = checkData.Item3;
+				model.UnmakeMove();
+				if (isInCheck) { moves.RemoveAt(i); }
+			}
 
-			return moves;
+			// ConsoleHelper.WriteLine($"{Piece.EnumToRepr[piece]}");
+			foreach (Move move in moves) {
+				ConsoleHelper.WriteLine($"{BoardHelper.IndexToSquareName(move.StartSquare)} {BoardHelper.IndexToSquareName(move.TargetSquare)} {move.MoveFlag}", ConsoleColor.DarkMagenta);
+			}
+
+			return moves.ToArray();
 		}
 
-		public static bool isSquareAttacked() {
-			return false;
+		public static bool IsSquareAttacked(Board board, int index, int color) {
+			return GetCheckData(board, index, color).Item1;
+		}
+
+		public static (bool, List<(int, int)>, List<(int, int)>) GetCheckData(Board board, int index, int color) {
+
+			List<(int, int)> pins = new List<(int, int)>();
+			List<(int, int)> checks = new List<(int, int)>();
+			bool inCheck = false;
+
+			Coord[] directions = { new Coord(0, -1), new Coord(1, 0), new Coord(0, 1), new Coord(-1, 0), new Coord(1, 1), new Coord(-1, 1), new Coord(-1, -1), new Coord(1, -1) };
+			Coord start = new Coord(index);
+
+			for (int j=0; j<directions.Length; j++) {
+
+				Coord delta = directions[j];
+
+				(int, int) possiblePin = (0, 0);
+				for (int i = 1; i < 8; i++) {
+					if (! (start + delta*i).IsInBounds()) {
+						break;
+					}
+
+					int testedPos = (start + delta * i).SquareIndex;
+
+					Piece attackingSquare = board.GetSquare(testedPos);
+
+					if (attackingSquare.IsNull) {
+						continue;
+					}
+
+					if (attackingSquare.Color == color && attackingSquare.Type != Piece.King) {
+						if (possiblePin == (0, 0)) {
+							possiblePin = (testedPos, delta.SquareIndex);
+						}
+						else {
+							break;
+						}
+					}
+					else if (attackingSquare.Color != color) {
+						int type = attackingSquare.Type;
+						if ((0 <= j && j <= 3 && type == Piece.Rook) ||
+							(4 <= j && j <= 7 && type == Piece.Bishop) ||
+							(i == 1 && type == Piece.Pawn && ((color == Piece.White && 4 <= j && j <= 5) || (color == Piece.Black && 6 <= j && j <= 7))) ||
+							(type == Piece.Queen) || (i == 1 && type == Piece.King)) {
+							if (possiblePin == (0, 0)) {
+								inCheck = true;
+								checks.Add((testedPos, delta.SquareIndex));
+								break;
+							}
+							else {
+								pins.Add(possiblePin);
+								break;
+							}
+						}
+						else {
+							break;
+						}
+					}
+				}
+			}
+
+			Coord[] knightMoves = { new Coord(-2, 1), new Coord(-1, 2), new Coord(1, 2), new Coord(2, 1), new Coord(2, -1), new Coord(1, -2), new Coord(-1, -2), new Coord(-2, -1) };
+			foreach (Coord delta in knightMoves) {
+				Coord newPos = start + delta;
+				if (! newPos.IsInBounds()) {
+					continue;
+				}
+
+
+				Piece endPiece = board.GetSquare(newPos.SquareIndex);
+				if (endPiece.IsNull) {
+					continue;
+				}
+
+				if (endPiece.Color != color && endPiece.Type == Piece.Knight) {
+					inCheck = true;
+					checks.Add((newPos.SquareIndex, delta.SquareIndex));
+				}
+			}
+
+			return (inCheck, pins, checks);
 		}
 
 	}

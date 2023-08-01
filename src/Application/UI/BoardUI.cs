@@ -101,11 +101,11 @@ namespace ChessBot.Application {
 			movesForSelected = new Move[0];
 		}
 
-		public void DrawPiece(int piece, Vector2 posTopLeft, float alpha = 1) { //* Copied from SebLague
-            if (piece != PieceHelper.None)
+		public void DrawPiece(Piece piece, Vector2 posTopLeft, float alpha = 1) { //* Copied from SebLague
+            if (piece != Piece.None)
             {
-                int type = PieceHelper.GetType(piece);
-                bool white = PieceHelper.GetColor(piece) == PieceHelper.White;
+                int type = piece.Type;
+                bool white = piece.Color == Piece.White;
                 Rectangle srcRect = GetPieceTextureRect(type, white);
                 Rectangle targRect = new Rectangle((int)posTopLeft.X, (int)posTopLeft.Y, squareSize, squareSize);
 

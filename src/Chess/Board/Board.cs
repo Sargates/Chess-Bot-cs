@@ -4,11 +4,17 @@ namespace ChessBot.Engine {
 	
 	public class Board {
 
-		public int[] board;
+		public Piece[] board;
 		public Gamestate state;
 
 		public bool whiteToMove;
 		public int enPassantIndex;
+
+		public int whiteKingPos;
+		public int blackKingPos;
+		
+
+
 
 
 		public Board(string fen) {
@@ -16,6 +22,11 @@ namespace ChessBot.Engine {
 			// TODO: Add FEN string loading, StartNewGame should be in Controller/Model.cs, board should just be able to load a fen string in place
 			state = new Gamestate(fen);
 			board = BoardFromFen(state.fenBoard);
+			for (int i = 0; i < board.Length; i++) {
+				if (board[i] == (Piece.White | Piece.King)) { whiteKingPos = i; }
+				if (board[i] == (Piece.Black | Piece.King)) { blackKingPos = i; }
+			}
+
 
 			Console.WriteLine(state.ToFEN());
 
@@ -25,17 +36,21 @@ namespace ChessBot.Engine {
 
 		public void UpdateFromState() {
 			board = BoardFromFen(state.fenBoard);
+			for (int i = 0; i < board.Length; i++) {
+				if (board[i] == (Piece.White | Piece.King)) { whiteKingPos = i; }
+				if (board[i] == (Piece.Black | Piece.King)) { blackKingPos = i; }
+			}
 			whiteToMove = state.fenColor == 'w';
 			enPassantIndex = BoardHelper.NameToSquareIndex(state.enpassantSquare);
 			
 		}
 
-		public static int[] BoardFromFen(string fen) {
-			int[] board = new int[64];
-			int file = 0; int rank = 7;
+		public static Piece[] BoardFromFen(string fen) {
+			Piece[] board = new Piece[64];
+			Piece file = 0; Piece rank = 7;
 			foreach (char c in fen) {
 				if (c == '/') {rank -= 1; file = 0; continue;}
-				int index = 8*rank+file;
+				Piece index = 8*rank+file;
 
 				if (char.IsNumber(c)) {
 
@@ -50,25 +65,29 @@ namespace ChessBot.Engine {
 			return board;
 		}
 
-		public int activeColor => whiteToMove ? PieceHelper.White : PieceHelper.Black;
+		public int activeColor => whiteToMove ? Piece.White : Piece.Black;
 
-        public int opponentColour(int color) => color ^ PieceHelper.White;
-		public int forwardDir(int color) => color == PieceHelper.White ? 8 : -8;
+        public int opponentColour(int color) => color ^ Piece.White;
+		public int forwardDir(int color) => color == Piece.White ? 8 : -8;
 
 
-		public void MovePiece(int piece, int movedFrom, int movedTo) {
+		public void MovePiece(Piece piece, int movedFrom, int movedTo) {
 			//* modify bitboards here
+
+			if (board[movedFrom] == (Piece.White | Piece.King)) { whiteKingPos = movedTo; }
+			if (board[movedFrom] == (Piece.Black | Piece.King)) { blackKingPos = movedTo; }
 			
 			int temp = board[movedTo];
 			board[movedTo] = board[movedFrom];
-			board[movedFrom] = PieceHelper.None;
+			board[movedFrom] = Piece.None;
+
+
 
 		}
 
 		
-		public int GetSquare(int index) {
+		public Piece GetSquare(int index) {
 			if (! (0 <= index && index < 64) ) { throw new Exception("Board index out of bounds"); }
-			
 			return board[index];
 		}
 	}

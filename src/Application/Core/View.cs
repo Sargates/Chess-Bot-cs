@@ -10,12 +10,14 @@ namespace ChessBot.Application {
 		public Model model;
 		public Animation? activeAnimation;
 		int squareClicked;
+		public bool waitingOnFish;
 
 		// Animation? 
 		public View(Vector2 screenSize, Model model) {
 			ui = new BoardUI();
 			View.screenSize = screenSize;
 			this.model = model;
+			waitingOnFish = false;
 			this.model.enforceColorToMove = true;
 		}
 
@@ -29,6 +31,25 @@ namespace ChessBot.Application {
 			HandleMouseInput();
 			HandleKeyboardInput();
 
+		}
+
+		public void GetAttackedSquares() {
+			string o = "";
+
+			for (int i=0;i<8;i++) {
+				for (int j=0;j<8;j++) {
+					int index = 8*(7-i)+j;
+
+					Piece piece = model.board.GetSquare(index);
+
+					string symbol = MoveGenerator.IsSquareAttacked(model.board, index, Piece.White) ? "**" : "--";
+					
+					o += $"{symbol} ";
+				}
+				Console.WriteLine(o);
+				o = "";
+			}
+			
 		}
 
 		public void HandleKeyboardInput() {
@@ -47,6 +68,9 @@ namespace ChessBot.Application {
 						break;
 					}
 					case (int) KeyboardKey.KEY_P :{
+						// GetAttackedSquares();
+						// Console.WriteLine(model.board.whiteKingPos);
+						// Console.WriteLine(model.board.blackKingPos);
 						Console.WriteLine(model.board.state.PeekHistory());
 						Console.WriteLine(model.board.state.GetHistory().Count);
 						Console.WriteLine(model.board.state.GetFuture().Count);
@@ -66,7 +90,7 @@ namespace ChessBot.Application {
 
 		public void HandleMouseInput() {
 			// TODO Test how ineffective it would be to constantly update mousePos and check if mouse is on a square
-			int clickedPiece=0;
+			Piece clickedPiece = Piece.None;
 			squareClicked = -1;
 			Move validMove = new Move(0);
 			bool leftReleased, leftPressed, rightPressed;
@@ -83,7 +107,7 @@ namespace ChessBot.Application {
 				if ((0 <= boardPos.X && boardPos.X < 8 && 0 <= boardPos.Y && boardPos.Y < 8) ) {
 					squareClicked = 8*((int)(8-boardPos.Y))+(int)boardPos.X;
 					clickedPiece = model.board.GetSquare(squareClicked);
-				} // If the interaction (click/release) is in bounds, set square clicked and clicked piece, otherwise they will be -1 and {PieceHelper.None}
+				} // If the interaction (click/release) is in bounds, set square clicked and clicked piece, otherwise they will be -1 and {Piece.None}
 
 				if (squareClicked == -1) { // Case 1
 					ui.DeselectActiveSquare();
@@ -104,21 +128,22 @@ namespace ChessBot.Application {
 						ui.DeselectActiveSquare();
 						model.MakeMove(validMove);
 						//* ANIMATION HERE
+						waitingOnFish = true;
 					} else
 					if (ui.selectedIndex != -1 && squareClicked == ui.selectedIndex) { // Case 5
 						ui.isDraggingPiece = true;
 					} else
-					if (ui.selectedIndex == -1 && clickedPiece != PieceHelper.None) { // Case 2
-						if (model.enforceColorToMove && PieceHelper.GetColor(clickedPiece) == model.board.activeColor) {
+					if (ui.selectedIndex == -1 && clickedPiece != Piece.None) { // Case 2
+						if (model.enforceColorToMove && clickedPiece.Color == model.board.activeColor) {
 							ui.selectedIndex = squareClicked;
-							ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
+							ui.movesForSelected = MoveGenerator.GetMoves(model, squareClicked);
 							ui.isDraggingPiece = true;
 						}
 					} else
-					if (validMove.IsNull && PieceHelper.GetType(clickedPiece) != PieceHelper.None) { // Case 6
-						if (model.enforceColorToMove && PieceHelper.GetColor(clickedPiece) == model.board.activeColor) {
+					if (validMove.IsNull && clickedPiece.Type != Piece.None) { // Case 6
+						if (model.enforceColorToMove && clickedPiece.Color == model.board.activeColor) {
 							ui.selectedIndex = squareClicked;
-							ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
+							ui.movesForSelected = MoveGenerator.GetMoves(model, squareClicked);
 							ui.isDraggingPiece = true;
 						}
 					} else
@@ -132,6 +157,8 @@ namespace ChessBot.Application {
 					if (! validMove.IsNull) {
 						ui.DeselectActiveSquare();
 						model.MakeMove(validMove);
+						//* ANIMATION HERE
+						waitingOnFish = true;
 					}
 				}
 			}

@@ -17,8 +17,6 @@ namespace ChessBot.Application {
 		Model model;
 		View view;
 
-
-
 		public static void Main() {
 
 			Raylib.SetTraceLogLevel(TraceLogLevel.LOG_WARNING);
@@ -47,6 +45,8 @@ namespace ChessBot.Application {
 		public void MainLoop() {
 			float dt = 0f;
 
+			Stockfish stockfish = new Stockfish();
+
 			while (!Raylib.WindowShouldClose()) {
 				dt = Raylib.GetFrameTime();
 				
@@ -57,6 +57,18 @@ namespace ChessBot.Application {
 
 				
 				view.Update();
+
+				if (view.waitingOnFish) {
+
+					string bestmove = stockfish.GetBestMove(model.board.state.ToFEN());
+
+					Move move = new Move(BoardHelper.NameToSquareIndex(bestmove.Substring(0, 2)), BoardHelper.NameToSquareIndex(bestmove.Substring(2, 2)));
+					Console.WriteLine($"{move.StartSquare}, {move.TargetSquare}");
+					model.MakeMove(move);
+
+					view.waitingOnFish = false;
+				}
+
 
 				Raylib.EndMode2D();
 
