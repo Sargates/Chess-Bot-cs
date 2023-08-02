@@ -12,6 +12,8 @@ namespace ChessBot.Application {
 		int squareClicked;
 		public bool waitingOnFish;
 
+		public bool[] isMouseClicked = new bool[2];
+
 		// Animation? 
 		public View(Vector2 screenSize, Model model) {
 			ui = new BoardUI();
@@ -93,13 +95,13 @@ namespace ChessBot.Application {
 			Piece clickedPiece = Piece.None;
 			squareClicked = -1;
 			Move validMove = new Move(0);
-			bool leftReleased, leftPressed, rightPressed;
-			bool isSquareSelectedBeforeClick = ui.selectedIndex != -1;
+			bool leftReleased, leftPressed, rightPressed, rightReleased;
 			leftPressed = Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT);
 			leftReleased = Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT);
 			rightPressed = Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT);
+			rightReleased = Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_RIGHT);
 
-			if (leftPressed || leftReleased) {
+			if (leftPressed || leftReleased || rightPressed || rightReleased) {
 				Vector2 pos = Raylib.GetMousePosition() - screenSize/2;
 
 				Vector2 boardPos = (pos/ui.squareSize)+new Vector2(4);
@@ -122,50 +124,62 @@ namespace ChessBot.Application {
 						}
 					}
 				}
+			}
 
-				if (leftPressed) {
-					if (! validMove.IsNull ) { // Case 3
-						ui.DeselectActiveSquare();
-						model.MakeMove(validMove);
-						//* ANIMATION HERE
-						waitingOnFish = true;
-					} else
-					if (ui.selectedIndex != -1 && squareClicked == ui.selectedIndex) { // Case 5
+			if (leftPressed) {
+				isMouseClicked[0] = true;
+				ui.selectedSquares = new bool[64];
+				if (! validMove.IsNull ) { // Case 3
+					ui.DeselectActiveSquare();
+					model.MakeMove(validMove);
+					//* ANIMATION HERE
+					waitingOnFish = true;
+				} else
+				if (ui.selectedIndex != -1 && squareClicked == ui.selectedIndex) { // Case 5
+					ui.isDraggingPiece = true;
+				} else
+				if (ui.selectedIndex == -1 && clickedPiece != Piece.None) { // Case 2
+					if (model.enforceColorToMove && clickedPiece.Color == model.board.activeColor) {
+						ui.selectedIndex = squareClicked;
+						ui.movesForSelected = MoveGenerator.GetMoves(model, squareClicked);
 						ui.isDraggingPiece = true;
-					} else
-					if (ui.selectedIndex == -1 && clickedPiece != Piece.None) { // Case 2
-						if (model.enforceColorToMove && clickedPiece.Color == model.board.activeColor) {
-							ui.selectedIndex = squareClicked;
-							ui.movesForSelected = MoveGenerator.GetMoves(model, squareClicked);
-							ui.isDraggingPiece = true;
-						}
-					} else
-					if (validMove.IsNull && clickedPiece.Type != Piece.None) { // Case 6
-						if (model.enforceColorToMove && clickedPiece.Color == model.board.activeColor) {
-							ui.selectedIndex = squareClicked;
-							ui.movesForSelected = MoveGenerator.GetMoves(model, squareClicked);
-							ui.isDraggingPiece = true;
-						}
-					} else
-					if (validMove.IsNull) { // Case 4
-						ui.DeselectActiveSquare();
 					}
-
-				} else if (leftReleased) {
-					ui.isDraggingPiece = false;
-
-					if (! validMove.IsNull) {
-						ui.DeselectActiveSquare();
-						model.MakeMove(validMove);
-						//* ANIMATION HERE
-						waitingOnFish = true;
+				} else
+				if (validMove.IsNull && clickedPiece.Type != Piece.None) { // Case 6
+					if (model.enforceColorToMove && clickedPiece.Color == model.board.activeColor) {
+						ui.selectedIndex = squareClicked;
+						ui.movesForSelected = MoveGenerator.GetMoves(model, squareClicked);
+						ui.isDraggingPiece = true;
 					}
+				} else
+				if (validMove.IsNull) { // Case 4
+					ui.DeselectActiveSquare();
+				}
+
+			}
+			if (leftReleased) {
+				isMouseClicked[0] = false;
+				ui.isDraggingPiece = false;
+
+				if (! validMove.IsNull) {
+					ui.DeselectActiveSquare();
+					model.MakeMove(validMove);
+					//* ANIMATION HERE
+					waitingOnFish = true;
 				}
 			}
 
 			if (rightPressed) {
+				isMouseClicked[1] = true;
 				ui.DeselectActiveSquare();
 				ui.isDraggingPiece = false;
+			}
+
+			if (rightReleased) {
+				isMouseClicked[1] = false;
+				if (ui.selectedIndex == -1 && ! isMouseClicked[0]) {
+					ui.selectedSquares[squareClicked] = ! ui.selectedSquares[squareClicked];
+				}
 			}
 
 			//* Case 1: 	No square is selected, and square clicked is out of bounds 			=> call DeselectActiveSquare ✓

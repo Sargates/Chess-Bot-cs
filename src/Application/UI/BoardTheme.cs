@@ -7,17 +7,21 @@ namespace ChessBot.Application{
 		public static Color lightCol = HexToColor("#eed8c0");
         public static Color darkCol = HexToColor("#ab7965");
 
-        public static Color selectedLight = HexToColor("#ecc57b");
-        public static Color selectedDark = HexToColor("#c89e50");
+        public static Color selectedLight = HexToColor("#ec7e6a");
+        public static Color selectedDark = HexToColor("#d46c51");
+		public static Color selectedHighlight = HexToColor("#ff3b0abf");
 
-        public static Color moveFromLight = HexToColor("#cfac6a");	//* represents moves made by opponent ()
-        public static Color moveFromDark = HexToColor("#c59e36");	//* represents moves made by opponent ()
+        public static Color movedFromLight = HexToColor("#cfac6a");	//* represents moves made by opponent ()
+        public static Color movedFromDark = HexToColor("#c59e36");	//* represents moves made by opponent ()
+        public static Color movedFromHighlight = HexToColor("#daa925bf");	//* represents moves made by opponent ()
 
-        public static Color moveToLight = HexToColor("#ddd07c");	//* represents moves made by opponent ()
-        public static Color moveToDark = HexToColor("#c5ad60");	//* represents moves made by opponent ()
+        public static Color movedToLight = HexToColor("#ddd07c");	//* represents moves made by opponent ()
+        public static Color movedToDark = HexToColor("#c5ad60");	//* represents moves made by opponent ()
+        public static Color movedToHighlight = HexToColor("#ffce2fbf");	//* represents moves made by opponent ()
 
         public static Color legalLight = HexToColor("#59abdd");
         public static Color legalDark = HexToColor("#3e90c3");
+		public static Color legalHighlight = HexToColor("#17a6ffbf");
 
         public static Color checkLight = HexToColor("#ea4a4a");
         public static Color checkDark = HexToColor("#cf2727");

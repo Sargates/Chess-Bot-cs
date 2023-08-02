@@ -4,8 +4,7 @@ using System.IO;
 using System.Numerics;
 
 namespace ChessBot.Helpers {
-	public static class UIHelper
-	{
+	public static class UIHelper {
 		// static readonly bool SDF_Enabled = true;
 		const string fontName = "OPENSANS-SEMIBOLD.TTF";
 		const int referenceResolution = 1920;
@@ -14,14 +13,12 @@ namespace ChessBot.Helpers {
 		// static Font fontSdf;
 		// static Shader shader;
 
-		public enum AlignH
-		{
+		public enum AlignH {
 			Left,
 			Centre,
 			Right
 		}
-		public enum AlignV
-		{
+		public enum AlignV {
 			Top,
 			Centre,
 			Bottom
@@ -97,29 +94,24 @@ namespace ChessBot.Helpers {
 		// 	return pressedThisFrame;
 		// }
 
-		static bool MouseInRect(Rectangle rec)
-		{
+		static bool MouseInRect(Rectangle rec) {
 			Vector2 mousePos = Raylib.GetMousePosition();
 			return mousePos.X >= rec.x && mousePos.Y >= rec.y && mousePos.X <= rec.x + rec.width && mousePos.Y <= rec.y + rec.height;
 		}
 
-		public static string GetResourcePath(params string[] localPath)
-		{
+		public static string GetResourcePath(params string[] localPath) {
 			return Path.Combine(Directory.GetCurrentDirectory(), "resources", Path.Combine(localPath));
 		}
 
-		public static float Scale(float val, int referenceResolution = referenceResolution)
-		{
+		public static float Scale(float val, int referenceResolution = referenceResolution) {
 			return Raylib.GetScreenWidth() / (float)referenceResolution * val;
 		}
 
-		public static int ScaleInt(int val, int referenceResolution = referenceResolution)
-		{
+		public static int ScaleInt(int val, int referenceResolution = referenceResolution) {
 			return (int)Math.Round(Raylib.GetScreenWidth() / (float)referenceResolution * val);
 		}
 
-		public static Vector2 Scale(Vector2 vec, int referenceResolution = referenceResolution)
-		{
+		public static Vector2 Scale(Vector2 vec, int referenceResolution = referenceResolution) {
 			float x = Scale(vec.X, referenceResolution);
 			float y = Scale(vec.Y, referenceResolution);
 			return new Vector2(x, y);

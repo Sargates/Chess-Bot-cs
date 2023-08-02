@@ -9,14 +9,12 @@ namespace ChessBot.Engine { // ! Copied from SebLague
 		public readonly int file;
 		public readonly int rank;
 
-		public Coord(int fileIndex, int rankIndex)
-		{
+		public Coord(int fileIndex, int rankIndex) {
 			this.file = fileIndex;
 			this.rank = rankIndex;
 		}
 
-		public Coord(int squareIndex)
-		{
+		public Coord(int squareIndex) {
 			this.file = squareIndex & 0b111;
 			this.rank = squareIndex >> 3;
 		}

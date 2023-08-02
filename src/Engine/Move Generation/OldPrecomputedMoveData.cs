@@ -13,8 +13,7 @@ public static class OldPrecomputedMoveData {
 	// First 4 are orthogonal, last 4 are diagonals (N, S, W, E, NW, SE, NE, SW)
 	public static readonly int[] directionOffsets = { 8, -8, -1, 1, 7, -7, 9, -9 };
 
-	static readonly Coord[] dirOffsets2D =
-	{
+	static readonly Coord[] dirOffsets2D = {
 			new Coord(0, 1),
 			new Coord(0, -1),
 			new Coord(-1, 0),
@@ -58,19 +57,16 @@ public static class OldPrecomputedMoveData {
 	public static int[,] kingDistance;
 	public static int[] CentreManhattanDistance;
 
-	public static int NumRookMovesToReachSquare(int startSquare, int targetSquare)
-	{
+	public static int NumRookMovesToReachSquare(int startSquare, int targetSquare) {
 		return OrthogonalDistance[startSquare, targetSquare];
 	}
 
-	public static int NumKingMovesToReachSquare(int startSquare, int targetSquare)
-	{
+	public static int NumKingMovesToReachSquare(int startSquare, int targetSquare) {
 		return kingDistance[startSquare, targetSquare];
 	}
 
 	// Initialize lookup data
-	static OldPrecomputedMoveData()
-	{
+	static OldPrecomputedMoveData() {
 		pawnAttacksWhite = new int[64][];
 		pawnAttacksBlack = new int[64][];
 		numSquaresToEdge = new int[8][];
@@ -86,8 +82,7 @@ public static class OldPrecomputedMoveData {
 		// See comments by variable definitions for more info.
 		int[] allKnightJumps = { 15, 17, -17, -15, 10, -6, 6, -10 };
 
-		for (int squareIndex = 0; squareIndex < 64; squareIndex++)
-		{
+		for (int squareIndex = 0; squareIndex < 64; squareIndex++) {
 
 			int y = squareIndex / 8;
 			int x = squareIndex - y * 8;
@@ -108,17 +103,14 @@ public static class OldPrecomputedMoveData {
 
 			// Calculate all squares knight can jump to from current square
 			var legalKnightJumps = new List<byte>();
-			foreach (int knightJumpDelta in allKnightJumps)
-			{
+			foreach (int knightJumpDelta in allKnightJumps) {
 				int knightJumpSquare = squareIndex + knightJumpDelta;
-				if (knightJumpSquare >= 0 && knightJumpSquare < 64)
-				{
+				if (knightJumpSquare >= 0 && knightJumpSquare < 64) {
 					int knightSquareY = knightJumpSquare / 8;
 					int knightSquareX = knightJumpSquare - knightSquareY * 8;
 					// Ensure knight has moved max of 2 squares on x/y axis (to reject indices that have wrapped around side of board)
 					int maxCoordMoveDst = System.Math.Max(System.Math.Abs(x - knightSquareX), System.Math.Abs(y - knightSquareY));
-					if (maxCoordMoveDst == 2)
-					{
+					if (maxCoordMoveDst == 2) {
 						legalKnightJumps.Add((byte)knightJumpSquare);
 					}
 				}
@@ -127,17 +119,14 @@ public static class OldPrecomputedMoveData {
 
 			// Calculate all squares king can move to from current square (not including castling)
 			var legalKingMoves = new List<byte>();
-			foreach (int kingMoveDelta in directionOffsets)
-			{
+			foreach (int kingMoveDelta in directionOffsets) {
 				int kingMoveSquare = squareIndex + kingMoveDelta;
-				if (kingMoveSquare >= 0 && kingMoveSquare < 64)
-				{
+				if (kingMoveSquare >= 0 && kingMoveSquare < 64) {
 					int kingSquareY = kingMoveSquare / 8;
 					int kingSquareX = kingMoveSquare - kingSquareY * 8;
 					// Ensure king has moved max of 1 square on x/y axis (to reject indices that have wrapped around side of board)
 					int maxCoordMoveDst = System.Math.Max(System.Math.Abs(x - kingSquareX), System.Math.Abs(y - kingSquareY));
-					if (maxCoordMoveDst == 1)
-					{
+					if (maxCoordMoveDst == 1) {
 						legalKingMoves.Add((byte)kingMoveSquare);
 					}
 				}
@@ -147,25 +136,19 @@ public static class OldPrecomputedMoveData {
 			// Calculate legal pawn captures for white and black
 			List<int> pawnCapturesWhite = new List<int>();
 			List<int> pawnCapturesBlack = new List<int>();
-			if (x > 0)
-			{
-				if (y < 7)
-				{
+			if (x > 0) {
+				if (y < 7) {
 					pawnCapturesWhite.Add(squareIndex + 7);
 				}
-				if (y > 0)
-				{
+				if (y > 0) {
 					pawnCapturesBlack.Add(squareIndex - 9);
 				}
 			}
-			if (x < 7)
-			{
-				if (y < 7)
-				{
+			if (x < 7) {
+				if (y < 7) {
 					pawnCapturesWhite.Add(squareIndex + 9);
 				}
-				if (y > 0)
-				{
+				if (y > 0) {
 					pawnCapturesBlack.Add(squareIndex - 7);
 				}
 			}
@@ -173,21 +156,17 @@ public static class OldPrecomputedMoveData {
 			pawnAttacksBlack[squareIndex] = pawnCapturesBlack.ToArray();
 
 			// Rook moves
-			for (int directionIndex = 0; directionIndex < 4; directionIndex++)
-			{
+			for (int directionIndex = 0; directionIndex < 4; directionIndex++) {
 				int currentDirOffset = directionOffsets[directionIndex];
-				for (int n = 0; n < numSquaresToEdge[squareIndex][directionIndex]; n++)
-				{
+				for (int n = 0; n < numSquaresToEdge[squareIndex][directionIndex]; n++) {
 					int targetSquare = squareIndex + currentDirOffset * (n + 1);
 					rookMoves[squareIndex] |= 1ul << targetSquare;
 				}
 			}
 			// Bishop moves
-			for (int directionIndex = 4; directionIndex < 8; directionIndex++)
-			{
+			for (int directionIndex = 4; directionIndex < 8; directionIndex++) {
 				int currentDirOffset = directionOffsets[directionIndex];
-				for (int n = 0; n < numSquaresToEdge[squareIndex][directionIndex]; n++)
-				{
+				for (int n = 0; n < numSquaresToEdge[squareIndex][directionIndex]; n++) {
 					int targetSquare = squareIndex + currentDirOffset * (n + 1);
 					bishopMoves[squareIndex] |= 1ul << targetSquare;
 				}
@@ -196,21 +175,17 @@ public static class OldPrecomputedMoveData {
 		}
 
 		directionLookup = new int[127];
-		for (int i = 0; i < 127; i++)
-		{
+		for (int i = 0; i < 127; i++) {
 			int offset = i - 63;
 			int absOffset = System.Math.Abs(offset);
 			int absDir = 1;
-			if (absOffset % 9 == 0)
-			{
+			if (absOffset % 9 == 0) {
 				absDir = 9;
 			}
-			else if (absOffset % 8 == 0)
-			{
+			else if (absOffset % 8 == 0) {
 				absDir = 8;
 			}
-			else if (absOffset % 7 == 0)
-			{
+			else if (absOffset % 7 == 0) {
 				absDir = 7;
 			}
 
@@ -221,15 +196,13 @@ public static class OldPrecomputedMoveData {
 		OrthogonalDistance = new int[64, 64];
 		kingDistance = new int[64, 64];
 		CentreManhattanDistance = new int[64];
-		for (int squareA = 0; squareA < 64; squareA++)
-		{
+		for (int squareA = 0; squareA < 64; squareA++) {
 			Coord coordA = new Coord(squareA);
 			int fileDstFromCentre = Max(3 - coordA.file, coordA.file - 4);
 			int rankDstFromCentre = Max(3 - coordA.rank, coordA.rank - 4);
 			CentreManhattanDistance[squareA] = fileDstFromCentre + rankDstFromCentre;
 
-			for (int squareB = 0; squareB < 64; squareB++)
-			{
+			for (int squareB = 0; squareB < 64; squareB++) {
 
 				Coord coordB = new Coord(squareB);
 				int rankDistance = Abs(coordA.rank - coordB.rank);
@@ -240,21 +213,17 @@ public static class OldPrecomputedMoveData {
 		}
 
 		alignMask = new ulong[64, 64];
-		for (int squareA = 0; squareA < 64; squareA++)
-		{
-			for (int squareB = 0; squareB < 64; squareB++)
-			{
+		for (int squareA = 0; squareA < 64; squareA++) {
+			for (int squareB = 0; squareB < 64; squareB++) {
 				Coord cA = new Coord(squareA);
 				Coord cB = new Coord(squareB);
 				Coord delta = cB - cA;
 				Coord dir = new Coord(System.Math.Sign(delta.file), System.Math.Sign(delta.rank));
 				//Coord dirOffset = dirOffsets2D[dirIndex];
 
-				for (int i = -8; i < 8; i++)
-				{
+				for (int i = -8; i < 8; i++) {
 					Coord coord = new Coord(squareA) + dir * i;
-					if (coord.IsInBounds())
-					{
+					if (coord.IsInBounds()) {
 						alignMask[squareA, squareB] |= 1ul << (8*coord.rank+coord.file);
 					}
 				}
@@ -263,21 +232,16 @@ public static class OldPrecomputedMoveData {
 
 
 		dirRayMask = new ulong[8, 64];
-		for (int dirIndex = 0; dirIndex < dirOffsets2D.Length; dirIndex++)
-		{
-			for (int squareIndex = 0; squareIndex < 64; squareIndex++)
-			{
+		for (int dirIndex = 0; dirIndex < dirOffsets2D.Length; dirIndex++) {
+			for (int squareIndex = 0; squareIndex < 64; squareIndex++) {
 				Coord square = new Coord(squareIndex);
 
-				for (int i = 0; i < 8; i++)
-				{
+				for (int i = 0; i < 8; i++) {
 					Coord coord = square + dirOffsets2D[dirIndex] * i;
-					if (coord.IsInBounds())
-					{
+					if (coord.IsInBounds()) {
 						dirRayMask[dirIndex, squareIndex] |= 1ul << (8*coord.rank+coord.file);
 					}
-					else
-					{
+					else {
 						break;
 					}
 				}

@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 
-namespace ChessBot.Engine.Stockfish
-{
-    public class Settings
-    {
+namespace ChessBot.Engine.Stockfish {
+    public class Settings {
         public int Contempt { get; set; }
         public int Threads { get; set; }
         public bool Ponder { get; set; }
@@ -18,12 +16,11 @@ namespace ChessBot.Engine.Stockfish
             int threads = 0,
             bool ponder = false,
             int multiPV = 1,
-            int skillLevel = 20,
+            int skillLevel = 2,
             int moveOverhead = 30,
-            int slowMover = 80,
+            int slowMover = 10,
             bool uciChess960 = false
-        )
-        {
+        ) {
             Contempt = contempt;
             Ponder = ponder;
             Threads = threads;
@@ -34,10 +31,8 @@ namespace ChessBot.Engine.Stockfish
             UCIChess960 = uciChess960;
         }
 
-        public Dictionary<string, string> GetPropertiesAsDictionary()
-        {
-            return new Dictionary<string, string>
-            {
+        public Dictionary<string, string> GetPropertiesAsDictionary() {
+            return new Dictionary<string, string> {
                 ["Contempt"] = Contempt.ToString(),
                 ["Threads"] = Threads.ToString(),
                 ["Ponder"] = Ponder.ToString(),

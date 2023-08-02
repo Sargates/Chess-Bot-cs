@@ -14,6 +14,7 @@ namespace ChessBot.Application {
 		public int oppMovedTo	= -1;
 
 		public int selectedIndex = -1;
+		public bool[] selectedSquares = new bool[64];
 		public Move[] movesForSelected = new Move[0];
 		public Color[] squareColors = new Color[64];
 		public bool isDraggingPiece = false;
@@ -40,31 +41,26 @@ namespace ChessBot.Application {
 			Raylib.DrawRectangle(boardStartX-w, boardStartY - w, 8*squareSize+2*w, 8*squareSize+2*w, BoardTheme.borderCol);
 		}
 
-		public Color GetSquareColor(int index) {
-			Color color = IsLightSquare(index) ? BoardTheme.lightCol : BoardTheme.darkCol;
-
-			if (index == selectedIndex) {
-				color = IsLightSquare(index) ? BoardTheme.selectedLight : BoardTheme.selectedDark;
-			}
-
-
-			return color;
-		}
-
 		public void DrawBoardSquares() {
 
-			foreach (Move move in movesForSelected) {
-				squareColors[move.TargetSquare] = IsLightSquare(move.TargetSquare) ? BoardTheme.legalLight : BoardTheme.legalDark;
-			}
-
-			if (selectedIndex != -1) {
-				squareColors[selectedIndex] = IsLightSquare(selectedIndex) ? BoardTheme.selectedLight : BoardTheme.selectedLight; // TODO fix redundant line
-			}
 
 			for (int i=0;i<64;i++) {
 				Vector2 squarePos = new Vector2(i%8, (7-i/8));
-				// squareColors[i] = GetSquareColor(i);
 				Raylib.DrawRectangle((int)( squareSize * (squarePos.X-4) ), (int)( squareSize * (squarePos.Y-4) ), squareSize, squareSize, squareColors[i]);
+				if (selectedSquares[i]) {
+					Raylib.DrawRectangle((int)( squareSize * (squarePos.X-4) ), (int)( squareSize * (squarePos.Y-4) ), squareSize, squareSize, BoardTheme.selectedHighlight);
+				}
+			}
+			foreach (Move move in movesForSelected) {
+				Vector2 squarePos = new Vector2(move.TargetSquare%8, (7-move.TargetSquare/8));
+				// squareColors[move.TargetSquare] = IsLightSquare(move.TargetSquare) ? BoardTheme.legalLight : BoardTheme.legalDark;
+				Raylib.DrawRectangle((int)( squareSize * (squarePos.X-4) ), (int)( squareSize * (squarePos.Y-4) ), squareSize, squareSize, BoardTheme.legalHighlight);
+			}
+
+			if (selectedIndex != -1) {
+				Vector2 squarePos = new Vector2(selectedIndex%8, (7-selectedIndex/8));
+				// squareColors[selectedIndex] = IsLightSquare(selectedIndex) ? BoardTheme.selectedLight : BoardTheme.selectedLight; // TODO fix redundant line
+				Raylib.DrawRectangle((int)( squareSize * (squarePos.X-4) ), (int)( squareSize * (squarePos.Y-4) ), squareSize, squareSize, BoardTheme.movedFromHighlight);
 			}
 		}
 
@@ -102,8 +98,7 @@ namespace ChessBot.Application {
 		}
 
 		public void DrawPiece(Piece piece, Vector2 posTopLeft, float alpha = 1) { //* Copied from SebLague
-            if (piece != Piece.None)
-            {
+            if (piece != Piece.None) {
                 int type = piece.Type;
                 bool white = piece.Color == Piece.White;
                 Rectangle srcRect = GetPieceTextureRect(type, white);
@@ -113,8 +108,7 @@ namespace ChessBot.Application {
                 Raylib.DrawTexturePro(piecesTexture, srcRect, targRect, new Vector2(0, 0), 0, tint);
             }
         }
-		static Rectangle GetPieceTextureRect(int pieceType, bool isWhite) //* Copied from SebLague
-        {
+		static Rectangle GetPieceTextureRect(int pieceType, bool isWhite) { //* Copied from SebLague
             const int size = 666;
             return new Rectangle(size * pieceImageOrder[pieceType - 1], isWhite ? 0 : size, size, size);
         }

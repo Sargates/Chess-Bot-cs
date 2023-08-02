@@ -42,7 +42,6 @@ namespace ChessBot.Application {
 			}
 
 
-			board.state.UpdateBoardRepr(board);
 
 			// If move is a castle, move rook
 			if (moveFlag == Move.CastleFlag) {
@@ -67,6 +66,8 @@ namespace ChessBot.Application {
 					}
 				}
 			}
+
+			board.state.UpdateBoardRepr(board);
 
 			// If piece moved is a king or a rook, update castle perms
 			if (pieceMoved.Type == Piece.King) {

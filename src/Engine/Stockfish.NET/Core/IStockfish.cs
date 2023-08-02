@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 using ChessBot.Engine.Stockfish;
 
-namespace ChessBot.Engine.Stockfish
-{
-    public interface IStockfish
-    {
+namespace ChessBot.Engine.Stockfish {
+    public interface IStockfish {
         int Depth { get; set; }
         int SkillLevel { get; set; }
         void SetPosition(params string[] move);

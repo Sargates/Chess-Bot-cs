@@ -5,8 +5,7 @@ using ChessBot.Engine.Stockfish;
 using ChessBot.Engine.Stockfish.NET.Models;
 
 namespace ChessBot.Engine.Stockfish {
-    public class Stockfish : IStockfish
-    {
+    public class Stockfish : IStockfish {
         #region private variables
 
         /// <summary>
@@ -45,11 +44,9 @@ namespace ChessBot.Engine.Stockfish {
         /// <summary>
         /// 
         /// </summary>
-        public int SkillLevel
-        {
+        public int SkillLevel {
             get => _skillLevel;
-            set
-            {
+            set {
                 _skillLevel = value;
                 Settings.SkillLevel = SkillLevel;
                 setOption("Skill level", SkillLevel.ToString());
@@ -68,26 +65,22 @@ namespace ChessBot.Engine.Stockfish {
         /// <param name="settings"></param>
         public Stockfish(
             string path,
-            int depth = 2,
-            Settings? settings = null)
-        {
+            int depth = 14,
+            Settings? settings = null) {
             Depth = depth;
             _stockfish = new StockfishProcess(path);
             _stockfish.Start();
             _stockfish.ReadLine();
 
-            if (settings == null)
-            {
+            if (settings == null) {
                 Settings = new Settings();
             }
-            else
-            {
+            else {
                 Settings = settings;
             }
 
             SkillLevel = Settings.SkillLevel;
-            foreach (var property in Settings.GetPropertiesAsDictionary())
-            {
+            foreach (var property in Settings.GetPropertiesAsDictionary()) {
                 setOption(property.Key, property.Value);
             }
 
@@ -103,8 +96,7 @@ namespace ChessBot.Engine.Stockfish {
         /// </summary>
         /// <param name="command"></param>
         /// <param name="estimatedTime"></param>
-        private void send(string command, int estimatedTime = 100)
-        {
+        private void send(string command, int estimatedTime = 100) {
             _stockfish.WriteLine(command);
             _stockfish.Wait(estimatedTime);
         }
@@ -114,8 +106,7 @@ namespace ChessBot.Engine.Stockfish {
         /// </summary>
         /// <returns></returns>
         /// <exception cref="MaxTriesException"></exception>
-		private bool isReady()
-        {
+		private bool isReady() {
 			send("isready");
 			var tries = 0;
 			while (tries < MAX_TRIES) {
@@ -134,11 +125,9 @@ namespace ChessBot.Engine.Stockfish {
         /// <param name="name"></param>
         /// <param name="value"></param>
         /// <exception cref="ApplicationException"></exception>
-        private void setOption(string name, string value)
-        {
+        private void setOption(string name, string value) {
             send($"setoption name {name} value {value}");
-            if (!isReady())
-            {
+            if (!isReady()) {
                 throw new ApplicationException();
             }
         }
@@ -148,8 +137,7 @@ namespace ChessBot.Engine.Stockfish {
         /// </summary>
         /// <param name="moves"></param>
         /// <returns></returns>
-        private string movesToString(string[] moves)
-        {
+        private string movesToString(string[] moves) {
             return string.Join(" ", moves);
         }
 
@@ -157,11 +145,9 @@ namespace ChessBot.Engine.Stockfish {
         /// 
         /// </summary>
         /// <exception cref="ApplicationException"></exception>
-        private void startNewGame()
-        {
+        private void startNewGame() {
             send("ucinewgame");
-            if (!isReady())
-            {
+            if (!isReady()) {
                 throw new ApplicationException();
             }
         }
@@ -169,8 +155,7 @@ namespace ChessBot.Engine.Stockfish {
         /// <summary>
         /// 
         /// </summary>
-        private void go()
-        {
+        private void go() {
             send($"go depth {Depth}");
         }
 
@@ -178,8 +163,7 @@ namespace ChessBot.Engine.Stockfish {
         /// 
         /// </summary>
         /// <param name="time"></param>
-        private void goTime(int time)
-        {
+        private void goTime(int time) {
             send($"go movetime {time}", estimatedTime: time + 100);
         }
 
@@ -187,8 +171,7 @@ namespace ChessBot.Engine.Stockfish {
         /// 
         /// </summary>
         /// <returns></returns>
-        private List<string> readLineAsList()
-        {
+        private List<string> readLineAsList() {
             var data = _stockfish.ReadLine();
 			if (data == null) { data = ""; }
             return data.Split(' ').ToList();
@@ -202,8 +185,7 @@ namespace ChessBot.Engine.Stockfish {
         /// Setup current position
         /// </summary>
         /// <param name="moves"></param>
-        public void SetPosition(params string[] moves)
-        {
+        public void SetPosition(params string[] moves) {
             startNewGame();
             send($"position startpos moves {movesToString(moves)}");
         }
@@ -213,23 +195,19 @@ namespace ChessBot.Engine.Stockfish {
         /// </summary>
         /// <returns></returns>
         /// <exception cref="MaxTriesException"></exception>
-        public string GetBoardVisual()
-        {
+        public string GetBoardVisual() {
             send("d");
             var board = "";
             var lines = 0;
             var tries = 0;
-            while (lines < 17)
-            {
-                if (tries > MAX_TRIES)
-                {
+            while (lines < 17) {
+                if (tries > MAX_TRIES) {
                     throw new MaxTriesException();
                 }
 
                 var data = _stockfish.ReadLine();
 				if (data == null) { data = ""; }
-                if (data.Contains("+") || data.Contains("|"))
-                {
+                if (data.Contains("+") || data.Contains("|")) {
                     lines++;
                     board += $"{data}\n";
                 }
@@ -245,20 +223,16 @@ namespace ChessBot.Engine.Stockfish {
         /// </summary>
         /// <returns></returns>
         /// <exception cref="MaxTriesException"></exception>
-        public string GetFenPosition()
-        {
+        public string GetFenPosition() {
             send("d");
             var tries = 0;
-            while (true)
-            {
-                if (tries > MAX_TRIES)
-                {
+            while (true) {
+                if (tries > MAX_TRIES) {
                     throw new MaxTriesException();
                 }
 
                 var data = readLineAsList();
-                if (data[0] == "Fen:")
-                {
+                if (data[0] == "Fen:") {
                     return string.Join(" ", data.GetRange(1, data.Count - 1));
                 }
 
@@ -270,8 +244,7 @@ namespace ChessBot.Engine.Stockfish {
         /// Set position in fen format
         /// </summary>
         /// <param name="fenPosition"></param>
-        public void SetFenPosition(string fenPosition)
-        {
+        public void SetFenPosition(string fenPosition) {
             startNewGame();
             send($"position fen {fenPosition}");
         }
@@ -281,23 +254,18 @@ namespace ChessBot.Engine.Stockfish {
         /// </summary>
         /// <returns></returns>
         /// <exception cref="MaxTriesException"></exception>
-        public string? GetBestMove()
-        {
+        public string? GetBestMove() {
             go();
             var tries = 0;
-            while (true)
-            {
-                if (tries > MAX_TRIES)
-                {
+            while (true) {
+                if (tries > MAX_TRIES) {
                     throw new MaxTriesException();
                 }
 
                 var data = readLineAsList();
 
-                if (data[0] == "bestmove")
-                {
-                    if (data[1] == "(none)")
-                    {
+                if (data[0] == "bestmove") {
+                    if (data[1] == "(none)") {
                         return null;
                     }
 
@@ -314,22 +282,17 @@ namespace ChessBot.Engine.Stockfish {
         /// <param name="time"></param>
         /// <returns></returns>
         /// <exception cref="MaxTriesException"></exception>
-        public string GetBestMoveTime(int time = 1000)
-        {
+        public string GetBestMoveTime(int time = 1000) {
             goTime(time);
             var tries = 0;
-            while (true)
-            {
-                if (tries > MAX_TRIES)
-                {
+            while (true) {
+                if (tries > MAX_TRIES) {
                     throw new MaxTriesException();
                 }
 
                 var data = readLineAsList();
-                if (data[0] == "bestmove")
-                {
-                    if (data[1] == "(none)")
-                    {
+                if (data[0] == "bestmove") {
+                    if (data[1] == "(none)") {
                         return "";
                     }
 
@@ -344,22 +307,17 @@ namespace ChessBot.Engine.Stockfish {
         /// <param name="moveValue"></param>
         /// <returns></returns>
         /// <exception cref="MaxTriesException"></exception>
-        public bool IsMoveCorrect(string moveValue)
-        {
+        public bool IsMoveCorrect(string moveValue) {
             send($"go depth 1 searchmoves {moveValue}");
             var tries = 0;
-            while (true)
-            {
-                if (tries > MAX_TRIES)
-                {
+            while (true) {
+                if (tries > MAX_TRIES) {
                     throw new MaxTriesException();
                 }
 
                 var data = readLineAsList();
-                if (data[0] == "bestmove")
-                {
-                    if (data[1] == "(none)")
-                    {
+                if (data[0] == "bestmove") {
+                    if (data[1] == "(none)") {
                         return false;
                     }
 
@@ -375,18 +333,15 @@ namespace ChessBot.Engine.Stockfish {
         /// </summary>
         /// <returns></returns>
         /// <exception cref="MaxTriesException"></exception>
-        public Evaluation GetEvaluation()
-        {
+        public Evaluation GetEvaluation() {
             Evaluation evaluation = new Evaluation();
             var fen = GetFenPosition();
             Color compare;
             // fen sequence for white always contains w
-            if (fen.Contains("w"))
-            {
+            if (fen.Contains("w")) {
                 compare = Color.White;
             }
-            else
-            {
+            else {
                 compare = Color.Black;
             }
 
@@ -394,28 +349,21 @@ namespace ChessBot.Engine.Stockfish {
             // Another way we need to somehow limit engine depth? 
             goTime(10000);
             var tries = 0;
-            while (true)
-            {
-                if (tries > MAX_TRIES)
-                {
+            while (true) {
+                if (tries > MAX_TRIES) {
                     throw new MaxTriesException("tries:"+tries+">max-tries:"+MAX_TRIES);
                 }
 
                 var data = readLineAsList();
-                if (data[0] == "info")
-                {
-                    for (int i = 0; i < data.Count; i++)
-                    {
-                        if (data[i] == "score")
-                        {
+                if (data[0] == "info") {
+                    for (int i = 0; i < data.Count; i++) {
+                        if (data[i] == "score") {
                             //don't use ternary operator here for readability
                             int k;
-                            if (compare == Color.White)
-                            {
+                            if (compare == Color.White) {
                                 k = 1;
                             }
-                            else
-                            {
+                            else {
                                 k = -1;
                             }
 
@@ -424,8 +372,7 @@ namespace ChessBot.Engine.Stockfish {
                     }
                 }
 
-                if (data[0] == "bestmove")
-                {
+                if (data[0] == "bestmove") {
                     return evaluation;
                 }
 

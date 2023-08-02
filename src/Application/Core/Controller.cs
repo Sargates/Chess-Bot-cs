@@ -18,8 +18,9 @@ namespace ChessBot.Application {
 		Model model;
 		View view;
 
-		public static void Main() {
+		public Controller() {
 
+			
 			Raylib.SetTraceLogLevel(TraceLogLevel.LOG_WARNING);
 			Raylib.InitWindow(1600, 900, "Chess");
 
@@ -30,14 +31,6 @@ namespace ChessBot.Application {
             cam.offset = new Vector2(screenWidth / 2f, screenHeight / 2f);
             cam.zoom = 1.0f;
 
-			Controller controller = new Controller();
-
-
-			controller.MainLoop();
-		}
-
-
-		public Controller() {
 			screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
 			model = new Model();
 			view = new View(screenSize, model);
@@ -47,6 +40,7 @@ namespace ChessBot.Application {
 			float dt = 0f;
 
 			Stockfish stockfish = new Stockfish("./resources/stockfish-windows-x86-64-avx2.exe");
+			Console.WriteLine(view.ui.selectedSquares[0]);
 			
 
 			while (!Raylib.WindowShouldClose()) {
