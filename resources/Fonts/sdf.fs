@@ -13,13 +13,14 @@ out vec4 finalColor;
 
 // NOTE: Add here your custom variables
 
-void main() {
-    // Texel color fetching from texture sampler
-    // NOTE: Calculate alpha using signed distance field (SDF)
-    float distanceFromOutline = texture(texture0, fragTexCoord).a - 0.5;
-    float distanceChangePerFragment = length(vec2(dFdx(distanceFromOutline), dFdy(distanceFromOutline)));
-    float alpha = smoothstep(-distanceChangePerFragment, distanceChangePerFragment, distanceFromOutline);
+void main()
+{
+	// Texel color fetching from texture sampler
+	// NOTE: Calculate alpha using signed distance field (SDF)
+	float distanceFromOutline = texture(texture0, fragTexCoord).a - 0.5;
+	float distanceChangePerFragment = length(vec2(dFdx(distanceFromOutline), dFdy(distanceFromOutline)));
+	float alpha = smoothstep(-distanceChangePerFragment, distanceChangePerFragment, distanceFromOutline);
 
-    // Calculate final fragment color
-    finalColor = vec4(fragColor.rgb, fragColor.a*alpha);
+	// Calculate final fragment color
+	finalColor = vec4(fragColor.rgb, fragColor.a*alpha);
 }

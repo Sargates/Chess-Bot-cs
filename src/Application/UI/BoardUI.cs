@@ -6,18 +6,19 @@ using ChessBot.Helpers;
 
 namespace ChessBot.Application {
 	public class BoardUI {
-		Texture2D piecesTexture;
-		public int squareSize = 100;
+		public static Texture2D piecesTexture;
+		public static int squareSize = 100;
 		static readonly int[] pieceImageOrder = { 5, 3, 2, 4, 1, 0 };
 
 		public int oppMovedFrom = -1;
 		public int oppMovedTo	= -1;
 
 		public int selectedIndex = -1;
-		public bool[] selectedSquares = new bool[64];
+		public bool[] highlightedSquares = new bool[64];
 		public Move[] movesForSelected = new Move[0];
 		public Color[] squareColors = new Color[64];
 		public bool isDraggingPiece = false;
+		public Animation? activeAnimation;
 
 
 		public BoardUI() {
@@ -25,13 +26,13 @@ namespace ChessBot.Application {
             Raylib.GenTextureMipmaps(ref piecesTexture);
             Raylib.SetTextureWrap(piecesTexture, TextureWrap.TEXTURE_WRAP_CLAMP);
             Raylib.SetTextureFilter(piecesTexture, TextureFilter.TEXTURE_FILTER_BILINEAR);
-			
+
 			for (int i=0;i<64;i++) {
 				squareColors[i] = IsLightSquare(i) ? BoardTheme.lightCol : BoardTheme.darkCol;
 			}
 		}
 
-		public bool IsLightSquare(int i) => ((i%8 + i/8) % 2 == 0);
+		public bool IsLightSquare(int i) => (((i&0b111) + (i>>3)) % 2 == 1);
 
 
 		public void DrawBoardBorder() {
@@ -46,8 +47,9 @@ namespace ChessBot.Application {
 
 			for (int i=0;i<64;i++) {
 				Vector2 squarePos = new Vector2(i%8, (7-i/8));
-				Raylib.DrawRectangle((int)( squareSize * (squarePos.X-4) ), (int)( squareSize * (squarePos.Y-4) ), squareSize, squareSize, squareColors[i]);
-				if (selectedSquares[i]) {
+				Vector2 temp = squareSize * (squarePos - new Vector2(4));
+				Raylib.DrawRectangle((int)( temp.X ), (int)( temp.Y ), squareSize, squareSize, squareColors[i]);
+				if (highlightedSquares[i]) {
 					Raylib.DrawRectangle((int)( squareSize * (squarePos.X-4) ), (int)( squareSize * (squarePos.Y-4) ), squareSize, squareSize, BoardTheme.selectedHighlight);
 				}
 			}
@@ -75,13 +77,17 @@ namespace ChessBot.Application {
 			//* This is kind of nasty to have this inside of the draw method but it's the only way to 
 			//* add some QOL functionality without cluttering up other things
 			for (int i=0; i<64;i++) {
-				int x = i & 0b111; int y = (7-i >> 3);
+				int x = i & 0b111; int y = (7-(i >> 3));
 
 				Vector2 indexVector = new Vector2(x, y);
 
-				Vector2 renderPosition = (indexVector - new Vector2(4, -3)) * squareSize;
+				Vector2 renderPosition = (indexVector - new Vector2(4, 4)) * squareSize;
 
 				if (selectedIndex == i && isDraggingPiece) {
+					continue;
+				}
+
+				if (i == (activeAnimation?.StartIndex ?? -1) || i == (activeAnimation?.EndIndex ?? -1)) {
 					continue;
 				}
 
@@ -97,7 +103,7 @@ namespace ChessBot.Application {
 			movesForSelected = new Move[0];
 		}
 
-		public void DrawPiece(Piece piece, Vector2 posTopLeft, float alpha = 1) { //* Copied from SebLague
+		public static void DrawPiece(Piece piece, Vector2 posTopLeft, float alpha = 1) { //* Copied from SebLague
             if (piece != Piece.None) {
                 int type = piece.Type;
                 bool white = piece.Color == Piece.White;
@@ -112,6 +118,10 @@ namespace ChessBot.Application {
             const int size = 666;
             return new Rectangle(size * pieceImageOrder[pieceType - 1], isWhite ? 0 : size, size, size);
         }
+
+		public void Release() {
+			Raylib.UnloadTexture(piecesTexture);
+		}
 
 	}
 }

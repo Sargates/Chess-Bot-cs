@@ -28,6 +28,10 @@ namespace ChessBot.Engine {
 			"bR", "bQ", "bK", "  ",
 		};
 
+		public override string ToString() {
+			return $"{EnumToRepr[_Value]}";
+		}
+
 		public static implicit operator Piece(int value) {
 			return new Piece { _Value = value };
 		}

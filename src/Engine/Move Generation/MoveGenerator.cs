@@ -30,22 +30,26 @@ namespace ChessBot.Engine {
 				}
 			}
 
-			delta = new Coord(board.forwardDir(color) + 1);
+			delta = new Coord(+1, Math.Sign(board.forwardDir(color)));
 			newPos = coord+delta;
 			Piece pawnAttackPositive = board.GetSquare(newPos.SquareIndex);
-			if ((pawnAttackPositive.Type != Piece.None) && pawnAttackPositive.Color != color ) { // ! add pinning capabilities
-				moves.Add(new Move(index, newPos.SquareIndex));
-			} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index + 1) != color)) {
-				moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
+			if (newPos.IsInBounds()) {
+				if ((pawnAttackPositive.Type != Piece.None) && pawnAttackPositive.Color != color ) { // ! add pinning capabilities
+					moves.Add(new Move(index, newPos.SquareIndex));
+				} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index + 1) != color)) {
+					moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
+				}
 			}
 
-			delta = new Coord(board.forwardDir(color) - 1);
+			delta = new Coord(-1, Math.Sign(board.forwardDir(color)));
 			newPos = coord+delta;
 			Piece pawnAttackNegative = board.GetSquare(newPos.SquareIndex);
-			if ((pawnAttackNegative.Type != Piece.None) && pawnAttackNegative.Color != color ) { // ! add pinning capabilities
-				moves.Add(new Move(index, newPos.SquareIndex));
-			} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index - 1) != color)) {
-				moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
+			if (newPos.IsInBounds()) {
+				if ((pawnAttackNegative.Type != Piece.None) && pawnAttackNegative.Color != color ) { // ! add pinning capabilities
+					moves.Add(new Move(index, newPos.SquareIndex));
+				} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index - 1) != color)) {
+					moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
+				}
 			}
 
 			return moves;
@@ -223,42 +227,43 @@ namespace ChessBot.Engine {
 
 
 		// TODO: Add method to sum number of moves to an given depth (recursive? iterative?)
-		public static Move[] GetMoves(Model model, int index) { // ! check edgecases
+		public static Move[] GetMoves(Board board, int index) { // ! check edgecases
 
 			// !!! Add pinning capabilities
 			// !!! Make sure moving in opposite direction of pin doesnt work; moving in same direction as pin does
 
-			Piece piece = model.board.GetSquare(index);
+			Piece piece = board.GetSquare(index);
 
 			// ConsoleHelper.WriteLine($"PieceEnum = {Convert.ToString(piece, 2)}");
 
 			List<Move> moves = piece.Type switch {
-				Piece.Pawn => GetPawnMoves(model.board, index),
-				Piece.Knight => GetKnightMoves(model.board, index),
-				Piece.Bishop => GetBishopMoves(model.board, index),
-				Piece.Rook => GetRookMoves(model.board, index),
-				Piece.Queen => GetQueenMoves(model.board, index),
-				Piece.King => GetKingMoves(model.board, index),
+				Piece.Pawn => GetPawnMoves(board, index),
+				Piece.Knight => GetKnightMoves(board, index),
+				Piece.Bishop => GetBishopMoves(board, index),
+				Piece.Rook => GetRookMoves(board, index),
+				Piece.Queen => GetQueenMoves(board, index),
+				Piece.King => GetKingMoves(board, index),
 				_ => throw new Exception("Invalid piece type")
 			};
 
 			for (int i=moves.Count-1; i>-1; i--) {
 				Move move = moves[i];
-				model.MakeMove(move, true);
-				int kingPos = piece.Color == Piece.White ? model.board.whiteKingPos : model.board.blackKingPos;
+				board.MakeMove(move, true);
+				int kingPos = piece.Color == Piece.White ? board.whiteKingPos : board.blackKingPos;
 				// Console.WriteLine(kingPos);
-				var checkData = GetCheckData(model.board, kingPos, piece.Color);
+				var checkData = GetCheckData(board, kingPos, piece.Color);
 				bool isInCheck = checkData.Item1;
 				List<(int, int)> gaming = checkData.Item2;
 				List<(int, int)> gaming2  = checkData.Item3;
-				model.UnmakeMove();
+				board.UnmakeMove();
 				if (isInCheck) { moves.RemoveAt(i); }
 			}
 
+
 			// ConsoleHelper.WriteLine($"{Piece.EnumToRepr[piece]}");
-			foreach (Move move in moves) {
-				ConsoleHelper.WriteLine($"{BoardHelper.IndexToSquareName(move.StartSquare)} {BoardHelper.IndexToSquareName(move.TargetSquare)} {move.MoveFlag}", ConsoleColor.DarkMagenta);
-			}
+			// foreach (Move move in moves) {
+			// 	ConsoleHelper.WriteLine($"{BoardHelper.IndexToSquareName(move.StartSquare)} {BoardHelper.IndexToSquareName(move.TargetSquare)} {move.MoveFlag}", ConsoleColor.DarkMagenta);
+			// }
 
 			return moves.ToArray();
 		}
@@ -266,6 +271,7 @@ namespace ChessBot.Engine {
 		public static bool IsSquareAttacked(Board board, int index, int color) {
 			return GetCheckData(board, index, color).Item1;
 		}
+
 
 		public static (bool, List<(int, int)>, List<(int, int)>) GetCheckData(Board board, int index, int color) {
 

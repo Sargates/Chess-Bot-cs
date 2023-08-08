@@ -21,7 +21,8 @@ namespace ChessBot.Application {
 		public Controller() {
 
 			
-			Raylib.SetTraceLogLevel(TraceLogLevel.LOG_WARNING);
+			Raylib.SetConfigFlags(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+			Raylib.SetTraceLogLevel(TraceLogLevel.LOG_FATAL); // Ignore Raylib Errors unless fatal
 			Raylib.InitWindow(1600, 900, "Chess");
 
 			cam = new Camera2D();
@@ -31,47 +32,33 @@ namespace ChessBot.Application {
             cam.offset = new Vector2(screenWidth / 2f, screenHeight / 2f);
             cam.zoom = 1.0f;
 
+
 			screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
 			model = new Model();
-			view = new View(screenSize, model);
+			view = new View(screenSize, model, cam);
+
+			
 		}
 
 		public void MainLoop() {
 			float dt = 0f;
 
 			Stockfish stockfish = new Stockfish("./resources/stockfish-windows-x86-64-avx2.exe");
-			Console.WriteLine(view.ui.selectedSquares[0]);
-			
+
 
 			while (!Raylib.WindowShouldClose()) {
 				dt = Raylib.GetFrameTime();
+
+				if (Raylib.IsWindowResized()) {
+            		view.camera.offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
+					View.screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+				}
 				
 				Raylib.BeginDrawing();
 				Raylib.ClearBackground(new Color(22, 22, 22, 255));
 				Raylib.DrawFPS(10, 10);
-				Raylib.BeginMode2D(cam);
+				view.Update(dt);
 
-				
-				view.Update();
-
-				if (view.waitingOnFish) {
-
-
-					stockfish.SetFenPosition(model.board.state.ToFEN());
-					string bestmove = stockfish.GetBestMoveTime(300);
-					if (bestmove == "") {
-						throw new Exception("Stockfish did not return a best move");
-					}
-
-					Move move = new Move(BoardHelper.NameToSquareIndex(bestmove.Substring(0, 2)), BoardHelper.NameToSquareIndex(bestmove.Substring(2, 2)));
-					Console.WriteLine($"{move.StartSquare}, {move.TargetSquare}");
-					model.MakeMove(move);
-
-					view.waitingOnFish = false;
-				}
-
-
-				Raylib.EndMode2D();
 
 				//* Draw menu here
 
@@ -79,6 +66,10 @@ namespace ChessBot.Application {
 			}
 
 			Raylib.CloseWindow();
+
+			view.Release();
+            UIHelper.Release();
+
 		}
 
 		public void HandleInput() {

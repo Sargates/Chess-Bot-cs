@@ -5,107 +5,108 @@ using ChessBot.Engine.Stockfish;
 using ChessBot.Engine.Stockfish.NET.Models;
 
 namespace ChessBot.Engine.Stockfish {
-    public class Stockfish : IStockfish {
-        #region private variables
+	public class Stockfish : IStockfish {
+		#region private variables
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private const int MAX_TRIES = 200;
+		/// <summary>
+		/// 
+		/// </summary>
+		private const int MAX_TRIES = 200;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private int _skillLevel;
+		/// <summary>
+		/// 
+		/// </summary>
+		private int _skillLevel;
 
-        #endregion
+		#endregion
 
-        # region private properties
+		# region private properties
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private StockfishProcess _stockfish { get; set; }
+		/// <summary>
+		/// 
+		/// </summary>
+		private StockfishProcess _stockfish { get; set; }
 
-        #endregion
+		#endregion
 
-        #region public properties
+		#region public properties
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public Settings Settings { get; set; }
+		/// <summary>
+		/// 
+		/// </summary>
+		public Settings Settings { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Depth { get; set; }
+		/// <summary>
+		/// 
+		/// </summary>
+		public int Depth { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public int SkillLevel {
-            get => _skillLevel;
-            set {
-                _skillLevel = value;
-                Settings.SkillLevel = SkillLevel;
-                setOption("Skill level", SkillLevel.ToString());
-            }
-        }
+		/// <summary>
+		/// 
+		/// </summary>
+		public int SkillLevel {
+			get => _skillLevel;
+			set {
+				_skillLevel = value;
+				Settings.SkillLevel = SkillLevel;
+				setOption("Skill level", SkillLevel.ToString());
+			}
+		}
 
-        #endregion
+		#endregion
 
-        # region constructor
+		# region constructor
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="depth"></param>
-        /// <param name="settings"></param>
-        public Stockfish(
-            string path,
-            int depth = 14,
-            Settings? settings = null) {
-            Depth = depth;
-            _stockfish = new StockfishProcess(path);
-            _stockfish.Start();
-            _stockfish.ReadLine();
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="path"></param>
+		/// <param name="depth"></param>
+		/// <param name="settings"></param>
+		public Stockfish(
+			string path,
+			int depth = 14,
+			Settings? settings = null) {
 
-            if (settings == null) {
-                Settings = new Settings();
-            }
-            else {
-                Settings = settings;
-            }
+			Depth = depth;
+			_stockfish = new StockfishProcess(path);
+			_stockfish.Start();
+			_stockfish.ReadLine();
 
-            SkillLevel = Settings.SkillLevel;
-            foreach (var property in Settings.GetPropertiesAsDictionary()) {
-                setOption(property.Key, property.Value);
-            }
+			if (settings == null) {
+				Settings = new Settings();
+			}
+			else {
+				Settings = settings;
+			}
 
-            startNewGame();
-        }
+			SkillLevel = Settings.SkillLevel;
+			foreach (var property in Settings.GetPropertiesAsDictionary()) {
+				setOption(property.Key, property.Value);
+			}
 
-        #endregion
+			startNewGame();
+		}
 
-        #region private
+		#endregion
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="command"></param>
-        /// <param name="estimatedTime"></param>
-        private void send(string command, int estimatedTime = 100) {
-            _stockfish.WriteLine(command);
-            _stockfish.Wait(estimatedTime);
-        }
+		#region private
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="MaxTriesException"></exception>
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="command"></param>
+		/// <param name="estimatedTime"></param>
+		private void send(string command, int estimatedTime = 100) {
+			_stockfish.WriteLine(command);
+			_stockfish.Wait(estimatedTime);
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns></returns>
+		/// <exception cref="MaxTriesException"></exception>
 		private bool isReady() {
 			send("isready");
 			var tries = 0;
@@ -119,267 +120,267 @@ namespace ChessBot.Engine.Stockfish {
 			throw new MaxTriesException();
 		}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
-        /// <exception cref="ApplicationException"></exception>
-        private void setOption(string name, string value) {
-            send($"setoption name {name} value {value}");
-            if (!isReady()) {
-                throw new ApplicationException();
-            }
-        }
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="name"></param>
+		/// <param name="value"></param>
+		/// <exception cref="ApplicationException"></exception>
+		private void setOption(string name, string value) {
+			send($"setoption name {name} value {value}");
+			if (!isReady()) {
+				throw new ApplicationException();
+			}
+		}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="moves"></param>
-        /// <returns></returns>
-        private string movesToString(string[] moves) {
-            return string.Join(" ", moves);
-        }
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="moves"></param>
+		/// <returns></returns>
+		private string movesToString(string[] moves) {
+			return string.Join(" ", moves);
+		}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <exception cref="ApplicationException"></exception>
-        private void startNewGame() {
-            send("ucinewgame");
-            if (!isReady()) {
-                throw new ApplicationException();
-            }
-        }
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <exception cref="ApplicationException"></exception>
+		private void startNewGame() {
+			send("ucinewgame");
+			if (!isReady()) {
+				throw new ApplicationException();
+			}
+		}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private void go() {
-            send($"go depth {Depth}");
-        }
+		/// <summary>
+		/// 
+		/// </summary>
+		private void go() {
+			send($"go depth {Depth}");
+		}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="time"></param>
-        private void goTime(int time) {
-            send($"go movetime {time}", estimatedTime: time + 100);
-        }
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="time"></param>
+		private void goTime(int time) {
+			send($"go movetime {time}", estimatedTime: time + 100);
+		}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        private List<string> readLineAsList() {
-            var data = _stockfish.ReadLine();
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns></returns>
+		private List<string> readLineAsList() {
+			var data = _stockfish.ReadLine();
 			if (data == null) { data = ""; }
-            return data.Split(' ').ToList();
-        }
+			return data.Split(' ').ToList();
+		}
 
-        #endregion
+		#endregion
 
-        #region public
+		#region public
 
-        /// <summary>
-        /// Setup current position
-        /// </summary>
-        /// <param name="moves"></param>
-        public void SetPosition(params string[] moves) {
-            startNewGame();
-            send($"position startpos moves {movesToString(moves)}");
-        }
+		/// <summary>
+		/// Setup current position
+		/// </summary>
+		/// <param name="moves"></param>
+		public void SetPosition(params string[] moves) {
+			startNewGame();
+			send($"position startpos moves {movesToString(moves)}");
+		}
 
-        /// <summary>
-        /// Get visualisation of current position
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="MaxTriesException"></exception>
-        public string GetBoardVisual() {
-            send("d");
-            var board = "";
-            var lines = 0;
-            var tries = 0;
-            while (lines < 17) {
-                if (tries > MAX_TRIES) {
-                    throw new MaxTriesException();
-                }
+		/// <summary>
+		/// Get visualisation of current position
+		/// </summary>
+		/// <returns></returns>
+		/// <exception cref="MaxTriesException"></exception>
+		public string GetBoardVisual() {
+			send("d");
+			var board = "";
+			var lines = 0;
+			var tries = 0;
+			while (lines < 17) {
+				if (tries > MAX_TRIES) {
+					throw new MaxTriesException();
+				}
 
-                var data = _stockfish.ReadLine();
+				var data = _stockfish.ReadLine();
 				if (data == null) { data = ""; }
-                if (data.Contains("+") || data.Contains("|")) {
-                    lines++;
-                    board += $"{data}\n";
-                }
+				if (data.Contains("+") || data.Contains("|")) {
+					lines++;
+					board += $"{data}\n";
+				}
 
-                tries++;
-            }
+				tries++;
+			}
 
-            return board;
-        }
+			return board;
+		}
 
-        /// <summary>
-        /// Get position in fen format
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="MaxTriesException"></exception>
-        public string GetFenPosition() {
-            send("d");
-            var tries = 0;
-            while (true) {
-                if (tries > MAX_TRIES) {
-                    throw new MaxTriesException();
-                }
+		/// <summary>
+		/// Get position in fen format
+		/// </summary>
+		/// <returns></returns>
+		/// <exception cref="MaxTriesException"></exception>
+		public string GetFenPosition() {
+			send("d");
+			var tries = 0;
+			while (true) {
+				if (tries > MAX_TRIES) {
+					throw new MaxTriesException();
+				}
 
-                var data = readLineAsList();
-                if (data[0] == "Fen:") {
-                    return string.Join(" ", data.GetRange(1, data.Count - 1));
-                }
+				var data = readLineAsList();
+				if (data[0] == "Fen:") {
+					return string.Join(" ", data.GetRange(1, data.Count - 1));
+				}
 
-                tries++;
-            }
-        }
+				tries++;
+			}
+		}
 
-        /// <summary>
-        /// Set position in fen format
-        /// </summary>
-        /// <param name="fenPosition"></param>
-        public void SetFenPosition(string fenPosition) {
-            startNewGame();
-            send($"position fen {fenPosition}");
-        }
+		/// <summary>
+		/// Set position in fen format
+		/// </summary>
+		/// <param name="fenPosition"></param>
+		public void SetFenPosition(string fenPosition) {
+			startNewGame();
+			send($"position fen {fenPosition}");
+		}
 
-        /// <summary>
-        /// Getting best move of current position
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="MaxTriesException"></exception>
-        public string? GetBestMove() {
-            go();
-            var tries = 0;
-            while (true) {
-                if (tries > MAX_TRIES) {
-                    throw new MaxTriesException();
-                }
+		/// <summary>
+		/// Getting best move of current position
+		/// </summary>
+		/// <returns></returns>
+		/// <exception cref="MaxTriesException"></exception>
+		public string? GetBestMove() {
+			go();
+			var tries = 0;
+			while (true) {
+				if (tries > MAX_TRIES) {
+					throw new MaxTriesException();
+				}
 
-                var data = readLineAsList();
+				var data = readLineAsList();
 
-                if (data[0] == "bestmove") {
-                    if (data[1] == "(none)") {
-                        return null;
-                    }
+				if (data[0] == "bestmove") {
+					if (data[1] == "(none)") {
+						return null;
+					}
 
-                    return data[1];
-                }
+					return data[1];
+				}
 
-                tries++;
-            }
-        }
+				tries++;
+			}
+		}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        /// <exception cref="MaxTriesException"></exception>
-        public string GetBestMoveTime(int time = 1000) {
-            goTime(time);
-            var tries = 0;
-            while (true) {
-                if (tries > MAX_TRIES) {
-                    throw new MaxTriesException();
-                }
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="time"></param>
+		/// <returns></returns>
+		/// <exception cref="MaxTriesException"></exception>
+		public string GetBestMoveTime(int time = 1000) {
+			goTime(time);
+			var tries = 0;
+			while (true) {
+				if (tries > MAX_TRIES) {
+					throw new MaxTriesException();
+				}
 
-                var data = readLineAsList();
-                if (data[0] == "bestmove") {
-                    if (data[1] == "(none)") {
-                        return "";
-                    }
+				var data = readLineAsList();
+				if (data[0] == "bestmove") {
+					if (data[1] == "(none)") {
+						return "";
+					}
 
-                    return data[1];
-                }
-            }
-        }
+					return data[1];
+				}
+			}
+		}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="moveValue"></param>
-        /// <returns></returns>
-        /// <exception cref="MaxTriesException"></exception>
-        public bool IsMoveCorrect(string moveValue) {
-            send($"go depth 1 searchmoves {moveValue}");
-            var tries = 0;
-            while (true) {
-                if (tries > MAX_TRIES) {
-                    throw new MaxTriesException();
-                }
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="moveValue"></param>
+		/// <returns></returns>
+		/// <exception cref="MaxTriesException"></exception>
+		public bool IsMoveCorrect(string moveValue) {
+			send($"go depth 1 searchmoves {moveValue}");
+			var tries = 0;
+			while (true) {
+				if (tries > MAX_TRIES) {
+					throw new MaxTriesException();
+				}
 
-                var data = readLineAsList();
-                if (data[0] == "bestmove") {
-                    if (data[1] == "(none)") {
-                        return false;
-                    }
+				var data = readLineAsList();
+				if (data[0] == "bestmove") {
+					if (data[1] == "(none)") {
+						return false;
+					}
 
-                    return true;
-                }
+					return true;
+				}
 
-                tries++;
-            }
-        }
+				tries++;
+			}
+		}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="MaxTriesException"></exception>
-        public Evaluation GetEvaluation() {
-            Evaluation evaluation = new Evaluation();
-            var fen = GetFenPosition();
-            Color compare;
-            // fen sequence for white always contains w
-            if (fen.Contains("w")) {
-                compare = Color.White;
-            }
-            else {
-                compare = Color.Black;
-            }
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns></returns>
+		/// <exception cref="MaxTriesException"></exception>
+		public Evaluation GetEvaluation() {
+			Evaluation evaluation = new Evaluation();
+			var fen = GetFenPosition();
+			Color compare;
+			// fen sequence for white always contains w
+			if (fen.Contains("w")) {
+				compare = Color.White;
+			}
+			else {
+				compare = Color.Black;
+			}
 
-            // I'm not sure this is the good way to handle evaluation of position, but why not?
-            // Another way we need to somehow limit engine depth? 
-            goTime(10000);
-            var tries = 0;
-            while (true) {
-                if (tries > MAX_TRIES) {
-                    throw new MaxTriesException("tries:"+tries+">max-tries:"+MAX_TRIES);
-                }
+			// I'm not sure this is the good way to handle evaluation of position, but why not?
+			// Another way we need to somehow limit engine depth? 
+			goTime(10000);
+			var tries = 0;
+			while (true) {
+				if (tries > MAX_TRIES) {
+					throw new MaxTriesException("tries:"+tries+">max-tries:"+MAX_TRIES);
+				}
 
-                var data = readLineAsList();
-                if (data[0] == "info") {
-                    for (int i = 0; i < data.Count; i++) {
-                        if (data[i] == "score") {
-                            //don't use ternary operator here for readability
-                            int k;
-                            if (compare == Color.White) {
-                                k = 1;
-                            }
-                            else {
-                                k = -1;
-                            }
+				var data = readLineAsList();
+				if (data[0] == "info") {
+					for (int i = 0; i < data.Count; i++) {
+						if (data[i] == "score") {
+							//don't use ternary operator here for readability
+							int k;
+							if (compare == Color.White) {
+								k = 1;
+							}
+							else {
+								k = -1;
+							}
 
-                            evaluation = new Evaluation(data[i + 1], Convert.ToInt32(data[i + 2]) * k);
-                        }
-                    }
-                }
+							evaluation = new Evaluation(data[i + 1], Convert.ToInt32(data[i + 2]) * k);
+						}
+					}
+				}
 
-                if (data[0] == "bestmove") {
-                    return evaluation;
-                }
+				if (data[0] == "bestmove") {
+					return evaluation;
+				}
 
-                tries++;
-            }
-        }
+				tries++;
+			}
+		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

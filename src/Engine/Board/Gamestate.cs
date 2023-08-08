@@ -5,6 +5,8 @@ using ChessBot.Helpers;
 namespace ChessBot.Engine {
 	public struct Gamestate {
 
+		public static readonly string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 		private Stack<Gamestate> history = new Stack<Gamestate>();
 		private Stack<Gamestate> future = new Stack<Gamestate>();
 
