@@ -9,15 +9,23 @@ namespace ChessBot.Application {
 		public static Vector2 screenSize;
 		public Model model;
 		public Camera2D camera;
-		int squareClicked;
 
 		// Square selected on each interaction, -1 for invalid square
 		// { leftDown, leftUp, rightDown, rightUp }
 		public int[] mouseClickInfo = {-1, -1, -1, -1};
-		public static bool leftReleased, leftPressed, rightPressed, rightReleased;
+		// in the format of: leftReleased, leftPressed, rightPressed, rightReleased
+		public static int mouseButtonsClicked; // 0b1111
 		public static int pressedKey=0;
 
+		public List<(int tail, int head)> drawnArrows = new List<(int tail, int head)>();
+
 		public List<IInteractable> pipeline;
+
+		public static bool IsLeftPressed => (View.mouseButtonsClicked & 8) == 8;
+		public static bool IsLeftReleased => (View.mouseButtonsClicked & 4) == 4;
+		public static bool IsRightPressed => (View.mouseButtonsClicked & 2) == 2;
+		public static bool IsRightReleased => (View.mouseButtonsClicked & 1) == 1;
+
 
 
 
@@ -33,7 +41,9 @@ namespace ChessBot.Application {
 
 			Button button = new Button(new Rectangle(40, 600, 200, 50), "Button");
 			button.OnLeftPressed = () => {
+				Piece[] oldBoard = model.board.board.ToArray();
 				model.StartNewGame(Fen.startpos);
+				ui.activeAnimation = new BoardAnimation(oldBoard, model.board.board, .12f);
 			};
 			AddToPipeline(button);
 		}
@@ -46,10 +56,11 @@ namespace ChessBot.Application {
 
 
 		public void Update(float dt) {
-			View.leftPressed = Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT);
-			View.leftReleased = Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT);
-			View.rightPressed = Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT);
-			View.rightReleased = Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_RIGHT);
+			mouseButtonsClicked = 0;
+			mouseButtonsClicked += Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)   ? 8 : 0;
+			mouseButtonsClicked += Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)  ? 4 : 0;
+			mouseButtonsClicked += Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)  ? 2 : 0;
+			mouseButtonsClicked += Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_RIGHT) ? 1 : 0;
 			pressedKey = Raylib.GetKeyPressed();
 
 			Raylib.BeginMode2D(camera);
@@ -78,7 +89,7 @@ namespace ChessBot.Application {
 			if (pressedKey != 0) {
 				HandleKeyboardInput();
 			}
-			if (ui.activeAnimation is null && View.leftPressed || View.leftReleased || View.rightPressed || View.rightReleased) {
+			if (ui.activeAnimation is null && mouseButtonsClicked > 0) {
 				HandleMouseInput();
 			}
 		}
@@ -115,9 +126,12 @@ namespace ChessBot.Application {
 				}
 
 				case (int) KeyboardKey.KEY_P :{
-					foreach (Fen fenString in model.board.stateHistory) {
-						ConsoleHelper.WriteLine($"{fenString}", ConsoleColor.Cyan);
-					}
+					Console.WriteLine(Convert.ToString(model.board.currentFen.castlePrivsBin, 2));
+					// foreach (Fen fenString in model.board.stateHistory) {
+					// 	ConsoleHelper.WriteLine($"{fenString}", ConsoleColor.Cyan);
+					// }
+					// Console.WriteLine(Raylib.GetMousePosition());
+					// Console.WriteLine((new Vector2(ui.selectedIndex & 0b111, 7-(ui.selectedIndex >> 3)) - new Vector2(4, 4)) * BoardUI.squareSize);
 					break;
 				}
 				default: {
@@ -129,7 +143,7 @@ namespace ChessBot.Application {
 		public void HandleMouseInput() {
 			// TODO Test how ineffective it would be to constantly update mousePos and check if mouse is on a square
 			Piece clickedPiece = Piece.None;
-			squareClicked = -1;
+			int squareClicked = -1;
 			Move validMove = new Move(0);
 
 			Vector2 pos = Raylib.GetMousePosition() - screenSize/2;
@@ -155,13 +169,14 @@ namespace ChessBot.Application {
 				}
 			}
 
-			if (View.leftPressed) {
+			if (IsLeftPressed) {
 				mouseClickInfo[0] = squareClicked;
 				ui.highlightedSquares = new bool[64];
 				if (! validMove.IsNull ) { // Case 3
 					ui.DeselectActiveSquare();
+					Piece[] oldState = model.board.board.ToArray();
 					model.board.MakeMove(validMove);
-					ui.activeAnimation = new Animation(validMove.StartSquare, validMove.TargetSquare, model.board.GetSquare(validMove.TargetSquare), .12f);
+					ui.activeAnimation = new BoardAnimation(oldState, model.board.board, .12f);
 					//* ANIMATION HERE
 				} else
 				if (ui.selectedIndex != -1 && squareClicked == ui.selectedIndex) { // Case 5
@@ -186,7 +201,7 @@ namespace ChessBot.Application {
 				}
 			}
 
-			if (View.leftReleased) {
+			if (IsLeftReleased) {
 				mouseClickInfo[1] = squareClicked;
 				ui.isDraggingPiece = false;
 
@@ -198,16 +213,19 @@ namespace ChessBot.Application {
 				mouseClickInfo[0] = -1; mouseClickInfo[1] = -1;
 			}
 
-			if (View.rightPressed) {
+			if (IsRightPressed) {
 				mouseClickInfo[2] = squareClicked;
 				ui.DeselectActiveSquare();
 				ui.isDraggingPiece = false;
 			}
 
-			if (View.rightReleased) {
+			if (IsRightReleased) {
 				mouseClickInfo[3] = squareClicked;
 				if (ui.selectedIndex == -1 && mouseClickInfo[0] == -1) {
 					ui.highlightedSquares[squareClicked] = ! ui.highlightedSquares[squareClicked];
+				} else
+				if (true) {
+					drawnArrows.Add((mouseClickInfo[2], mouseClickInfo[3]));
 				}
 				// Console.WriteLine(string.Join(", ", mouseClickInfo));
 				mouseClickInfo[2] = -1; mouseClickInfo[3] = -1;

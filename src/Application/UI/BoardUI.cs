@@ -18,7 +18,7 @@ namespace ChessBot.Application {
 		public Move[] movesForSelected = new Move[0];
 		public Color[] squareColors = new Color[64];
 		public bool isDraggingPiece = false;
-		public Animation? activeAnimation;
+		public BoardAnimation? activeAnimation;
 
 
 		public BoardUI() {
@@ -76,6 +76,8 @@ namespace ChessBot.Application {
 		public void DrawPiecesOnBoard(Board board) {
 			//* This is kind of nasty to have this inside of the draw method but it's the only way to 
 			//* add some QOL functionality without cluttering up other things
+			float snappingFactor = 0.375f; // Domain: [0, 1]; 0 for no snaping, 1 for snapping within 1 board square
+			Vector2 cachedRenderPos = Vector2.Zero;
 			for (int i=0; i<64;i++) {
 				int x = i & 0b111; int y = (7-(i >> 3));
 
@@ -84,17 +86,29 @@ namespace ChessBot.Application {
 				Vector2 renderPosition = (indexVector - new Vector2(4, 4)) * squareSize;
 
 				if (selectedIndex == i && isDraggingPiece) {
+					cachedRenderPos = renderPosition;
 					continue;
 				}
 
-				if (i == (activeAnimation?.StartIndex ?? -1) || i == (activeAnimation?.EndIndex ?? -1)) {
+				//  this is the control					if there is no animation render anyway
+				//  vvv      vvv single out the 1st bit   					  vvv	
+				if (1ul != ((1ul) & ((activeAnimation?.identicalPieces>>i) ?? 1ul))) {
 					continue;
 				}
 
 				DrawPiece(board.GetSquare(i), renderPosition);
 			}
 			if (selectedIndex != -1 && isDraggingPiece) {
+				Vector2 mousePos = Raylib.GetMousePosition() - View.screenSize/2; // Mouse position in camera space converted to worldspace (centered at the origin)
+				Vector2 renderedPosition = cachedRenderPos + new Vector2(squareSize/2); // center of selected square
+				
+				// Checking if either X or Y is greater than the snappingFactor, in terms of half the square size
+				if (Math.Max(Math.Abs((mousePos - renderedPosition).X), Math.Abs((mousePos - renderedPosition).Y)) < (squareSize/2) * snappingFactor) {
+					DrawPiece(board.GetSquare(selectedIndex), cachedRenderPos);
+					return;
+				}
 				DrawPiece(board.GetSquare(selectedIndex), Raylib.GetMousePosition()-View.screenSize/2-new Vector2(squareSize)/2);
+
 			}
 		}
 

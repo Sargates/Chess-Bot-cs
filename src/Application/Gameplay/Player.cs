@@ -11,6 +11,8 @@ namespace ChessBot.Engine {
 			this.color = color;
 		}
 
-		public void HandleInput() {}
+		public void Think() {
+			
+		}
 	}
 }

@@ -194,6 +194,7 @@ namespace ChessBot.Engine {
 			if (kingSide) {
 				for (int i=0; i<kingSideDeltas.Length; i++) {
 					Coord newPos = coord + kingSideDeltas[i];
+					if (! newPos.IsInBounds()) continue;
 					// ConsoleHelper.WriteLine($"King side, {newPos.SquareIndex}");
 					if (IsSquareAttacked(board, newPos.SquareIndex, piece.Color)) { kingSide = false; break; }
 					if (board.GetSquare(newPos.SquareIndex) != Piece.None) { kingSide = false; break; }
@@ -203,6 +204,7 @@ namespace ChessBot.Engine {
 			if (queenSide) {
 				for (int i=0; i<queenSideDeltas.Length; i++) {
 					Coord newPos = coord + queenSideDeltas[i];
+					if (! newPos.IsInBounds()) continue;
 					// ConsoleHelper.WriteLine($"Queen side, {newPos.SquareIndex}");
 					if (i != 2) { if (IsSquareAttacked(board, newPos.SquareIndex, piece.Color)) { queenSide = false; break; } }
 					if (board.GetSquare(newPos.SquareIndex) != Piece.None) { queenSide = false; break; }

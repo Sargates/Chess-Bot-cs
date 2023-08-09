@@ -31,10 +31,7 @@ namespace ChessBot.Engine {
 				if (board[i] == (Piece.White | Piece.King)) { whiteKingPos = i; }
 				if (board[i] == (Piece.Black | Piece.King)) { blackKingPos = i; }
 			}
-			
-
             Console.WriteLine(this.currentFen.ToFEN());
-
             whiteToMove = this.currentFen.fenColor == 'w';
 		}
 
@@ -47,6 +44,16 @@ namespace ChessBot.Engine {
 			}
 			whiteToMove = currentFen.fenColor == 'w';
 			enPassantIndex = BoardHelper.NameToSquareIndex(currentFen.enpassantSquare);
+		}
+
+		public void UpdateFromState(Fen state) {
+			board = FenToBoard(state.fenBoard);
+			for (int i = 0; i < board.Length; i++) {
+				if (board[i] == (Piece.White | Piece.King)) { whiteKingPos = i; }
+				if (board[i] == (Piece.Black | Piece.King)) { blackKingPos = i; }
+			}
+			whiteToMove = state.fenColor == 'w';
+			enPassantIndex = BoardHelper.NameToSquareIndex(state.enpassantSquare);
 
 		}
 
@@ -161,6 +168,7 @@ namespace ChessBot.Engine {
 			if (! quiet) {
 				currentFen.moveMade = move;
 
+				currentFen.castlePrivsBin &= castlesToRemove;
 				currentFen.enpassantSquare = (enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(enPassantIndex);
 				if (pieceTaken == Piece.None || pieceMoved.Type == Piece.Pawn) { currentFen.halfMoveCount = 0; }
 				else { currentFen.halfMoveCount += 1; }

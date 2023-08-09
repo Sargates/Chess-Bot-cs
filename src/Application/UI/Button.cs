@@ -10,9 +10,9 @@ namespace ChessBot.Application {
 		public Color highlightColor = ColorHelper.HexToColor("#03adfcff");
 		public delegate void ClickHandler();
 		public ClickHandler? OnLeftPressed;
-		public ClickHandler? OnLeftReleasedClick;
+		public ClickHandler? OnLeftReleased;
 		public ClickHandler? OnRightPressed;
-		public ClickHandler? OnRightReleasedClick;
+		public ClickHandler? OnRightReleased;
 
 		public Button(Rectangle rect, string text) {
 			_Rect = rect;
@@ -40,17 +40,17 @@ namespace ChessBot.Application {
 
 		public void Update() {
 			if (! this.IsHoveringOver) { return; }
-			if (View.leftPressed) {
+			if (View.IsLeftPressed) {
 				OnLeftPressed?.Invoke();
 			}
-			if (View.leftReleased) {
-				OnLeftReleasedClick?.Invoke();
+			if (View.IsLeftReleased) {
+				OnLeftReleased?.Invoke();
 			}
-			if (View.rightPressed) {
+			if (View.IsRightPressed) {
 				OnRightPressed?.Invoke();
 			}
-			if (View.rightReleased) {
-				OnRightReleasedClick?.Invoke();
+			if (View.IsRightReleased) {
+				OnRightReleased?.Invoke();
 			}
 		}
 

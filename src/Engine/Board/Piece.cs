@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace ChessBot.Engine {
 	public struct Piece {
 		private int _Value;
@@ -21,6 +23,10 @@ namespace ChessBot.Engine {
 		public int Color => (_Value & ColorMask);
 		public bool IsNull => _Value == None;
 
+		public bool Equals(Piece other) {
+			return Type == other.Type && Color == other.Color;
+		}
+
 		public static readonly string[] EnumToRepr = {
 			"**", "wp", "wN", "wB",
 			"wR", "wQ", "wK", "  ",
@@ -31,6 +37,8 @@ namespace ChessBot.Engine {
 		public override string ToString() {
 			return $"{EnumToRepr[_Value]}";
 		}
+
+		public Piece(int v) { _Value = v; }
 
 		public static implicit operator Piece(int value) {
 			return new Piece { _Value = value };

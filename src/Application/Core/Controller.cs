@@ -37,7 +37,6 @@ namespace ChessBot.Application {
 			model = new Model();
 			view = new View(screenSize, model, cam);
 
-			
 		}
 
 		public void MainLoop() {
@@ -72,8 +71,5 @@ namespace ChessBot.Application {
 
 		}
 
-		public void HandleInput() {
-			
-		}
 	}
 }

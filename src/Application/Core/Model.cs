@@ -8,8 +8,10 @@ namespace ChessBot.Application {
 		public bool enforceColorToMove = false;
 
 		public Model() {
-			board = new Board();
-			// board = new Board("rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq e6 0 5");
+			board = new Board("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+
+			Player whitePlayer = new Player('w');
+			Player blackPlayer = new Player('b');
 		}
 
 		
@@ -23,7 +25,9 @@ namespace ChessBot.Application {
 			//* 
 			//* 
 
+			
 			board = new Board(fenString);
+			
 		}
 
 
