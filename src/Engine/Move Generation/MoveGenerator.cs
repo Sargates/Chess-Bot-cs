@@ -23,7 +23,7 @@ namespace ChessBot.Engine {
 			Coord newPos = coord+delta;
 			Piece pawnOneUp = board.GetSquare(newPos.SquareIndex);
 			if (newPos.IsInBounds() && pawnOneUp == Piece.None) { // ! add pinning capabilities
-				moves.Add(new Move(index, index + board.forwardDir(color)));
+				moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
 				
 				if (BoardHelper.RankIndex(index) == (color == Piece.White ? 1 : 6) && board.GetSquare(index + 2*board.forwardDir(color)) == Piece.None) {
 					moves.Add(new Move(index, index + 2*board.forwardDir(color), Move.PawnTwoUpFlag));
@@ -35,7 +35,7 @@ namespace ChessBot.Engine {
 			Piece pawnAttackPositive = board.GetSquare(newPos.SquareIndex);
 			if (newPos.IsInBounds()) {
 				if ((pawnAttackPositive.Type != Piece.None) && pawnAttackPositive.Color != color ) { // ! add pinning capabilities
-					moves.Add(new Move(index, newPos.SquareIndex));
+					moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
 				} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index + 1) != color)) {
 					moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
 				}
@@ -46,7 +46,7 @@ namespace ChessBot.Engine {
 			Piece pawnAttackNegative = board.GetSquare(newPos.SquareIndex);
 			if (newPos.IsInBounds()) {
 				if ((pawnAttackNegative.Type != Piece.None) && pawnAttackNegative.Color != color ) { // ! add pinning capabilities
-					moves.Add(new Move(index, newPos.SquareIndex));
+					moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
 				} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index - 1) != color)) {
 					moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
 				}
@@ -179,10 +179,10 @@ namespace ChessBot.Engine {
 				}
 			}
 
-			int flagKing = piece.Color == Piece.White ? Gamestate.whiteKingCastle : Gamestate.blackKingCastle;
-			int flagQueen = piece.Color == Piece.White ? Gamestate.whiteQueenCastle : Gamestate.blackQueenCastle;
-			bool kingSide = (board.state.castlePrivsBin & flagKing) == flagKing;
-			bool queenSide = (board.state.castlePrivsBin & flagQueen) == flagQueen;
+			int flagKing = piece.Color == Piece.White ? Fen.whiteKingCastle : Fen.blackKingCastle;
+			int flagQueen = piece.Color == Piece.White ? Fen.whiteQueenCastle : Fen.blackQueenCastle;
+			bool kingSide = (board.currentFen.castlePrivsBin & flagKing) == flagKing;
+			bool queenSide = (board.currentFen.castlePrivsBin & flagQueen) == flagQueen;
 
 			//! Handle Double checks
 
@@ -250,12 +250,12 @@ namespace ChessBot.Engine {
 				Move move = moves[i];
 				board.MakeMove(move, true);
 				int kingPos = piece.Color == Piece.White ? board.whiteKingPos : board.blackKingPos;
-				// Console.WriteLine(kingPos);
 				var checkData = GetCheckData(board, kingPos, piece.Color);
 				bool isInCheck = checkData.Item1;
 				List<(int, int)> gaming = checkData.Item2;
 				List<(int, int)> gaming2  = checkData.Item3;
-				board.UnmakeMove();
+				// Console.WriteLine($"{move}, {isInCheck}");
+				board.UpdateFromState();
 				if (isInCheck) { moves.RemoveAt(i); }
 			}
 

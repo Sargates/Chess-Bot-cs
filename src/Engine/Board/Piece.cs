@@ -22,7 +22,7 @@ namespace ChessBot.Engine {
 		public bool IsNull => _Value == None;
 
 		public static readonly string[] EnumToRepr = {
-			"  ", "wp", "wN", "wB",
+			"**", "wp", "wN", "wB",
 			"wR", "wQ", "wK", "  ",
 			"  ", "bp", "bN", "bB",
 			"bR", "bQ", "bK", "  ",

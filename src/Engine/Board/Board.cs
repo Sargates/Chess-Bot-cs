@@ -5,47 +5,53 @@ namespace ChessBot.Engine {
 	public class Board {
 
 		public Piece[] board;
-		public Gamestate state;
 
 		public bool whiteToMove;
 		public int enPassantIndex;
 
 		public int whiteKingPos;
 		public int blackKingPos;
-		
 
+		public LinkedList<Fen> stateHistory;
+		public LinkedListNode<Fen> currentStateNode;
+		public Fen currentFen;
 
 
 
 		public Board(string fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
 
+			stateHistory = new LinkedList<Fen>();
+			currentStateNode = new LinkedListNode<Fen>(new Fen(fen));
+			stateHistory.AddLast(currentStateNode);
+			currentFen = currentStateNode.Value;
+
 			// TODO: Add FEN string loading, StartNewGame should be in Controller/Model.cs, board should just be able to load a fen string in place
-			state = new Gamestate(fen);
-			board = BoardFromFen(state.fenBoard);
+            board = FenToBoard(this.currentFen.fenBoard);
 			for (int i = 0; i < board.Length; i++) {
 				if (board[i] == (Piece.White | Piece.King)) { whiteKingPos = i; }
 				if (board[i] == (Piece.Black | Piece.King)) { blackKingPos = i; }
 			}
+			
 
+            Console.WriteLine(this.currentFen.ToFEN());
 
-			Console.WriteLine(state.ToFEN());
-
-			whiteToMove = state.fenColor == 'w';
+            whiteToMove = this.currentFen.fenColor == 'w';
 		}
 
 
 		public void UpdateFromState() {
-			board = BoardFromFen(state.fenBoard);
+			board = FenToBoard(currentFen.fenBoard);
 			for (int i = 0; i < board.Length; i++) {
 				if (board[i] == (Piece.White | Piece.King)) { whiteKingPos = i; }
 				if (board[i] == (Piece.Black | Piece.King)) { blackKingPos = i; }
 			}
-			whiteToMove = state.fenColor == 'w';
-			enPassantIndex = BoardHelper.NameToSquareIndex(state.enpassantSquare);
-			
+			whiteToMove = currentFen.fenColor == 'w';
+			enPassantIndex = BoardHelper.NameToSquareIndex(currentFen.enpassantSquare);
+
 		}
 
-		public static Piece[] BoardFromFen(string fen) {
+
+		public static Piece[] FenToBoard(string fen) {
 			Piece[] board = new Piece[64];
 			Piece file = 0; Piece rank = 7;
 			foreach (char c in fen) {
@@ -58,7 +64,7 @@ namespace ChessBot.Engine {
 					continue;
 				}
 
-				board[index] = Gamestate.BoardCharToEnum(c);
+				board[index] = BoardHelper.BoardCharToEnum(c);
 				file += 1;
 			}
 
@@ -120,96 +126,89 @@ namespace ChessBot.Engine {
 				}
 			}
 
-			state.UpdateBoardRepr(this);
-
+			int castlesToRemove = 0b1111;
 			// If piece moved is a king or a rook, update castle perms
 			if (pieceMoved.Type == Piece.King) {
 				if (pieceMoved.Color == Piece.White) {
-					state.RemoveCastle(Gamestate.whiteKingCastle);
-					state.RemoveCastle(Gamestate.whiteQueenCastle);
+					castlesToRemove -= Fen.whiteKingCastle;
+					castlesToRemove -= Fen.whiteQueenCastle;
 				}
 				if (pieceMoved.Color == Piece.Black) {
-					state.RemoveCastle(Gamestate.blackKingCastle);
-					state.RemoveCastle(Gamestate.blackQueenCastle);
+					castlesToRemove -= Fen.blackKingCastle;
+					castlesToRemove -= Fen.blackQueenCastle;
 				}
 			}
 			if (pieceMoved.Type == Piece.Rook) {
 				if (pieceMoved.Color == Piece.White) {
 					if (movedFrom == BoardHelper.a1) {
-						state.RemoveCastle(Gamestate.whiteQueenCastle);
+						castlesToRemove -= Fen.whiteQueenCastle;
 					}
 					if (movedFrom == BoardHelper.h1) {
-						state.RemoveCastle(Gamestate.whiteKingCastle);
+						castlesToRemove -= Fen.whiteKingCastle;
 					}
 				}
 				if (pieceMoved.Color == Piece.Black) {
 					if (movedFrom == BoardHelper.a8) {
-						state.RemoveCastle(Gamestate.blackQueenCastle);
+						castlesToRemove -= Fen.blackQueenCastle;
 					}
 					if (movedFrom == BoardHelper.h8) {
-						state.RemoveCastle(Gamestate.blackKingCastle);
+						castlesToRemove -= Fen.blackKingCastle;
 					}
 				}
 			}
 
-			state.castlePrivs = state.GetCastlePrivs();
-			state.enpassantSquare = (enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(enPassantIndex);
-			if (pieceTaken == Piece.None || pieceMoved.Type == Piece.Pawn) { state.halfMoveCount = 0; }
-			else { state.halfMoveCount += 1; }
-			state.fullMoveCount += 1;
-
 			whiteToMove = !whiteToMove; // ForwardDir / anything related to the active color will be the same up until this point
-			state.fenColor = whiteToMove ? 'w' : 'b';
+			if (! quiet) {
+				currentFen.moveMade = move;
 
-			state.SetRecentMove(move);
+				currentFen.enpassantSquare = (enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(enPassantIndex);
+				if (pieceTaken == Piece.None || pieceMoved.Type == Piece.Pawn) { currentFen.halfMoveCount = 0; }
+				else { currentFen.halfMoveCount += 1; }
+				if (whiteToMove) currentFen.fullMoveCount += 1;
 
-			if (! quiet) { Console.WriteLine(state.ToFEN()); }
-			if (quiet) { state.GetFuture().Clear(); }
-			state.PushHistory();
+				currentFen.fenColor = whiteToMove ? 'w' : 'b';
+
+				BoardHelper.UpdateFenAttachedToBoard(this);
+				
+				PushNewState(this.currentFen);
+			}
 		}
-
 		public void MovePiece(Piece piece, int movedFrom, int movedTo) {
 			//* modify bitboards here
 
 			if (board[movedFrom] == (Piece.White | Piece.King)) { whiteKingPos = movedTo; }
 			if (board[movedFrom] == (Piece.Black | Piece.King)) { blackKingPos = movedTo; }
-			
-			int temp = board[movedTo];
 			board[movedTo] = board[movedFrom];
 			board[movedFrom] = Piece.None;
 		}
 
-
-		public void UnmakeMove() {
-			PopHistory();
-			state.PopFuture();
+		public void PushNewState(Fen newFen) {
+			if (stateHistory.Last == null) {
+				throw new Exception("`stateHistory.Last` is null");
+			}
+			while (stateHistory.Last != currentStateNode) { stateHistory.RemoveLast(); }
+			stateHistory.AddLast(newFen);
+			currentStateNode = stateHistory.Last;
 		}
 
-		
-		public void PopHistory() {
-			if (state.GetHistory().Count <= 1) {
-				Console.WriteLine("Cannot pop history instance, empty history");
-				return;
-			}
-			state.PopHistory().PushFuture();
-			state = state.PeekHistory();
+		public void SetPrevState() {
+			if (currentStateNode.Previous == null) { Console.WriteLine("Cannot get previous state, is null"); return; }
+			currentStateNode = currentStateNode.Previous;
+			currentFen = currentStateNode.Value;
 			UpdateFromState();
-
 		}
-		public void PopFuture() {
-			if (state.GetFuture().Count <= 0) {
-				Console.WriteLine("Cannot pop future instance, empty futures");
-				return;
-			}
-			state.PopFuture().PushHistory();
-			state = state.PeekHistory();
+		public void SetNextState() {
+			if (currentStateNode.Next == null) { Console.WriteLine("Cannot get next state, is null"); return; }
+			currentStateNode = currentStateNode.Next;
+			currentFen = currentStateNode.Value;
 			UpdateFromState();
-
 		}
 		
 		public Piece GetSquare(int index) {
 			if (! (0 <= index && index < 64) ) { throw new Exception("Board index out of bounds"); }
 			return board[index];
 		}
+
+		
 	}
 }

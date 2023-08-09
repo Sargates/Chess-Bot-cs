@@ -1,4 +1,4 @@
-
+using ChessBot.Helpers;
 namespace ChessBot.Engine {
 	public readonly struct Move {
 		
@@ -22,7 +22,6 @@ namespace ChessBot.Engine {
 		public const int targetSquareMask = 0b0000111111000000;
 		public const int flagMask = 0b1111000000000000;
 
-		// ! Must refactor to use a { PieceMoved, PieceTaken } structure to easily implement EnPassant
 		//* Look at SebLague's implementation
 
 		public Move(ushort moveValue) {
@@ -48,6 +47,10 @@ namespace ChessBot.Engine {
 
 		public bool Equals(Move other) {
 			return (this.moveValue & (targetSquareMask | startSquareMask)) == (other.moveValue & (targetSquareMask | startSquareMask));
+		}
+
+		public override string ToString() {
+			return $"{BoardHelper.IndexToSquareName(StartSquare)}{BoardHelper.IndexToSquareName(TargetSquare)}";
 		}
 
 		public static bool operator ==(Move a, Move b) => (a.moveValue & ~flagMask) == (b.moveValue & ~flagMask);

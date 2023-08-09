@@ -33,7 +33,7 @@ namespace ChessBot.Application {
 
 			Button button = new Button(new Rectangle(40, 600, 200, 50), "Button");
 			button.OnLeftPressed = () => {
-				model.StartNewGame(Gamestate.startpos);
+				model.StartNewGame(Fen.startpos);
 			};
 			AddToPipeline(button);
 		}
@@ -75,11 +75,11 @@ namespace ChessBot.Application {
 
 
 
-			if (ui.activeAnimation is null && View.leftPressed || View.leftReleased || View.rightPressed || View.rightReleased) {
-				HandleMouseInput();
-			}
 			if (pressedKey != 0) {
 				HandleKeyboardInput();
+			}
+			if (ui.activeAnimation is null && View.leftPressed || View.leftReleased || View.rightPressed || View.rightReleased) {
+				HandleMouseInput();
 			}
 		}
 
@@ -105,19 +105,19 @@ namespace ChessBot.Application {
 			switch (pressedKey) {
 				case (int) KeyboardKey.KEY_Z :{
 					ui.DeselectActiveSquare();
-					model.board.PopHistory();
+					model.board.SetPrevState();
 					break;
 				}
 				case (int) KeyboardKey.KEY_X :{
 					ui.DeselectActiveSquare();
-					model.board.PopFuture();
+					model.board.SetNextState();
 					break;
 				}
 
 				case (int) KeyboardKey.KEY_P :{
-					// foreach (IInteractable asset in pipeline) {
-					// 	Console.WriteLine(asset);
-					// }
+					foreach (Fen fenString in model.board.stateHistory) {
+						ConsoleHelper.WriteLine($"{fenString}", ConsoleColor.Cyan);
+					}
 					break;
 				}
 				default: {
@@ -194,7 +194,7 @@ namespace ChessBot.Application {
 					ui.DeselectActiveSquare();
 					model.board.MakeMove(validMove);
 				}
-				Console.WriteLine(string.Join(", ", mouseClickInfo));
+				// Console.WriteLine(string.Join(", ", mouseClickInfo));
 				mouseClickInfo[0] = -1; mouseClickInfo[1] = -1;
 			}
 
@@ -209,7 +209,7 @@ namespace ChessBot.Application {
 				if (ui.selectedIndex == -1 && mouseClickInfo[0] == -1) {
 					ui.highlightedSquares[squareClicked] = ! ui.highlightedSquares[squareClicked];
 				}
-				Console.WriteLine(string.Join(", ", mouseClickInfo));
+				// Console.WriteLine(string.Join(", ", mouseClickInfo));
 				mouseClickInfo[2] = -1; mouseClickInfo[3] = -1;
 			}
 

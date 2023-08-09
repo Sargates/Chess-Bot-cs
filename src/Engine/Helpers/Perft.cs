@@ -10,7 +10,7 @@
 
 // 		public static void GetDepth() {
 // 			// Board board = new Board();
-// 			Board board = new Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+// 			Board board = new Board();
 
 // 			depthList[0] = 1;
 // 			CountMove(board, 1);
@@ -35,7 +35,7 @@
 // 			int[] sumList = new int[totalMoves.Count];
 // 			for (int i=0; i<totalMoves.Count; i++) {
 // 				Move move = totalMoves[i];
-// 				board.MakeMove(move, true);
+// 				board.MakeMove(move);
 
 // 				// If move is not illegal
 // 				if (! MoveGenerator.IsSquareAttacked(board, (board.activeColor!=Piece.White ? board.whiteKingPos : board.blackKingPos), board.opponentColour(board.activeColor))) {
@@ -46,8 +46,7 @@
 // 						// Console.WriteLine($"{BoardHelper.IndexToSquareName(move.StartSquare)}{BoardHelper.IndexToSquareName(move.TargetSquare)} {subsequentSum}");
 // 					}
 // 				}
-
-// 				board.UnmakeMove();
+// 				board.SetPrevState();
 // 			}
 
 
