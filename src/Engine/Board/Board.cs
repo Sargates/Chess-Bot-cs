@@ -1,3 +1,4 @@
+using ChessBot.Application;
 using ChessBot.Helpers;
 
 namespace ChessBot.Engine {
@@ -215,9 +216,9 @@ namespace ChessBot.Engine {
 
 				currentFen.castlePrivsBin &= castlesToRemove;
 				currentFen.enpassantSquare = (enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(enPassantIndex);
-				if (pieceTaken == Piece.None || pieceMoved.Type == Piece.Pawn) { currentFen.halfMoveCount = 0; }
+				if (pieceTaken != Piece.None || pieceMoved.Type == Piece.Pawn) { currentFen.halfMoveCount = 0; }
 				else { currentFen.halfMoveCount += 1; }
-				if (whiteToMove) currentFen.fullMoveCount += 1;
+				if (tempWhiteToMove) currentFen.fullMoveCount += 1;
 
 				currentFen.fenColor = tempWhiteToMove ? 'w' : 'b';
 				BoardHelper.UpdateFenAttachedToBoard(this);
@@ -250,12 +251,17 @@ namespace ChessBot.Engine {
 			currentStateNode = currentStateNode.Previous;
 			currentFen = currentStateNode.Value;
 			UpdateFromState();
+			Controller.whitePlayer.UCI?.RaiseManualUpdateFlag();
+			Controller.blackPlayer.UCI?.RaiseManualUpdateFlag();
+
 		}
 		public void SetNextState() {
 			if (currentStateNode.Next == null) { Console.WriteLine("Cannot get next state, is null"); return; }
 			currentStateNode = currentStateNode.Next;
 			currentFen = currentStateNode.Value;
 			UpdateFromState();
+			Controller.whitePlayer.UCI?.RaiseManualUpdateFlag();
+			Controller.blackPlayer.UCI?.RaiseManualUpdateFlag();			
 		}
 		
 		public Piece GetSquare(int index) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////
-// Most of this is taken from Stockfish.NET
+// Most of this is taken from Stockfish.NET (see license)
 // The only real changes are to make it compatible with my engine
 /////////////////////////////////////////////////////////////////////
 
@@ -185,6 +185,29 @@ public class UCIEngine {
 
 			tries++;
 		}
+	}
+
+	public string GetBoardVisual() {
+		send("d");
+		var board = "";
+		var lines = 0;
+		var tries = 0;
+		while (lines < 17) {
+			if (tries > MAX_TRIES) {
+				throw new Exception("Max tries Exceeded");
+			}
+
+			var data = ReadLine();
+			if (data == null) { data = ""; }
+			if (data.Contains("+") || data.Contains("|")) {
+				lines++;
+				board += $"{data}\n";
+			}
+
+			tries++;
+		}
+
+		return board;
 	}
 
 	public Evaluation GetEvaluation() {

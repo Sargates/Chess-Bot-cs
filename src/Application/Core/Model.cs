@@ -28,6 +28,10 @@ namespace ChessBot.Application {
 
 			board = new Board(fenString);
 			ConsoleHelper.WriteLine($"\nNew game started\nFEN: {fenString}", ConsoleColor.Yellow);
+			Controller.whitePlayer.UCI?.RaiseManualUpdateFlag();
+			Controller.blackPlayer.UCI?.RaiseManualUpdateFlag();
+			
+			
 		}
 
 		public void Update() {

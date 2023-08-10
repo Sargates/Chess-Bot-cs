@@ -18,8 +18,8 @@ namespace ChessBot.Application {
 		public static Random random = new Random();
 		
 		public bool SuspendPlay = false;
-		ChessPlayer whitePlayer;
-		ChessPlayer blackPlayer;
+		public static ChessPlayer whitePlayer = new ChessPlayer();
+		public static ChessPlayer blackPlayer = new ChessPlayer();
 
 		// Square selected on each interaction, -1 for invalid square
 		// { leftDown, leftUp, rightDown, rightUp }
@@ -44,7 +44,6 @@ namespace ChessBot.Application {
 
 		public Controller() {
 
-			
 			Raylib.SetConfigFlags(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 			Raylib.SetTraceLogLevel(TraceLogLevel.LOG_FATAL); // Ignore Raylib Errors unless fatal
 			Raylib.InitWindow(1600, 900, "Chess");
@@ -62,10 +61,10 @@ namespace ChessBot.Application {
 			model = new Model();
 			view = new View(screenSize, model, cam);
 
-			ChessPlayer.OnMoveChosen += MakeMove;
+			Player.OnMoveChosen += MakeMove;
 
-			whitePlayer = new ChessPlayer();
-			blackPlayer = new UCIPlayer('b', "stockfish-windows-x86-64-avx2.exe", model.board);
+			whitePlayer = new ChessPlayer(new Player('w'), 60.0f);
+			blackPlayer = new ChessPlayer(new ComputerPlayer('b', model), 60.0f);
 
 
 
@@ -225,7 +224,7 @@ namespace ChessBot.Application {
 					view.ui.DeselectActiveSquare();
 					Piece[] old = model.board.board.ToArray();
 					model.board.SetPrevState();
-					model.board.SetPrevState();
+					// model.board.SetPrevState();
 					view.ui.activeAnimation = new BoardAnimation(old, model.board.board, 0.08f);
 					break;
 				}
@@ -233,7 +232,7 @@ namespace ChessBot.Application {
 					view.ui.DeselectActiveSquare();
 					Piece[] old = model.board.board.ToArray();
 					model.board.SetNextState();
-					model.board.SetNextState();
+					// model.board.SetNextState();
 					view.ui.activeAnimation = new BoardAnimation(old, model.board.board, 0.08f);
 					break;
 				}
@@ -248,13 +247,23 @@ namespace ChessBot.Application {
 					break;
 				}
 				case (int) KeyboardKey.KEY_O :{
-					foreach(Fen state in model.board.stateHistory) {
-						Console.WriteLine($"{state} {state.moveMade}");
+					LinkedListNode<Fen>? currNode = model.board.stateHistory.First;
+					while (currNode != null) {
+						if (currNode == model.board.currentStateNode) {
+							ConsoleHelper.WriteLine($"{currNode.Value} {currNode.Value.moveMade}", ConsoleColor.Red);
+						} else
+						if (currNode == model.board.currentStateNode.Previous || currNode == model.board.currentStateNode.Next) {
+							ConsoleHelper.WriteLine($"{currNode.Value} {currNode.Value.moveMade}", ConsoleColor.Yellow);
+						} else {
+							ConsoleHelper.WriteLine($"{currNode.Value} {currNode.Value.moveMade}");
+						}
+						currNode = currNode.Next;
 					}
 					break;
 				}
 				case (int) KeyboardKey.KEY_I :{
-					Console.WriteLine(model.board.currentStateNode.Value);
+					Console.WriteLine(blackPlayer.UCI?.engine.GetBoardVisual());
+					// Console.WriteLine($"Current player: {ActivePlayer}, {ActivePlayer.IsSearching}");
 					break;
 				}
 				default: {
@@ -266,16 +275,18 @@ namespace ChessBot.Application {
 		public void MakeMove(Move move, bool animate=true) {
 			if (! move.IsNull) { // When null move is attempted, it's assumed it's checkmate, active color is the loser
 				ActivePlayer.IsSearching = false;
-				if (animate) {
-					Piece[] oldState = model.board.board.ToArray();
-					model.board.MakeMove(move);
-					view.ui.activeAnimation = new BoardAnimation(oldState, model.board.board, .12f);
-					return;
-				}
+				Piece[] oldState = model.board.board.ToArray();
 				model.board.MakeMove(move);
+				if (animate) {
+					view.ui.activeAnimation = new BoardAnimation(oldState, model.board.board, .12f);
+				}
 				return;
 			}
 
+			SuspendPlay = true;
+
+			ConsoleHelper.WriteLine("Checkmate!", ConsoleColor.DarkBlue);
+			ConsoleHelper.WriteLine($"Winner: {(ActivePlayer.color == 'w' ? 'b' : 'w')}, Loser: {ActivePlayer.color}", ConsoleColor.DarkBlue);
 			// Handle Checkmate
 		}
 
