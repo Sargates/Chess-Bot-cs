@@ -4,6 +4,7 @@ namespace ChessBot.Engine {
 	
 	public class Board {
 
+		public Piece[] prevBoard;
 		public Piece[] board;
 
 		public bool whiteToMove;
@@ -19,6 +20,7 @@ namespace ChessBot.Engine {
 
 
 		public Board(string fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
+			if (fen == "") fen = Fen.startpos;
 
 			stateHistory = new LinkedList<Fen>();
 			currentStateNode = new LinkedListNode<Fen>(new Fen(fen));
@@ -27,12 +29,13 @@ namespace ChessBot.Engine {
 
 			// TODO: Add FEN string loading, StartNewGame should be in Controller/Model.cs, board should just be able to load a fen string in place
             board = FenToBoard(this.currentFen.fenBoard);
+			prevBoard = board;
 			for (int i = 0; i < board.Length; i++) {
 				if (board[i] == (Piece.White | Piece.King)) { whiteKingPos = i; }
 				if (board[i] == (Piece.Black | Piece.King)) { blackKingPos = i; }
 			}
-            Console.WriteLine(this.currentFen.ToFEN());
             whiteToMove = this.currentFen.fenColor == 'w';
+
 		}
 
 
@@ -83,6 +86,35 @@ namespace ChessBot.Engine {
         public int opponentColour(int color) => whiteToMove ? Piece.Black : Piece.White;
 		public int forwardDir(int color) => color == Piece.White ? 8 : -8;
 
+		public string GetUCIGameFormat() {
+
+			LinkedListNode<Fen>? currNode = stateHistory.First;
+			string o = "";
+			if (currNode is null) {
+				Console.WriteLine("`GetUCIGameFormat` returned default");
+				return "position startpos";
+			}
+
+			if (currNode.Value.isStartPos) {
+				o += $"position startpos ";
+			} else if (! currNode.Value.isStartPos) {
+				o += $"position fen {currNode.Value.ToFEN()} ";
+			}
+			if (! currNode.Value.moveMade.IsNull) {
+				o += $"moves {currNode.Value.moveMade}";
+			}
+			currNode = currNode.Next;
+
+			while (currNode != null) {
+				if (currNode.Value.moveMade.IsNull) break;
+
+				o += $" {currNode.Value.moveMade}";
+				currNode = currNode.Next;
+			}
+
+			return o;
+		}
+
 		public void MakeMove(Move move, bool quiet = false) { //* Wrapper method for MovePiece, calls MovePiece and handles things like board history, 50 move rule, 3 move repition, 
 			int movedFrom = move.StartSquare;
 			int movedTo = move.TargetSquare;
@@ -105,8 +137,17 @@ namespace ChessBot.Engine {
 			}
 
 			// Is a promotion
-			if (pieceMoved.Type == Piece.Pawn && BoardHelper.RankIndex(movedTo) == (pieceMoved.Color==Piece.White ? 7 : 0)) {
-				board[movedTo] = Piece.Queen|pieceMoved.Color;
+			if (moveFlag == Move.PromoteToQueenFlag) {
+				board[movedTo] = pieceMoved.Color|Piece.Queen;
+			}
+			if (moveFlag == Move.PromoteToKnightFlag) {
+				board[movedTo] = pieceMoved.Color|Piece.Knight;
+			}
+			if (moveFlag == Move.PromoteToRookFlag) {
+				board[movedTo] = pieceMoved.Color|Piece.Rook;
+			}
+			if (moveFlag == Move.PromoteToBishopFlag) {
+				board[movedTo] = pieceMoved.Color|Piece.Bishop;
 			}
 
 			// If move is a castle, move rook
@@ -164,9 +205,13 @@ namespace ChessBot.Engine {
 				}
 			}
 
-			whiteToMove = !whiteToMove; // ForwardDir / anything related to the active color will be the same up until this point
+			bool tempWhiteToMove = !whiteToMove; // ForwardDir / anything related to the active color will be the same up until this point
 			if (! quiet) {
-				currentFen.moveMade = move;
+				Fen temp = currentStateNode.Value;
+				temp.moveMade = move;
+				currentStateNode.Value = temp;
+
+				currentFen = new Fen(currentFen.ToFEN());
 
 				currentFen.castlePrivsBin &= castlesToRemove;
 				currentFen.enpassantSquare = (enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(enPassantIndex);
@@ -174,12 +219,12 @@ namespace ChessBot.Engine {
 				else { currentFen.halfMoveCount += 1; }
 				if (whiteToMove) currentFen.fullMoveCount += 1;
 
-				currentFen.fenColor = whiteToMove ? 'w' : 'b';
-
+				currentFen.fenColor = tempWhiteToMove ? 'w' : 'b';
 				BoardHelper.UpdateFenAttachedToBoard(this);
-				
+
 				PushNewState(this.currentFen);
 			}
+			whiteToMove = tempWhiteToMove; // Need to change whiteToMove after pushing state to fix threading issues between two computer opponents
 		}
 		public void MovePiece(Piece piece, int movedFrom, int movedTo) {
 			//* modify bitboards here
@@ -201,6 +246,7 @@ namespace ChessBot.Engine {
 
 		public void SetPrevState() {
 			if (currentStateNode.Previous == null) { Console.WriteLine("Cannot get previous state, is null"); return; }
+			
 			currentStateNode = currentStateNode.Previous;
 			currentFen = currentStateNode.Value;
 			UpdateFromState();

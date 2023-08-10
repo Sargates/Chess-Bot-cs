@@ -94,20 +94,19 @@ namespace ChessBot.Helpers {
 			for (int i=0; i<8;i++) {
 				for (int j=0; j<8; j++) {
 					int index = 8*(7-i)+j;
-					if (index%8==0 && index!=56) {
-						if (gap != 0) { o += $"{gap}"; }
-						o += '/';
-						gap = 0;
-					}
 					int pieceEnum = board.GetSquare(index);
 					if (pieceEnum == Piece.None) {
 						gap += 1;
 						continue;
-					}
+					} // Passes guard clause if square is not empty
 					if (gap != 0) { o += $"{gap}"; }
 					o += $"{BoardEnumToChar(pieceEnum)}";
 					gap = 0;
-
+				}
+				if (gap != 0) { o += $"{gap}"; }
+				if (i!=7) {
+					o += '/';
+					gap = 0;
 				}
 			}
 

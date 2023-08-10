@@ -50,7 +50,15 @@ namespace ChessBot.Engine {
 		}
 
 		public override string ToString() {
-			return $"{BoardHelper.IndexToSquareName(StartSquare)}{BoardHelper.IndexToSquareName(TargetSquare)}";
+			if (IsNull) return "null";
+			string promoChar = MoveFlag switch {
+				PromoteToQueenFlag => "q",
+				PromoteToBishopFlag => "b",
+				PromoteToKnightFlag => "n",
+				PromoteToRookFlag => "r",
+				_ => ""
+			};
+			return $"{BoardHelper.IndexToSquareName(StartSquare)}{BoardHelper.IndexToSquareName(TargetSquare)}{promoChar}";
 		}
 
 		public static bool operator ==(Move a, Move b) => (a.moveValue & ~flagMask) == (b.moveValue & ~flagMask);

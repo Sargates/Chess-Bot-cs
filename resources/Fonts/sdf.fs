@@ -13,8 +13,7 @@ out vec4 finalColor;
 
 // NOTE: Add here your custom variables
 
-void main()
-{
+void main() {
 	// Texel color fetching from texture sampler
 	// NOTE: Calculate alpha using signed distance field (SDF)
 	float distanceFromOutline = texture(texture0, fragTexCoord).a - 0.5;

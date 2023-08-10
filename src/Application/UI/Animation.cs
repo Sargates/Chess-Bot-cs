@@ -14,8 +14,8 @@ namespace ChessBot.Application {
 			StartIndex = start;
 			EndIndex = end;
 
-			StartPos = BoardUI.squareSize*(new Vector2(start & 0b111, (7-(start>>3))) - new Vector2(4));
-			EndPos = BoardUI.squareSize*(new Vector2(end & 0b111, (7-(end>>3))) - new Vector2(4));
+			StartPos = BoardUI.squareSize*(new Vector2(start & 0b111, (7-(start>>3))) - new Vector2(3.5f));
+			EndPos = BoardUI.squareSize*(new Vector2(end & 0b111, (7-(end>>3))) - new Vector2(3.5f));
 
 			TotalTime = t;
 			ElapsedTime = 0f;
@@ -24,12 +24,15 @@ namespace ChessBot.Application {
 
 		public float LerpTime => ElapsedTime/TotalTime;
 
-		public void Draw() {
+		public void Draw(bool isFlipped) {
 			// Draw piece at position
 			float t = LerpTime;
+			Vector2 end = EndPos;
+			Vector2 start = StartPos;
+			if (isFlipped) { start *= -1; end *= -1; }
 
-			// BoardUI.DrawPiece(Piece.Bishop, new Vector2(400,400));
-			BoardUI.DrawPiece(piece, (t*EndPos)+(1-t)*StartPos);
+			
+			BoardUI.DrawPiece(piece, (t*end)+((1-t)*start));
 		}
 		public void Update(float dt) {
 			// Update T [0, 1]

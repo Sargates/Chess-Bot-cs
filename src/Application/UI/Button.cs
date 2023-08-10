@@ -23,6 +23,7 @@ namespace ChessBot.Application {
 			this.text = text;
 			this.color = color;
 		}
+		public Button(Rectangle rect, string text, string color) : this(rect, text, ColorHelper.HexToColor(color)) {}
 
 		public Vector2 Size => new Vector2(_Rect.width, _Rect.height);
 		public Vector2 Position => new Vector2(_Rect.x, _Rect.y);
@@ -40,16 +41,16 @@ namespace ChessBot.Application {
 
 		public void Update() {
 			if (! this.IsHoveringOver) { return; }
-			if (View.IsLeftPressed) {
+			if (Controller.IsLeftPressed) {
 				OnLeftPressed?.Invoke();
 			}
-			if (View.IsLeftReleased) {
+			if (Controller.IsLeftReleased) {
 				OnLeftReleased?.Invoke();
 			}
-			if (View.IsRightPressed) {
+			if (Controller.IsRightPressed) {
 				OnRightPressed?.Invoke();
 			}
-			if (View.IsRightReleased) {
+			if (Controller.IsRightReleased) {
 				OnRightReleased?.Invoke();
 			}
 		}

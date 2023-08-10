@@ -1,18 +1,9 @@
-using Raylib_cs;
+using ChessBot.Engine;
+namespace ChessBot.Application;
 
-
-namespace ChessBot.Engine {
-	public readonly struct Player {
-		public readonly char color;
-		public readonly char forward;
-		// public readonly char ;
-
-		public Player(char color) {
-			this.color = color;
-		}
-
-		public void Think() {
-			
-		}
-	}
+public class Player {
+	
+	public bool ShouldSearch;
+	public bool ExitFlag;
+	public bool IsThreaded;
 }

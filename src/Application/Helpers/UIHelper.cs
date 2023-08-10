@@ -34,7 +34,7 @@ namespace ChessBot.Helpers {
                 {
                     const int baseSize = 64;
                     uint fileSize = 0;
-                    var fileData = Raylib.LoadFileData(GetResourcePath("Fonts", fontName), ref fileSize);
+                    var fileData = Raylib.LoadFileData(FileHelper.GetResourcePath("Fonts", fontName), ref fileSize);
                     Font fontSdf = default;
                     fontSdf.baseSize = baseSize;
                     fontSdf.glyphCount = 95;
@@ -48,9 +48,9 @@ namespace ChessBot.Helpers {
                     Raylib.SetTextureFilter(fontSdf.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
                     UIHelper.fontSdf = fontSdf;
                 }
-                shader = Raylib.LoadShader("", GetResourcePath("Fonts", "sdf.fs"));
+                shader = Raylib.LoadShader("", FileHelper.GetResourcePath("Fonts", "sdf.fs"));
             }
-            font = Raylib.LoadFontEx(GetResourcePath("Fonts", fontName), 128, null, 0);
+            font = Raylib.LoadFontEx(FileHelper.GetResourcePath("Fonts", fontName), 128, null, 0);
         }
 
         public static void DrawText(string text, Vector2 pos, int size, int spacing, Color col, AlignH alignH = AlignH.Left, AlignV alignV = AlignV.Centre)
@@ -96,10 +96,6 @@ namespace ChessBot.Helpers {
 			return mousePos.X >= rec.x && mousePos.Y >= rec.y && mousePos.X <= rec.x + rec.width && mousePos.Y <= rec.y + rec.height;
 		}
 
-		public static string GetResourcePath(params string[] localPath) {
-			return Path.Combine(Directory.GetCurrentDirectory(), "resources", Path.Combine(localPath));
-		}
-
 		public static float Scale(float val, int referenceResolution = referenceResolution) {
 			return Raylib.GetScreenWidth() / (float)referenceResolution * val;
 		}
@@ -114,8 +110,7 @@ namespace ChessBot.Helpers {
 			return new Vector2(x, y);
 		}
 
-		public static void Release()
-		{
+		public static void Release() {
 		    Raylib.UnloadFont(font);
 		    if (SDF_Enabled)
 		    {

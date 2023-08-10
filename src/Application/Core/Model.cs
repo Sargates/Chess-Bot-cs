@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ChessBot.Engine;
 using ChessBot.Helpers;
 
@@ -6,18 +7,18 @@ namespace ChessBot.Application {
 
 		public Board board;
 		public bool enforceColorToMove = false;
+        public readonly string[] botMatchStartFens;
+
 
 		public Model() {
-			board = new Board("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+			StartNewGame();
 
-			Player whitePlayer = new Player('w');
-			Player blackPlayer = new Player('b');
+			Debug.Assert(board != null);
+            botMatchStartFens = FileHelper.ReadResourceFile("Fens.txt").Split('\n');
 		}
 
-		
 
-
-
+		public void StartNewGame() { StartNewGame(Fen.startpos); }
 		public void StartNewGame(string fenString) {
 			//* Instantiate starting gamestate
 			//* Instantiate new Board passing starting gamestate
@@ -25,10 +26,15 @@ namespace ChessBot.Application {
 			//* 
 			//* 
 
-			
 			board = new Board(fenString);
+			ConsoleHelper.WriteLine($"\nNew game started\nFEN: {fenString}", ConsoleColor.Yellow);
+		}
+
+		public void Update() {
 			
 		}
+
+		
 
 
 	}

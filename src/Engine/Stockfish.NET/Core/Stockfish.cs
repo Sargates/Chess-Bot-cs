@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ChessBot.Engine.Stockfish;
 using ChessBot.Engine.Stockfish.NET.Models;
+using ChessBot.Helpers;
 
 namespace ChessBot.Engine.Stockfish {
 	public class Stockfish : IStockfish {
@@ -67,6 +68,7 @@ namespace ChessBot.Engine.Stockfish {
 			string path,
 			int depth = 14,
 			Settings? settings = null) {
+			path = FileHelper.GetResourcePath(path);
 
 			Depth = depth;
 			_stockfish = new StockfishProcess(path);

@@ -6,8 +6,9 @@ namespace ChessBot.Engine {
 	public struct Fen {
 
 		public static readonly string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+		public readonly bool isStartPos = false;
 
-		public Move? moveMade; // Move made on current state, current state + moveMade yields new FEN string
+		public Move moveMade; // Move made on current state, current state + moveMade yields new FEN string
 		public string fenBoard;
 		public char fenColor;
 		public int castlePrivsBin;
@@ -34,6 +35,7 @@ namespace ChessBot.Engine {
 		public const int blackQueenCastle = 0b0001;
 
 		public Fen(string fenString) {
+			if (fenString == startpos) isStartPos = true;
 			String[] splitFenString = fenString.Split(' ');
 
 			try {
