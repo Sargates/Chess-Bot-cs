@@ -11,17 +11,18 @@ namespace ChessBot.Application;
 
 public class UCIEngine {
 	private const int MAX_TRIES = 200;
-	private int _skillLevel;
 	public int Depth;
 	public UCISettings Settings;
-	public int SkillLevel {
-		get => _skillLevel;
+	private int _elo;
+	public int Elo {
+		get => _elo;
 		set {
-			_skillLevel = value;
-			Settings.SkillLevel = SkillLevel;
-			setOption("Skill level", SkillLevel.ToString());
+			_elo = value;
+			Settings.Elo = Elo;
+			setOption("UCI_Elo", Elo.ToString());
 		}
 	}
+	public void SetElo(int rating) { Elo = rating; Console.WriteLine($"Fish Elo set to {Elo}"); }
 	public char color;
 	private ProcessStartInfo _processStartInfo;
 	private Process _process;
@@ -30,7 +31,7 @@ public class UCIEngine {
 
 	public UCIEngine(
 			string pathToExe,
-			int depth = 14,
+			int depth = 18,
 			UCISettings? settings = null) {
 		_processStartInfo = new ProcessStartInfo {
 			FileName = FileHelper.GetResourcePath(pathToExe),
@@ -49,7 +50,7 @@ public class UCIEngine {
 		
 		_process.Start();
 		ReadLine(); // Reads the buffer output when you launch stockfish
-		SkillLevel = Settings.SkillLevel;
+		Elo = Settings.Elo;
 
 		foreach (var property in Settings.GetPropertiesAsDictionary()) {
 			setOption(property.Key, property.Value);
@@ -150,18 +151,23 @@ public class UCIEngine {
 	public string GetBestMoveTime(int time = 1000) {
 		goTime(time);
 		var tries = 0;
+		// ConsoleHelper.WriteLine("Start Stockfish output", ConsoleColor.DarkRed);
 		while (true) {
 			if (tries > MAX_TRIES) {
 				throw new Exception("Max tries Exceeded");
 			}
 
-			var data = readLineAsList();
-			if (data[0] == "bestmove") {
-				if (data[1] == "(none)") {
+			string? response = ReadLine();
+			if (response==null) { continue; }
+			// Console.WriteLine(response);
+			List<string> parsedData = response.Split(" ").ToList();
+			if (parsedData[0] == "bestmove") {
+				// ConsoleHelper.WriteLine("End Stockfish output", ConsoleColor.DarkRed);
+				if (parsedData[1] == "(none)") {
 					return "a1a1";
 				}
 
-				return data[1];
+				return parsedData[1];
 			}
 		}
 	}

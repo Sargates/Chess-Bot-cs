@@ -56,7 +56,7 @@ public class BoardAnimation {
 		Random r = new Random();
 		if (newPiecesThatDontFit.Count > 0) {
 			foreach ((Piece piece, int index) tup in newPiecesThatDontFit) {
-				leftoverAnimations.Add(new Animation((int)(r.NextDouble()*64), tup.index, tup.piece, totalTime));
+				leftoverAnimations.Add(new Animation(tup.index, tup.index, tup.piece, totalTime));
 			}
 		}
 	}

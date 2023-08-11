@@ -50,14 +50,18 @@ namespace ChessBot.Application {
 			}
 			Raylib.EndMode2D();
 
+			DrawPlayerInfo();
+
 			foreach (IInteractable asset in pipeline) {
 				asset.Update();
 				asset.Draw();
 			}
+		}
 
+		public void DrawPlayerInfo() {
+			// Draw player timer
 
-
-			
+			// Draw icon for player state (thinking, )
 		}
 
 		public void GetAttackedSquares() {
@@ -80,27 +84,60 @@ namespace ChessBot.Application {
 
 		public void AddButtons() {
 
-			Button button1 = new Button(new Rectangle(40, 600, 200, 50), "Reset Board");
-			button1.OnLeftPressed = () => {
-				Piece[] oldBoard = model.board.board.ToArray();
-				model.StartNewGame(Fen.startpos);
-				ui.activeAnimation = new BoardAnimation(oldBoard, model.board.board, 0.2f);
-			};
-			AddToPipeline(button1);
-			Button button2 = new Button(new Rectangle(40, 540, 200, 50), "Random Position");
-			button2.OnLeftPressed = () => {
-				Piece[] oldBoard = model.board.board.ToArray();
-				model.StartNewGame(model.botMatchStartFens[Controller.random.Next(model.botMatchStartFens.Length)]);
-				ui.activeAnimation = new BoardAnimation(oldBoard, model.board.board, 0.2f);
-			};
-			AddToPipeline(button2);
+			// AddToPipeline(new Button(new Rectangle(40, 300, 210, 50), "Set Fish Elo 3000").SetCallback(() => {
+			// 	model.whitePlayer.UCI?.engine.SetElo(3000);
+			// 	model.blackPlayer.UCI?.engine.SetElo(3000);
+			// })); //* I don't really have a way to tell if `SetElo` even works until I make my own bot and test it
+			// AddToPipeline(new Button(new Rectangle(40, 360, 210, 50), "Set Fish Elo 600").SetCallback(() => {
+			// 	model.whitePlayer.UCI?.engine.SetElo(600);
+			// 	model.blackPlayer.UCI?.engine.SetElo(600);
+			// }));
+			AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Freeplay").SetCallback(() => {
+				model.StartNewGame();
+				// ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+			}));
+			AddToPipeline(new Button(new Rectangle(40, 480, 210, 50), "Human vs. Gatesfish").SetCallback(() => {
+				model.StartNewGame(Model.Gametype.HvC);
+				// ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+			}));
+			AddToPipeline(new Button(new Rectangle(40, 540, 210, 50), "Human vs. Stockfish").SetCallback(() => {
+				model.StartNewGame(Model.Gametype.HvU);
+				// ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+			}));
+			AddToPipeline(new Button(new Rectangle(40, 600, 210, 50), "Stockfish vs. Stockfish").SetCallback(() => {
+				model.StartNewGame(Model.Gametype.UvU);
+				// ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+			}));
 
-			Button button3 = new Button(new Rectangle(40, 480, 200, 50), "Flip Board");
-			button3.OnLeftPressed = () => {
-				ui.isFlipped = ! ui.isFlipped;
-			};
-			AddToPipeline(button3);
+			// AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Flip Board").SetCallback(() => {
+			// 	ui.isFlipped = ! ui.isFlipped;
+			// }));
 
+			// // 2x3 array of buttons for player types
+			// AddToPipeline(new Button(new Rectangle(40,  660, 60, 50), "HvH").SetCallback(() => {
+			// 	model.SetPlayerTypes(Model.Gametype.HvH);
+			// 	UpdateIsFlipped();
+			// }));
+			// AddToPipeline(new Button(new Rectangle(115, 660, 60, 50), "HvC").SetCallback(() => {
+			// 	model.SetPlayerTypes(Model.Gametype.HvC);
+			// 	UpdateIsFlipped();
+			// }));
+			// AddToPipeline(new Button(new Rectangle(190, 660, 60, 50), "HvU").SetCallback(() => {
+			// 	model.SetPlayerTypes(Model.Gametype.HvU);
+			// 	UpdateIsFlipped();
+			// }));
+			// AddToPipeline(new Button(new Rectangle(40,  720, 60, 50), "CvC").SetCallback(() => {
+			// 	model.SetPlayerTypes(Model.Gametype.CvC);
+			// 	UpdateIsFlipped();
+			// }));
+			// AddToPipeline(new Button(new Rectangle(115, 720, 60, 50), "CvU").SetCallback(() => {
+			// 	model.SetPlayerTypes(Model.Gametype.CvU);
+			// 	UpdateIsFlipped();
+			// }));
+			// AddToPipeline(new Button(new Rectangle(190, 720, 60, 50), "UvU").SetCallback(() => {
+			// 	model.SetPlayerTypes(Model.Gametype.UvU);
+			// 	UpdateIsFlipped();
+			// }));
 		}
 		public void Release() {
 			ui.Release();

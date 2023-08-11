@@ -7,6 +7,8 @@ namespace ChessBot.Application {
         public int Threads;
         public bool Ponder;
         public int MultiPV;
+		public bool LimitStrength;
+        public int Elo;
         public int SkillLevel;
         public int MoveOverhead;
         public int SlowMover;
@@ -17,7 +19,9 @@ namespace ChessBot.Application {
             int threads = 0,
             bool ponder = false,
             int multiPV = 1,
-            int skillLevel = 2,
+            bool limitStrength = true,
+            int elo = 3000,
+            int skillLevel = 20,
             int moveOverhead = 30,
             int slowMover = 10,
             bool uciChess960 = false
@@ -25,6 +29,8 @@ namespace ChessBot.Application {
             Contempt = contempt;
             Ponder = ponder;
             Threads = threads;
+			LimitStrength = limitStrength;
+			Elo = elo;
             MultiPV = multiPV;
             SkillLevel = skillLevel;
             MoveOverhead = moveOverhead;
@@ -38,7 +44,9 @@ namespace ChessBot.Application {
                 ["Threads"] = Threads.ToString(),
                 ["Ponder"] = Ponder.ToString(),
                 ["MultiPV"] = MultiPV.ToString(),
-                ["Skill Level"] = SkillLevel.ToString(),
+                ["UCI_LimitStrength"] = LimitStrength.ToString(),
+                ["UCI_Elo"] = Elo.ToString(),
+                // ["Skill Level"] = SkillLevel.ToString(),
                 ["Move Overhead"] = MoveOverhead.ToString(),
                 ["Slow Mover"] = SlowMover.ToString(),
                 ["UCI_Chess960"] = UCIChess960.ToString(),

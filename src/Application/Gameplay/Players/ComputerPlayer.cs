@@ -7,21 +7,28 @@ public class ComputerPlayer : Player {
 	public Model model;
 	public bool IsThreaded;
 	public Thread thread;
+	public ConsoleColor threadColor;
+	public static ConsoleColor[] ThreadColorBlacklist = { ConsoleColor.Black, ConsoleColor.DarkBlue, ConsoleColor.Yellow };
 
-	public ComputerPlayer(char color, Model model, bool inherited=false) : base(color) {
+	public ComputerPlayer(char color, Model model) : base(color) {
 		this.model = model;
 		IsThreaded = true;
+		IsSearching = false;
+		while (ThreadColorBlacklist.Contains(threadColor) ) {
+			threadColor = (ConsoleColor) Controller.random.Next(16);
+		}
 
 		ThreadStart ths = new ThreadStart(Start);
 		thread = new Thread(ths);
-		if (! inherited) {
-			thread.Start();
-		}
+	}
+
+	public void StartThread() {
+		thread.Start();
 	}
 
 
 	public virtual void Start() {
-		Console.WriteLine($"Starting Thread {color}");
+		ConsoleHelper.WriteLine($"Starting Thread {color}", threadColor);
 		while (true) {
 			if (ExitFlag) {
 				break;
@@ -31,16 +38,19 @@ public class ComputerPlayer : Player {
 			}
 
 			if (IsSearching) {
-				OnMoveChosen(Think());
+				Move bestmove = Think();
+				// If the bot gets a manual update request it means the board state has changed and the previous move is garbage
+				if (! ShouldManualUpdate) OnMoveChosen(bestmove);
 				IsSearching = false;
 			}
 		}
-		Console.WriteLine($"Exiting Thread {color}");
+		ConsoleHelper.WriteLine($"Exiting Thread {color}", threadColor);
 	}
 
 	public override Move Think() {
 		return Move.NullMove;
 	}
+
 
 	public override void Join() { thread.Join(); }
 

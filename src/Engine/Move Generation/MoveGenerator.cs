@@ -193,21 +193,23 @@ namespace ChessBot.Engine {
 
 			if (kingSide) {
 				for (int i=0; i<kingSideDeltas.Length; i++) {
-					Coord newPos = coord + kingSideDeltas[i];
-					if (! newPos.IsInBounds()) continue;
+					Coord checkSquareClear = coord + kingSideDeltas[i];
+					Coord checkSquareInCheck = coord + kingSideDeltas[i] - new Coord(1, 0);
+					if (! checkSquareClear.IsInBounds() || ! checkSquareInCheck.IsInBounds()) Console.WriteLine($"Castling error King side {checkSquareClear.IsInBounds()} {checkSquareInCheck.IsInBounds()}");
 					// ConsoleHelper.WriteLine($"King side, {newPos.SquareIndex}");
-					if (IsSquareAttacked(board, newPos.SquareIndex, piece.Color)) { kingSide = false; break; }
-					if (board.GetSquare(newPos.SquareIndex) != Piece.None) { kingSide = false; break; }
+					if (IsSquareAttacked(board, checkSquareInCheck.SquareIndex, piece.Color)) { kingSide = false; break; }
+					if (board.GetSquare(checkSquareClear.SquareIndex) != Piece.None) { kingSide = false; break; }
 				}
 			}			
 
 			if (queenSide) {
 				for (int i=0; i<queenSideDeltas.Length; i++) {
-					Coord newPos = coord + queenSideDeltas[i];
-					if (! newPos.IsInBounds()) continue;
+					Coord checkSquareClear = coord + queenSideDeltas[i];
+					Coord checkSquareInCheck = coord + queenSideDeltas[i] + new Coord(1, 0);
+					if (! checkSquareClear.IsInBounds() || ! checkSquareInCheck.IsInBounds()) Console.WriteLine($"Castling error Queen side {checkSquareClear.IsInBounds()} {checkSquareInCheck.IsInBounds()}");
 					// ConsoleHelper.WriteLine($"Queen side, {newPos.SquareIndex}");
-					if (i != 2) { if (IsSquareAttacked(board, newPos.SquareIndex, piece.Color)) { queenSide = false; break; } }
-					if (board.GetSquare(newPos.SquareIndex) != Piece.None) { queenSide = false; break; }
+					if (IsSquareAttacked(board, checkSquareInCheck.SquareIndex, piece.Color)) { queenSide = false; break; }
+					if (board.GetSquare(checkSquareClear.SquareIndex) != Piece.None) { queenSide = false; break; }
 				}
 			}
 

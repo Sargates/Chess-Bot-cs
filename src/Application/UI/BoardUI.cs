@@ -42,8 +42,6 @@ namespace ChessBot.Application {
 		}
 
 		public void DrawBoardSquares() {
-
-
 			for (int i=0;i<64;i++) {				
 				Vector2 squarePos = new Vector2(i & 0b111, 7-(i>>3));
 				Vector2 temp = squareSize * (squarePos - new Vector2(3.5f));
@@ -78,9 +76,7 @@ namespace ChessBot.Application {
 		}
 
 		public void ResetBoardColors() {
-			for (int i=0;i<64;i++) {
-				squareColors[i] = IsLightSquare(i) ? BoardTheme.lightCol : BoardTheme.darkCol;
-			}
+			for (int i=0;i<64;i++) { squareColors[i] = IsLightSquare(i) ? BoardTheme.lightCol : BoardTheme.darkCol; }
 		}
 
 

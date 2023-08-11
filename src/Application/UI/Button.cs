@@ -8,11 +8,19 @@ namespace ChessBot.Application {
 		public string text;
 		public Color color=ColorHelper.HexToColor("#555555ff");
 		public Color highlightColor = ColorHelper.HexToColor("#03adfcff");
-		public delegate void ClickHandler();
-		public ClickHandler? OnLeftPressed;
-		public ClickHandler? OnLeftReleased;
-		public ClickHandler? OnRightPressed;
-		public ClickHandler? OnRightReleased;
+		public delegate void ClickCallback();
+		public ClickCallback? OnLeftPressed;
+		public ClickCallback? OnLeftReleased;
+		public ClickCallback? OnRightPressed;
+		public ClickCallback? OnRightReleased;
+		public struct CallbackArgs {
+			public object[] args;
+			public ClickCallback callback;
+			public CallbackArgs(ClickCallback callback, params object[] args) {
+				this.callback = callback;
+				this.args = args;
+			}
+		}
 
 		public Button(Rectangle rect, string text) {
 			_Rect = rect;
@@ -53,6 +61,11 @@ namespace ChessBot.Application {
 			if (Controller.IsRightReleased) {
 				OnRightReleased?.Invoke();
 			}
+		}
+
+		public Button SetCallback(ClickCallback callback) {
+			this.OnLeftPressed += callback;
+			return this;
 		}
 
 		public override string ToString() {

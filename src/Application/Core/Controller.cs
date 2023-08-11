@@ -18,8 +18,6 @@ namespace ChessBot.Application {
 		public static Random random = new Random();
 		
 		public bool SuspendPlay = false;
-		public static ChessPlayer whitePlayer = new ChessPlayer();
-		public static ChessPlayer blackPlayer = new ChessPlayer();
 
 		// Square selected on each interaction, -1 for invalid square
 		// { leftDown, leftUp, rightDown, rightUp }
@@ -35,12 +33,9 @@ namespace ChessBot.Application {
 
 		
 		// Return active player based on color passed, throw error if invalid color
-		public ChessPlayer GetPlayerFromColor(char color) => ("wb".IndexOf(color) == -1) ? throw new Exception("Invalid Color") : (color == 'w') ? whitePlayer : blackPlayer;
+		public ChessPlayer GetPlayerFromColor(char color) => ("wb".IndexOf(color) == -1) ? throw new Exception("Invalid Color") : (color == 'w') ? model.whitePlayer : model.blackPlayer;
 		
 
-		public void ExitPlayerThreads() { whitePlayer.RaiseExitFlag(); blackPlayer.RaiseExitFlag(); }
-		public void Join() { whitePlayer.Join(); blackPlayer.Join(); }
-		public ChessPlayer ActivePlayer => model.board.whiteToMove ? whitePlayer : blackPlayer;
 
 		public Controller() {
 
@@ -60,14 +55,11 @@ namespace ChessBot.Application {
 			screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
 			model = new Model();
 			view = new View(screenSize, model, cam);
+			Model.NewGameCalls += () => {
+				view.ui.isFlipped = model.whitePlayer.Player == null && model.blackPlayer.Player != null;
+			};
 
 			Player.OnMoveChosen += MakeMove;
-
-			whitePlayer = new ChessPlayer(new Player('w'), 60.0f);
-			blackPlayer = new ChessPlayer(new ComputerPlayer('b', model), 60.0f);
-
-
-
 		}
 
 		public void MainLoop() {
@@ -86,7 +78,7 @@ namespace ChessBot.Application {
             		view.camera.offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
 					View.screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
 				}
-				
+
 				Raylib.BeginDrawing();
 				Raylib.ClearBackground(new Color(22, 22, 22, 255));
 				Raylib.DrawFPS(10, 10);
@@ -94,8 +86,8 @@ namespace ChessBot.Application {
 				model.Update();
 				view.Update(dt);
 
-				if (! ActivePlayer.IsSearching && ! SuspendPlay) {
-					ActivePlayer.IsSearching = true;
+				if (! model.ActivePlayer.IsSearching && ! SuspendPlay) {
+					model.ActivePlayer.IsSearching = true;
 				}
 
 				if (pressedKey != 0) {
@@ -111,8 +103,8 @@ namespace ChessBot.Application {
 			}
 
 			Raylib.CloseWindow();
-			ExitPlayerThreads();
-			Join();
+			model.ExitPlayerThreads();
+			model.JoinPlayerThreads();
 			
 
 			view.Release();
@@ -156,23 +148,29 @@ namespace ChessBot.Application {
 				if (! validMove.IsNull ) { // Case 3
 					view.ui.DeselectActiveSquare();
 					MakeMove(validMove);
-					//* ANIMATION HERE
 				} else
 				if (view.ui.selectedIndex != -1 && squareClicked == view.ui.selectedIndex) { // Case 5
 					view.ui.isDraggingPiece = true;
 				} else
 				if (view.ui.selectedIndex == -1 && clickedPiece != Piece.None) { // Case 2
-					if (model.enforceColorToMove && clickedPiece.Color == model.board.activeColor) {
-						view.ui.selectedIndex = squareClicked;
+					view.ui.selectedIndex = squareClicked;
+					view.ui.isDraggingPiece = true;
+					bool isHumanColor = false;
+					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.White && (model.humanColor & 0b10) != 0);
+					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.Black && (model.humanColor & 0b01) != 0);
+					if (isHumanColor && clickedPiece.Color == model.board.activeColor) {
 						view.ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
-						view.ui.isDraggingPiece = true;
 					}
 				} else
 				if (validMove.IsNull && clickedPiece.Type != Piece.None) { // Case 6
-					if (model.enforceColorToMove && clickedPiece.Color == model.board.activeColor) {
-						view.ui.selectedIndex = squareClicked;
+					bool isHumanColor = false;
+					view.ui.selectedIndex = squareClicked;
+					view.ui.isDraggingPiece = true;
+					view.ui.movesForSelected = new Move[0];
+					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.White && (model.humanColor & 0b10) != 0);
+					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.Black && (model.humanColor & 0b01) != 0);
+					if (isHumanColor && clickedPiece.Color == model.board.activeColor) {
 						view.ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
-						view.ui.isDraggingPiece = true;
 					}
 				} else
 				if (validMove.IsNull) { // Case 4
@@ -186,7 +184,7 @@ namespace ChessBot.Application {
 
 				if (! validMove.IsNull) {
 					view.ui.DeselectActiveSquare();
-					MakeMove(validMove, false); // Do not animate a move made on the release
+					MakeMove(validMove, false); // Do not animate a move made by a release
 				}
 				mouseClickInfo[0] = -1; mouseClickInfo[1] = -1;
 			}
@@ -223,16 +221,16 @@ namespace ChessBot.Application {
 				case (int) KeyboardKey.KEY_Z :{
 					view.ui.DeselectActiveSquare();
 					Piece[] old = model.board.board.ToArray();
-					model.board.SetPrevState();
-					// model.board.SetPrevState();
+					model.SetPrevState();
+					model.SetPrevState();
 					view.ui.activeAnimation = new BoardAnimation(old, model.board.board, 0.08f);
 					break;
 				}
 				case (int) KeyboardKey.KEY_X :{
 					view.ui.DeselectActiveSquare();
 					Piece[] old = model.board.board.ToArray();
-					model.board.SetNextState();
-					// model.board.SetNextState();
+					model.SetNextState();
+					model.SetNextState();
 					view.ui.activeAnimation = new BoardAnimation(old, model.board.board, 0.08f);
 					break;
 				}
@@ -262,7 +260,9 @@ namespace ChessBot.Application {
 					break;
 				}
 				case (int) KeyboardKey.KEY_I :{
-					Console.WriteLine(blackPlayer.UCI?.engine.GetBoardVisual());
+					Console.WriteLine($"White: {model.whitePlayer.UCI}, {model.whitePlayer.Computer}, {model.whitePlayer.Player}");
+					Console.WriteLine($"Black: {model.blackPlayer.UCI}, {model.blackPlayer.Computer}, {model.blackPlayer.Player}");
+					// Console.WriteLine(model.blackPlayer.UCI?.engine.GetBoardVisual());
 					// Console.WriteLine($"Current player: {ActivePlayer}, {ActivePlayer.IsSearching}");
 					break;
 				}
@@ -274,7 +274,7 @@ namespace ChessBot.Application {
 
 		public void MakeMove(Move move, bool animate=true) {
 			if (! move.IsNull) { // When null move is attempted, it's assumed it's checkmate, active color is the loser
-				ActivePlayer.IsSearching = false;
+				model.ActivePlayer.IsSearching = false;
 				Piece[] oldState = model.board.board.ToArray();
 				model.board.MakeMove(move);
 				if (animate) {
@@ -286,7 +286,7 @@ namespace ChessBot.Application {
 			SuspendPlay = true;
 
 			ConsoleHelper.WriteLine("Checkmate!", ConsoleColor.DarkBlue);
-			ConsoleHelper.WriteLine($"Winner: {(ActivePlayer.color == 'w' ? 'b' : 'w')}, Loser: {ActivePlayer.color}", ConsoleColor.DarkBlue);
+			ConsoleHelper.WriteLine($"Winner: {(model.ActivePlayer.color == 'w' ? 'b' : 'w')}, Loser: {model.ActivePlayer.color}", ConsoleColor.DarkBlue);
 			// Handle Checkmate
 		}
 

@@ -1,4 +1,4 @@
-namespace ChessBot.Helpers {
+namespace ChessBot.Helpers { //* Copied from SebLague (mostly)
 	public static class ConsoleHelper {
 		public static void WriteLine(string msg, ConsoleColor col = ConsoleColor.White) {
 			Console.ForegroundColor = col;

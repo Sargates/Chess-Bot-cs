@@ -6,24 +6,20 @@ namespace ChessBot.Application;
 
 public class UCIPlayer : ComputerPlayer {
 	public UCIEngine engine;
-	public bool ShouldManualUpdate;
 	
 
 	public UCIPlayer(
 			char color, Model model,
 			string pathToExe, int depth = 22,
-			UCISettings? settings = null) : base(color, model, true) {
+			UCISettings? settings = null) : base(color, model) {
 
 		engine = new UCIEngine(pathToExe, depth, settings);
-
-
-		thread.Start();
 	}
 
 	public override void Start() {
 		engine.Start();
 		engine.SetPosition($"position fen {model.board.currentFen.ToFEN()}");
-		Console.WriteLine($"Starting Thread {color}");
+		ConsoleHelper.WriteLine($"Starting Thread {color}", threadColor);
 		while (true) {
 			if (ExitFlag) {
 				break; }
@@ -41,16 +37,14 @@ public class UCIPlayer : ComputerPlayer {
 				IsSearching = false;
 			}
 		}
-		Console.WriteLine($"Exiting Thread {color}");
+		ConsoleHelper.WriteLine($"Exiting Thread {color}", threadColor);
 	}
 
 
-	public void RaiseManualUpdateFlag() {
-		ShouldManualUpdate = true;
-	}
 
 	public override Move Think() { // position should already be set
-		engine.SetPosition($"position fen {model.board.currentFen.ToFEN()}");
+		string fen = model.board.currentFen.ToFEN();
+		engine.SetPosition($"position fen {fen}");
 		string response = engine.GetBestMoveTime(400);
 		int promoChar = 0;
 		if (response.Length > 4) { // is Promotion
@@ -62,6 +56,7 @@ public class UCIPlayer : ComputerPlayer {
 				_ => 0
 			};
 		}
+		// Console.WriteLine($"{(color == 'w' ? "White's" : "Blacks")} response: {response} on {fen}");
 		return new Move(BoardHelper.NameToSquareIndex(response.Substring(0, 2)), BoardHelper.NameToSquareIndex(response.Substring(2, 2)), promoChar);
 	}
 

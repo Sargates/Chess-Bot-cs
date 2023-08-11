@@ -6,19 +6,22 @@ namespace ChessBot.Application;
 public class ChessPlayer { // Stole this idea from SebLague, able to reference actual types after casting
 
 	public float timeLeft;
-	public readonly UCIPlayer? UCI;
-	public readonly ComputerPlayer? Computer;
-	public readonly Player? Player;
+	public readonly UCIPlayer? UCI=null;
+	public readonly ComputerPlayer? Computer=null;
+	public readonly Player? Player=null;
 
 	public char color {
 		get {
 			if (UCI != null) {
 				return UCI.color;
-			} 
+			} else 
 			if (Computer != null) {
 				return Computer.color;
+			} else 
+			if (Player != null) {
+				return Player.color;
 			}
-			return color;
+			throw new Exception("Player object hidden by ChessPlayer is invalid");
 		}
 		set {
 			if (UCI != null) {
@@ -27,7 +30,9 @@ public class ChessPlayer { // Stole this idea from SebLague, able to reference a
 			if (Computer != null) {
 				Computer.color = value;
 			}
-			color = value;
+			if (Player != null) {
+				Player.color = value;
+			}
 		}
 	}
 
@@ -39,7 +44,7 @@ public class ChessPlayer { // Stole this idea from SebLague, able to reference a
 			if (Computer != null) {
 				return Computer.IsSearching;
 			}
-			return true;
+			return false;
 		}
 		set {
 			if (UCI != null) {
@@ -47,9 +52,6 @@ public class ChessPlayer { // Stole this idea from SebLague, able to reference a
 			} else
 			if (Computer != null) {
 				Computer.IsSearching = value;
-			} else
-			{
-				Console.WriteLine("IsSearching set on Human Player");
 			}
 		}
 	}
@@ -58,23 +60,33 @@ public class ChessPlayer { // Stole this idea from SebLague, able to reference a
 	public ChessPlayer(Player instance, float timeLeft)  {
 		this.timeLeft = timeLeft;
 		UCI = instance as UCIPlayer;
-		if (UCI==null) Computer = instance as ComputerPlayer; // UCIPlayer is derived from Computer player, don't want both
-		if (Computer==null) Player = instance as Player;
+		if (UCI==null) Computer = instance as ComputerPlayer; // UCIPlayer is derived from ComputerPlayer, don't want more than one
+		if (UCI==null && Computer==null) Player = instance;  // UCIPlayer, ComputerPlayer is derived from Player, don't want more than one
 	}
 
 	public override string ToString() {
 		if (UCI != null) {
-			return "UCI";
+			return "UCI Player";
 		}
 		if (Computer != null) {
-			return "Computer";
+			return "Computer Player";
 		}
-		return $"Human Player";
+		return "Human Player";
+	}
+
+	
+	public void StartThread() {
+		UCI?.StartThread();
+		Computer?.StartThread();
 	}
 
 	public void Join() {
 		UCI?.Join(); 
 		Computer?.Join(); 
+	}
+	public void RaiseManualUpdateFlag() {
+		UCI?.RaiseManualUpdateFlag();
+		Computer?.RaiseManualUpdateFlag();
 	}
 	public void RaiseExitFlag() {
 		UCI?.RaiseExitFlag();

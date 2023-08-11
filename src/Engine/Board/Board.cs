@@ -245,24 +245,6 @@ namespace ChessBot.Engine {
 			currentStateNode = stateHistory.Last;
 		}
 
-		public void SetPrevState() {
-			if (currentStateNode.Previous == null) { Console.WriteLine("Cannot get previous state, is null"); return; }
-			
-			currentStateNode = currentStateNode.Previous;
-			currentFen = currentStateNode.Value;
-			UpdateFromState();
-			Controller.whitePlayer.UCI?.RaiseManualUpdateFlag();
-			Controller.blackPlayer.UCI?.RaiseManualUpdateFlag();
-
-		}
-		public void SetNextState() {
-			if (currentStateNode.Next == null) { Console.WriteLine("Cannot get next state, is null"); return; }
-			currentStateNode = currentStateNode.Next;
-			currentFen = currentStateNode.Value;
-			UpdateFromState();
-			Controller.whitePlayer.UCI?.RaiseManualUpdateFlag();
-			Controller.blackPlayer.UCI?.RaiseManualUpdateFlag();			
-		}
 		
 		public Piece GetSquare(int index) {
 			if (! (0 <= index && index < 64) ) { throw new Exception("Board index out of bounds"); }
