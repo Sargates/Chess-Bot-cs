@@ -71,8 +71,8 @@ namespace ChessBot.Application {
 			}
 		}
 
-		public void DrawRectangle(float x, float y, int width, int height, Color color) {
-			Raylib.DrawRectangle((int)x-(width/2), (int)y-(height/2), width, height, color);
+		public void DrawRectangle(float x, float y, float width, float height, Color color) {
+			Raylib.DrawRectangle((int)(x-(width/2)), (int)(y-(height/2)), (int)width, (int)height, color);
 		}
 
 		public void ResetBoardColors() {

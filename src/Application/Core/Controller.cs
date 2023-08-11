@@ -17,7 +17,7 @@ namespace ChessBot.Application {
 		View view;
 		public static Random random = new Random();
 		
-		public bool SuspendPlay = false;
+		public static bool SuspendPlay = false;
 
 		// Square selected on each interaction, -1 for invalid square
 		// { leftDown, leftUp, rightDown, rightUp }
@@ -86,7 +86,7 @@ namespace ChessBot.Application {
 				model.Update();
 				view.Update(dt);
 
-				if (! model.ActivePlayer.IsSearching && ! SuspendPlay) {
+				if ((model.ActivePlayer.Computer?.HasStarted ?? true) && ! model.ActivePlayer.IsSearching && ! SuspendPlay) {
 					model.ActivePlayer.IsSearching = true;
 				}
 
@@ -274,6 +274,7 @@ namespace ChessBot.Application {
 
 		public void MakeMove(Move move, bool animate=true) {
 			if (! move.IsNull) { // When null move is attempted, it's assumed it's checkmate, active color is the loser
+				view.TimeOfLastMove = view.fTimeElapsed;
 				model.ActivePlayer.IsSearching = false;
 				Piece[] oldState = model.board.board.ToArray();
 				model.board.MakeMove(move);

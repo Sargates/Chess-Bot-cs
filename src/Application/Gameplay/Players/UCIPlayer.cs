@@ -19,6 +19,7 @@ public class UCIPlayer : ComputerPlayer {
 	public override void Start() {
 		engine.Start();
 		engine.SetPosition($"position fen {model.board.currentFen.ToFEN()}");
+		HasStarted = true;
 		ConsoleHelper.WriteLine($"Starting Thread {color}", threadColor);
 		while (true) {
 			if (ExitFlag) {
@@ -33,7 +34,9 @@ public class UCIPlayer : ComputerPlayer {
 			if (IsSearching) {
 				Move bestmove = Think();
 				// If the bot gets a manual update request it means the board state has changed and the previous move is garbage
-				if (! ShouldManualUpdate) OnMoveChosen(bestmove);
+				if (! ShouldManualUpdate && ! Controller.SuspendPlay) {
+					OnMoveChosen(bestmove);
+				}
 				IsSearching = false;
 			}
 		}
@@ -45,7 +48,7 @@ public class UCIPlayer : ComputerPlayer {
 	public override Move Think() { // position should already be set
 		string fen = model.board.currentFen.ToFEN();
 		engine.SetPosition($"position fen {fen}");
-		string response = engine.GetBestMoveTime(400);
+		string response = engine.GetBestMoveTime(1500);
 		int promoChar = 0;
 		if (response.Length > 4) { // is Promotion
 			promoChar = response[4] switch {

@@ -6,9 +6,10 @@ namespace ChessBot.Application;
 public class ComputerPlayer : Player {
 	public Model model;
 	public bool IsThreaded;
+	public bool HasStarted;
 	public Thread thread;
 	public ConsoleColor threadColor;
-	public static ConsoleColor[] ThreadColorBlacklist = { ConsoleColor.Black, ConsoleColor.DarkBlue, ConsoleColor.Yellow };
+	public static ConsoleColor[] ThreadColorBlacklist = { ConsoleColor.Black, ConsoleColor.DarkBlue, ConsoleColor.White };
 
 	public ComputerPlayer(char color, Model model) : base(color) {
 		this.model = model;
@@ -17,7 +18,7 @@ public class ComputerPlayer : Player {
 		while (ThreadColorBlacklist.Contains(threadColor) ) {
 			threadColor = (ConsoleColor) Controller.random.Next(16);
 		}
-
+		HasStarted = false;
 		ThreadStart ths = new ThreadStart(Start);
 		thread = new Thread(ths);
 	}
@@ -29,6 +30,7 @@ public class ComputerPlayer : Player {
 
 	public virtual void Start() {
 		ConsoleHelper.WriteLine($"Starting Thread {color}", threadColor);
+		HasStarted = true;
 		while (true) {
 			if (ExitFlag) {
 				break;

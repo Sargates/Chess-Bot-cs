@@ -56,8 +56,8 @@ namespace ChessBot.Application {
 			if (activeGameType != type) {
 			}
 			humanColor = 0b00;
-			whitePlayer.RaiseExitFlag();
-			blackPlayer.RaiseExitFlag();
+			ExitPlayerThreads();
+			whitePlayer.RaiseManualUpdateFlag(); blackPlayer.RaiseManualUpdateFlag(); 
 			whitePlayer = (type, gameIndex%2==1) switch {
 				(Gametype.HvH, true) => new ChessPlayer(new Player('w'), 300f),
 				(Gametype.HvC, true) => new ChessPlayer(new Player('w'), 300f),
@@ -96,8 +96,8 @@ namespace ChessBot.Application {
 			humanColor |= (whitePlayer.Player != null) ? 0b10 : 0b00;
 			humanColor |= (blackPlayer.Player != null) ? 0b01 : 0b00;
 
-			Console.WriteLine($"White: {whitePlayer}");
-			Console.WriteLine($"Black: {blackPlayer}");
+			ConsoleHelper.WriteLine($"White: {whitePlayer}", ConsoleColor.DarkYellow);
+			ConsoleHelper.WriteLine($"Black: {blackPlayer}", ConsoleColor.DarkYellow);
 		}
 
 		public void StartNewGame(Gametype type=Gametype.HvH) { StartNewGame(Fen.startpos, type); }
@@ -109,7 +109,7 @@ namespace ChessBot.Application {
 			//* 
 
 			SetBoardPosition(fenString);
-			ConsoleHelper.WriteLine($"\nGame number {gameIndex} started\nFEN: {fenString}", ConsoleColor.Yellow);
+			ConsoleHelper.WriteLine($"\nGame number {gameIndex} started\nFEN: {fenString}", ConsoleColor.DarkYellow);
 			// Console.WriteLine(activeGameType == type);
 			SetPlayerTypes(type);
 			NewGameCalls();

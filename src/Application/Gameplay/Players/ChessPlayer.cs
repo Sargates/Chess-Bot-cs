@@ -8,32 +8,13 @@ public class ChessPlayer { // Stole this idea from SebLague, able to reference a
 	public float timeLeft;
 	public readonly UCIPlayer? UCI=null;
 	public readonly ComputerPlayer? Computer=null;
-	public readonly Player? Player=null;
+	public readonly Player Player;
+
+	public bool IsThreaded => Computer!=null;
 
 	public char color {
-		get {
-			if (UCI != null) {
-				return UCI.color;
-			} else 
-			if (Computer != null) {
-				return Computer.color;
-			} else 
-			if (Player != null) {
-				return Player.color;
-			}
-			throw new Exception("Player object hidden by ChessPlayer is invalid");
-		}
-		set {
-			if (UCI != null) {
-				UCI.color = value;
-			} 
-			if (Computer != null) {
-				Computer.color = value;
-			}
-			if (Player != null) {
-				Player.color = value;
-			}
-		}
+		get { return Player.color; }
+		set { Player.color = color; }
 	}
 
 	public bool IsSearching {
@@ -55,13 +36,13 @@ public class ChessPlayer { // Stole this idea from SebLague, able to reference a
 			}
 		}
 	}
-	public ChessPlayer() {}
+	public ChessPlayer() { Player = new Player('f'); }
 
 	public ChessPlayer(Player instance, float timeLeft)  {
 		this.timeLeft = timeLeft;
 		UCI = instance as UCIPlayer;
-		if (UCI==null) Computer = instance as ComputerPlayer; // UCIPlayer is derived from ComputerPlayer, don't want more than one
-		if (UCI==null && Computer==null) Player = instance;  // UCIPlayer, ComputerPlayer is derived from Player, don't want more than one
+		Computer = instance as ComputerPlayer;
+		Player = instance;
 	}
 
 	public override string ToString() {
@@ -76,20 +57,16 @@ public class ChessPlayer { // Stole this idea from SebLague, able to reference a
 
 	
 	public void StartThread() {
-		UCI?.StartThread();
 		Computer?.StartThread();
 	}
 
 	public void Join() {
-		UCI?.Join(); 
-		Computer?.Join(); 
+		Player.Join(); 
 	}
 	public void RaiseManualUpdateFlag() {
-		UCI?.RaiseManualUpdateFlag();
-		Computer?.RaiseManualUpdateFlag();
+		Player.RaiseManualUpdateFlag();
 	}
 	public void RaiseExitFlag() {
-		UCI?.RaiseExitFlag();
-		Computer?.RaiseExitFlag();
+		Player.RaiseExitFlag();
 	}
 }
