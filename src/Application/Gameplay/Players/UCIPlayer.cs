@@ -34,10 +34,10 @@ public class UCIPlayer : ComputerPlayer {
 			if (IsSearching) {
 				Move bestMove = Think();
 				// If the bot gets a manual update request it means the board state has changed and the previous move is garbage
-				if (! ExitFlag && ! ShouldManualUpdate && ! Controller.SuspendPlay) {
+				if (! ExitFlag && ! ShouldManualUpdate && ! Model.SuspendPlay) {
 					OnMoveChosen(bestMove);
 				}
-				Console.WriteLine($"{ExitFlag} {ShouldManualUpdate} {Controller.SuspendPlay}");
+				// Console.WriteLine($"{ExitFlag} {ShouldManualUpdate} {Model.SuspendPlay}");
 				IsSearching = false;
 			}
 		}
@@ -49,7 +49,7 @@ public class UCIPlayer : ComputerPlayer {
 	public override Move Think() { // position should already be set
 		string fen = model.board.currentFen.ToFEN();
 		engine.SetPosition($"position fen {fen}");
-		string response = engine.GetBestMoveTime(1500);
+		string response = engine.GetBestMoveTime(1000);
 
 		int startSquare = BoardHelper.NameToSquareIndex(response.Substring(0, 2));
 		int targetSquare = BoardHelper.NameToSquareIndex(response.Substring(2, 2));

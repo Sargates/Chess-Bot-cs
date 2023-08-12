@@ -15,7 +15,7 @@ public class Player {
 	}
 
 	public delegate void VoidDel(Move move, bool animate=true);
-	public static VoidDel? OnMoveChosen;
+	public static VoidDel OnMoveChosen = (Move move, bool animate) => {};
 
 	public virtual Move Think() { return Move.NullMove; }
 	public void RaiseManualUpdateFlag() { ShouldManualUpdate = true; }

@@ -27,6 +27,7 @@ namespace ChessBot.Application {
 
 		public Gametype activeGameType = Gametype.HvH;
 
+		public static bool SuspendPlay = false;
 		public ChessPlayer whitePlayer = new ChessPlayer();
 		public ChessPlayer blackPlayer = new ChessPlayer();
 		public ChessPlayer ActivePlayer => board.whiteToMove ? whitePlayer : blackPlayer;
@@ -118,6 +119,7 @@ namespace ChessBot.Application {
 			gameIndex++;
 
 		}
+
 
 
 		

@@ -112,12 +112,6 @@ namespace ChessBot.Application {
 			if (selectedIndex != -1 && isDraggingPiece) {
 				Vector2 mousePos = Raylib.GetMousePosition() - View.screenSize/2; // Mouse position in camera space converted to worldspace (centered at the origin)
 				Vector2 renderedPosition = cachedRenderPos; // center of selected square
-				
-				// Checking if either X or Y is greater than the snappingFactor, in terms of half the square size
-				// if (Math.Max(Math.Abs((mousePos - renderedPosition).X), Math.Abs((mousePos - renderedPosition).Y)) < (squareSize/2) * snappingFactor) {
-				// 	DrawPiece(board.GetSquare(selectedIndex), cachedRenderPos);
-				// 	return;
-				// }
 
 				DrawPiece(board.GetSquare(selectedIndex), Vector2.Clamp(mousePos, -4*squareSizeV, 4*squareSizeV));
 

@@ -123,6 +123,7 @@ namespace ChessBot.Engine {
 
 			Piece pieceMoved = GetSquare(movedFrom);
 			Piece pieceTaken = (moveFlag==Move.EnPassantCaptureFlag) ? (opponentColour(pieceMoved.Color)|Piece.Pawn) : GetSquare(movedTo);
+			prevBoard = this.board.ToArray();
 
 			MovePiece(pieceMoved, movedFrom, movedTo);
 

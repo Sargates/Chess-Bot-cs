@@ -34,7 +34,7 @@ namespace ChessBot.Engine { // ! Copied from SebLague
 
 		public bool IsInBounds() => 0 <= file && file < 8 && 0 <= rank && rank < 8;
 		public override string ToString() {
-			return $"<{file}, {8-rank}>";
+			return $"<{file}, {rank}>";
 		}
 		public int SquareIndex => 8*rank+file;
 	}

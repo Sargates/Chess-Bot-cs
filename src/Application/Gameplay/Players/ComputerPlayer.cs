@@ -8,16 +8,18 @@ public class ComputerPlayer : Player {
 	public bool IsThreaded;
 	public bool HasStarted;
 	public Thread thread;
-	public ConsoleColor threadColor;
+	public readonly ConsoleColor threadColor;
 	public static ConsoleColor[] ThreadColorBlacklist = { ConsoleColor.Black, ConsoleColor.DarkBlue, ConsoleColor.White, ConsoleColor.DarkYellow, ConsoleColor.Yellow };
 
 	public ComputerPlayer(char color, Model model) : base(color) {
 		this.model = model;
 		IsThreaded = true;
 		IsSearching = false;
-		while (ThreadColorBlacklist.Contains(threadColor) ) {
-			threadColor = (ConsoleColor) Controller.random.Next(16);
+		ConsoleColor newThreadColor = 0;
+		while (ThreadColorBlacklist.Contains(newThreadColor) ) {
+			newThreadColor = (ConsoleColor) Controller.random.Next(16);
 		}
+		threadColor = newThreadColor;
 		HasStarted = false;
 		ThreadStart ths = new ThreadStart(Start);
 		thread = new Thread(ths);

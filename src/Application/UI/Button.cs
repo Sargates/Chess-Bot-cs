@@ -49,16 +49,16 @@ namespace ChessBot.Application {
 
 		public void Update() {
 			if (! this.IsHoveringOver) { return; }
-			if (Controller.IsLeftPressed) {
+			if (View.IsLeftPressed) {
 				OnLeftPressed?.Invoke();
 			}
-			if (Controller.IsLeftReleased) {
+			if (View.IsLeftReleased) {
 				OnLeftReleased?.Invoke();
 			}
-			if (Controller.IsRightPressed) {
+			if (View.IsRightPressed) {
 				OnRightPressed?.Invoke();
 			}
-			if (Controller.IsRightReleased) {
+			if (View.IsRightReleased) {
 				OnRightReleased?.Invoke();
 			}
 		}
