@@ -118,7 +118,8 @@ namespace ChessBot.Application {
 				// 	DrawPiece(board.GetSquare(selectedIndex), cachedRenderPos);
 				// 	return;
 				// }
-				DrawPiece(board.GetSquare(selectedIndex), Raylib.GetMousePosition()-View.screenSize/2);
+
+				DrawPiece(board.GetSquare(selectedIndex), Vector2.Clamp(mousePos, -4*squareSizeV, 4*squareSizeV));
 
 			}
 		}
