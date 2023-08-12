@@ -39,9 +39,9 @@ namespace ChessBot.Application {
 		public bool IsHoveringOver => 0 <= (Raylib.GetMouseX()-_Rect.x) && (Raylib.GetMouseX()-_Rect.x) <= _Rect.width && 0 <= (Raylib.GetMouseY()-_Rect.y) && (Raylib.GetMouseY()-_Rect.y) <= _Rect.height;
 
 		public void Draw() {
-			Raylib.DrawRectangle((int)_Rect.x, (int)_Rect.y, (int)_Rect.width, (int)_Rect.height, this.color);
+			Raylib.DrawRectangleV(Position, Size, this.color);
 			if (IsHoveringOver) {
-				Raylib.DrawRectangle((int)_Rect.x, (int)_Rect.y, (int)_Rect.width, (int)_Rect.height, this.highlightColor);
+				Raylib.DrawRectangleV(Position, Size, this.highlightColor);
 			}
 
 			UIHelper.DrawText(text, Position+(Size/2), 24, 0, Color.WHITE, UIHelper.AlignH.Centre, UIHelper.AlignV.Centre);

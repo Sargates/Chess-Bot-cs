@@ -34,9 +34,10 @@ public class UCIPlayer : ComputerPlayer {
 			if (IsSearching) {
 				Move bestMove = Think();
 				// If the bot gets a manual update request it means the board state has changed and the previous move is garbage
-				if (! ShouldManualUpdate && ! Controller.SuspendPlay) {
+				if (! ExitFlag && ! ShouldManualUpdate && ! Controller.SuspendPlay) {
 					OnMoveChosen(bestMove);
 				}
+				Console.WriteLine($"{ExitFlag} {ShouldManualUpdate} {Controller.SuspendPlay}");
 				IsSearching = false;
 			}
 		}
@@ -57,6 +58,9 @@ public class UCIPlayer : ComputerPlayer {
 				return testedMove;
 			}
 		}
+		// GetMoves returns empty Move[] if startSquare is empty, the only reason this should happen is if the
+		// thread is supposed to exit. Otherwise something is actually wrong and an exception should be thrown
+		if (ExitFlag) { return Move.NullMove; } // This shouldnt raise checkmate when it returns
 		throw new Exception("AI attempted invalid Move");
 	}
 

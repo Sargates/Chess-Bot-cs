@@ -92,10 +92,10 @@ namespace ChessBot.Application {
 					// Neat little math function to set a bias of how long a value will be 0, bias of 0.2 means it will be 0 for 20% of the perios
 					int output = (int) Math.Floor(1+(1/period)*((fTimeElapsed-TimeOfLastMove)%period) - bias); // No idea why Math.floor returns a double
 					// With a bias of 0.2, the displayed color will be the first color, 20% of the time
-					string[] sequencedColors = { "#2c2c2c", "#ffe553"};
+					string[] sequencedColors = { "#2c2c2c", "#ffff00"};
 					playerInfoColor = ColorHelper.HexToColor(sequencedColors[output]);
 				}
-				ui.DrawRectangle(displayPosition.X, displayPosition.Y, 0.8f*BoardUI.squareSize, 0.8f*BoardUI.squareSize, playerInfoColor);
+				ui.DrawRectangleCentered(displayPosition, new Vector2(0.8f*BoardUI.squareSize), playerInfoColor);
 			}
 		}
 

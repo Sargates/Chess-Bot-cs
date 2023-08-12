@@ -8,6 +8,7 @@ namespace ChessBot.Application {
 	public class BoardUI {
 		public static Texture2D piecesTexture;
 		public static int squareSize = 100;
+		public static Vector2 squareSizeV = new Vector2(squareSize);
 		static readonly int[] pieceImageOrder = { 5, 3, 2, 4, 1, 0 };
 
 		public int oppMovedFrom = -1;
@@ -38,16 +39,16 @@ namespace ChessBot.Application {
 
 		public void DrawBoardBorder() {
 			int w = 12;
-			DrawRectangle(0, 0, 8*squareSize+2*w, 8*squareSize+2*w, BoardTheme.borderCol);
+			DrawRectangleCentered(new Vector2(), new Vector2(8*squareSize+2*w), BoardTheme.borderCol);
 		}
 
 		public void DrawBoardSquares() {
 			for (int i=0;i<64;i++) {				
 				Vector2 squarePos = new Vector2(i & 0b111, 7-(i>>3));
 				Vector2 temp = squareSize * (squarePos - new Vector2(3.5f));
-				DrawRectangle(( temp.X ), ( temp.Y ), squareSize, squareSize, squareColors[i]);
+				DrawRectangleCentered(temp, squareSizeV, squareColors[i]);
 				if (highlightedSquares[isFlipped ? 63-i : i]) {
-					DrawRectangle(( temp.X ), ( temp.Y ), squareSize, squareSize, BoardTheme.selectedHighlight);
+					DrawRectangleCentered(temp, squareSizeV, BoardTheme.selectedHighlight);
 				}
 			}
 			foreach (Move move in movesForSelected) {
@@ -57,7 +58,7 @@ namespace ChessBot.Application {
 					temp *= -1;
 				}
 				// squareColors[move.TargetSquare] = IsLightSquare(move.TargetSquare) ? BoardTheme.legalLight : BoardTheme.legalDark;
-				DrawRectangle(( temp.X ), ( temp.Y ), squareSize, squareSize, BoardTheme.legalHighlight);
+				DrawRectangleCentered(temp, squareSizeV, BoardTheme.legalHighlight);
 			}
 
 			if (selectedIndex != -1) {
@@ -67,12 +68,12 @@ namespace ChessBot.Application {
 					temp *= -1;
 				}
 				// squareColors[selectedIndex] = IsLightSquare(selectedIndex) ? BoardTheme.selectedLight : BoardTheme.selectedLight; // TODO fix redundant line
-				DrawRectangle(( temp.X ), ( temp.Y ), squareSize, squareSize, BoardTheme.movedFromHighlight);
+				DrawRectangleCentered(temp, squareSizeV, BoardTheme.movedFromHighlight);
 			}
 		}
 
-		public void DrawRectangle(float x, float y, float width, float height, Color color) {
-			Raylib.DrawRectangle((int)(x-(width/2)), (int)(y-(height/2)), (int)width, (int)height, color);
+		public void DrawRectangleCentered(Vector2 position, Vector2 size, Color color) {
+			Raylib.DrawRectangleV(position-size/2, size, color);
 		}
 
 		public void ResetBoardColors() {

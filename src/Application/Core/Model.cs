@@ -30,6 +30,7 @@ namespace ChessBot.Application {
 		public ChessPlayer whitePlayer = new ChessPlayer();
 		public ChessPlayer blackPlayer = new ChessPlayer();
 		public ChessPlayer ActivePlayer => board.whiteToMove ? whitePlayer : blackPlayer;
+		public ChessPlayer InactivePlayer => board.whiteToMove ? blackPlayer : whitePlayer;
 
 		public delegate void NewGameDel();
 		public static NewGameDel NewGameCalls = () => {};
@@ -43,7 +44,7 @@ namespace ChessBot.Application {
 
 
 		public void ExitPlayerThreads() { whitePlayer.RaiseExitFlag(); blackPlayer.RaiseExitFlag(); }
-		public void JoinPlayerThreads() { whitePlayer.Join(); blackPlayer.Join(); }
+		public void JoinPlayerThreads() { ActivePlayer.Join(); InactivePlayer.Join(); } // Join the active player first because that's the one that will be searching
 		public void SetBoardPosition() { SetBoardPosition(Fen.startpos); }
 		public void SetBoardPosition(string fenString) {
 			if (board != null) SetOldBoard();
@@ -57,7 +58,7 @@ namespace ChessBot.Application {
 			}
 			humanColor = 0b00;
 			ExitPlayerThreads();
-			whitePlayer.RaiseManualUpdateFlag(); blackPlayer.RaiseManualUpdateFlag(); 
+			// JoinPlayerThreads();
 			whitePlayer = (type, gameIndex%2==1) switch {
 				(Gametype.HvH, true) => new ChessPlayer(new Player('w'), 300f),
 				(Gametype.HvC, true) => new ChessPlayer(new Player('w'), 300f),

@@ -42,7 +42,7 @@ public class ComputerPlayer : Player {
 			if (IsSearching) {
 				Move bestmove = Think();
 				// If the bot gets a manual update request it means the board state has changed and the previous move is garbage
-				if (! ShouldManualUpdate) OnMoveChosen(bestmove);
+				if (! ExitFlag && ! ShouldManualUpdate) OnMoveChosen(bestmove);
 				IsSearching = false;
 			}
 		}
