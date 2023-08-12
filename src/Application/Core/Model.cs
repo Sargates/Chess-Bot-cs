@@ -95,7 +95,7 @@ namespace ChessBot.Application {
 			blackPlayer.StartThread();
 			humanColor |= (whitePlayer.Computer == null && whitePlayer.Player != null) ? 0b10 : 0b00;
 			humanColor |= (blackPlayer.Computer == null && blackPlayer.Player != null) ? 0b01 : 0b00;
-			ConsoleHelper.WriteLine($"{System.Convert.ToString(humanColor, 2)}", ConsoleColor.DarkYellow);
+			// ConsoleHelper.WriteLine($"{System.Convert.ToString(humanColor, 2)}", ConsoleColor.DarkYellow);
 
 			ConsoleHelper.WriteLine($"White: {whitePlayer}", ConsoleColor.DarkYellow);
 			ConsoleHelper.WriteLine($"Black: {blackPlayer}", ConsoleColor.DarkYellow);

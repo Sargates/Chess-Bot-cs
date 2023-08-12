@@ -96,12 +96,7 @@ namespace ChessBot.Application {
 					playerInfoColor = ColorHelper.HexToColor(sequencedColors[output]);
 				}
 				ui.DrawRectangle(displayPosition.X, displayPosition.Y, 0.8f*BoardUI.squareSize, 0.8f*BoardUI.squareSize, playerInfoColor);
-
 			}
-			
-
-			
-
 		}
 
 		public void GetAttackedSquares() {

@@ -207,24 +207,27 @@ namespace ChessBot.Engine {
 			}
 
 			bool tempWhiteToMove = !whiteToMove; // ForwardDir / anything related to the active color will be the same up until this point
-			if (! quiet) {
-				Fen temp = currentStateNode.Value;
-				temp.moveMade = move;
-				currentStateNode.Value = temp;
-
-				currentFen = new Fen(currentFen.ToFEN());
-
-				currentFen.castlePrivsBin &= castlesToRemove;
-				currentFen.enpassantSquare = (enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(enPassantIndex);
-				if (pieceTaken != Piece.None || pieceMoved.Type == Piece.Pawn) { currentFen.halfMoveCount = 0; }
-				else { currentFen.halfMoveCount += 1; }
-				if (tempWhiteToMove) currentFen.fullMoveCount += 1;
-
-				currentFen.fenColor = tempWhiteToMove ? 'w' : 'b';
-				BoardHelper.UpdateFenAttachedToBoard(this);
-
-				PushNewState(this.currentFen);
+			if (quiet) {
+				return;
 			}
+
+			Fen temp = currentStateNode.Value;
+			temp.moveMade = move;
+			currentStateNode.Value = temp;
+
+			currentFen = new Fen(currentFen.ToFEN());
+
+			currentFen.castlePrivsBin &= castlesToRemove;
+			currentFen.enpassantSquare = (enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(enPassantIndex);
+			if (pieceTaken != Piece.None || pieceMoved.Type == Piece.Pawn) { currentFen.halfMoveCount = 0; }
+			else { currentFen.halfMoveCount += 1; }
+			if (tempWhiteToMove) currentFen.fullMoveCount += 1;
+
+			currentFen.fenColor = tempWhiteToMove ? 'w' : 'b';
+			BoardHelper.UpdateFenAttachedToBoard(this);
+
+			PushNewState(this.currentFen);
+			
 			whiteToMove = tempWhiteToMove; // Need to change whiteToMove after pushing state to fix threading issues between two computer opponents
 		}
 		public void MovePiece(Piece piece, int movedFrom, int movedTo) {

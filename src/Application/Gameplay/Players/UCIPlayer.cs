@@ -32,10 +32,10 @@ public class UCIPlayer : ComputerPlayer {
 			}
 
 			if (IsSearching) {
-				Move bestmove = Think();
+				Move bestMove = Think();
 				// If the bot gets a manual update request it means the board state has changed and the previous move is garbage
 				if (! ShouldManualUpdate && ! Controller.SuspendPlay) {
-					OnMoveChosen(bestmove);
+					OnMoveChosen(bestMove);
 				}
 				IsSearching = false;
 			}
@@ -49,18 +49,17 @@ public class UCIPlayer : ComputerPlayer {
 		string fen = model.board.currentFen.ToFEN();
 		engine.SetPosition($"position fen {fen}");
 		string response = engine.GetBestMoveTime(1500);
-		int promoChar = 0;
-		if (response.Length > 4) { // is Promotion
-			promoChar = response[4] switch {
-				'q' => Move.PromoteToQueenFlag,
-				'b' => Move.PromoteToBishopFlag,
-				'n' => Move.PromoteToKnightFlag,
-				'r' => Move.PromoteToRookFlag,
-				_ => 0
-			};
+
+		int startSquare = BoardHelper.NameToSquareIndex(response.Substring(0, 2));
+		int targetSquare = BoardHelper.NameToSquareIndex(response.Substring(2, 2));
+		Console.WriteLine($"{startSquare} {targetSquare}");
+		foreach (Move testedMove in MoveGenerator.GetMoves(model.board, startSquare)) {
+			if (testedMove.TargetSquare == targetSquare) {
+				Console.WriteLine();
+				return testedMove;
+			}
 		}
-		// Console.WriteLine($"{(color == 'w' ? "White's" : "Blacks")} response: {response} on {fen}");
-		return new Move(BoardHelper.NameToSquareIndex(response.Substring(0, 2)), BoardHelper.NameToSquareIndex(response.Substring(2, 2)), promoChar);
+		throw new Exception("AI attempted invalid Move");
 	}
 
 	~UCIPlayer() { // In case player object ever goes out of scope

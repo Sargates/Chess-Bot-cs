@@ -52,14 +52,14 @@ namespace ChessBot.Application {
             cam.offset = new Vector2(screenWidth / 2f, screenHeight / 2f);
             cam.zoom = 1.0f;
 
+			Player.OnMoveChosen += MakeMove;
 			screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
 			model = new Model();
 			view = new View(screenSize, model, cam);
 			Model.NewGameCalls += () => {
-				view.ui.isFlipped = model.whitePlayer.Player == null && model.blackPlayer.Player != null;
+				view.ui.isFlipped = model.humanColor == 0b01; // if white is not a player and black is a player
 			};
 
-			Player.OnMoveChosen += MakeMove;
 		}
 
 		public void MainLoop() {
@@ -158,6 +158,7 @@ namespace ChessBot.Application {
 					bool isHumanColor = false;
 					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.White && (model.humanColor & 0b10) != 0);
 					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.Black && (model.humanColor & 0b01) != 0);
+					isHumanColor = isHumanColor || SuspendPlay; // if play is suspended, allow view to move pieces
 					if (isHumanColor && clickedPiece.Color == model.board.activeColor) {
 						view.ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
 					}
@@ -169,6 +170,7 @@ namespace ChessBot.Application {
 					view.ui.movesForSelected = new Move[0];
 					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.White && (model.humanColor & 0b10) != 0);
 					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.Black && (model.humanColor & 0b01) != 0);
+					isHumanColor = isHumanColor || SuspendPlay; // if play is suspended, allow view to move pieces
 					if (isHumanColor && clickedPiece.Color == model.board.activeColor) {
 						view.ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
 					}
@@ -235,6 +237,7 @@ namespace ChessBot.Application {
 					break;
 				}
 				case (int) KeyboardKey.KEY_C :{
+					view.ui.DeselectActiveSquare();
 					SuspendPlay = ! SuspendPlay;
 					break;
 				}

@@ -19,18 +19,12 @@ public class ChessPlayer { // Stole this idea from SebLague, able to reference a
 
 	public bool IsSearching {
 		get {
-			if (UCI != null) {
-				return UCI.IsSearching;
-			} 
 			if (Computer != null) {
 				return Computer.IsSearching;
 			}
 			return false;
 		}
 		set {
-			if (UCI != null) {
-				UCI.IsSearching = value;
-			} else
 			if (Computer != null) {
 				Computer.IsSearching = value;
 			}

@@ -247,7 +247,7 @@ namespace ChessBot.Engine {
 				Piece.Rook => GetRookMoves(board, index),
 				Piece.Queen => GetQueenMoves(board, index),
 				Piece.King => GetKingMoves(board, index),
-				_ => throw new Exception("Invalid piece type")
+				_ => throw new Exception("Invalid piece type to generate moves")
 			};
 
 			for (int i=moves.Count-1; i>-1; i--) {
