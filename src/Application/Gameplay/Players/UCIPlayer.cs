@@ -52,10 +52,8 @@ public class UCIPlayer : ComputerPlayer {
 
 		int startSquare = BoardHelper.NameToSquareIndex(response.Substring(0, 2));
 		int targetSquare = BoardHelper.NameToSquareIndex(response.Substring(2, 2));
-		Console.WriteLine($"{startSquare} {targetSquare}");
 		foreach (Move testedMove in MoveGenerator.GetMoves(model.board, startSquare)) {
 			if (testedMove.TargetSquare == targetSquare) {
-				Console.WriteLine();
 				return testedMove;
 			}
 		}

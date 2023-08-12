@@ -9,7 +9,7 @@ public class ComputerPlayer : Player {
 	public bool HasStarted;
 	public Thread thread;
 	public ConsoleColor threadColor;
-	public static ConsoleColor[] ThreadColorBlacklist = { ConsoleColor.Black, ConsoleColor.DarkBlue, ConsoleColor.White };
+	public static ConsoleColor[] ThreadColorBlacklist = { ConsoleColor.Black, ConsoleColor.DarkBlue, ConsoleColor.White, ConsoleColor.DarkYellow, ConsoleColor.Yellow };
 
 	public ComputerPlayer(char color, Model model) : base(color) {
 		this.model = model;
