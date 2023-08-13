@@ -30,6 +30,7 @@ namespace ChessBot.Application {
 			Raylib.SetConfigFlags(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 			Raylib.SetTraceLogLevel(TraceLogLevel.LOG_FATAL); // Ignore Raylib Errors unless fatal
 			Raylib.InitWindow(1600, 900, "Chess");
+			Raylib.InitAudioDevice();
 
 			Debug.Assert(random != null);
 
@@ -82,6 +83,7 @@ namespace ChessBot.Application {
 			model.JoinPlayerThreads();
 			
 
+			Raylib.CloseAudioDevice();
 			view.Release();
             UIHelper.Release();
 		}
@@ -89,10 +91,16 @@ namespace ChessBot.Application {
 		public void MakeMove(Move move, bool animate=true) {
 			if (! move.IsNull) { // When null move is attempted, it's assumed it's checkmate, active color is the loser
 				model.ActivePlayer.IsSearching = false;
+				bool wasPieceCaptured = model.board.GetSquare(move.TargetSquare) != Piece.None || move.MoveFlag == Move.EnPassantCaptureFlag;
 				model.board.MakeMove(move);
 				view.TimeOfLastMove = view.fTimeElapsed;
-				if (animate) {
-					view.ui.activeAnimation = new BoardAnimation(model.board.prevBoard, model.board.board, .12f);
+				if (animate) { view.ui.activeAnimation = new BoardAnimation(model.board.prevBoard, model.board.board, .12f); }
+				if (wasPieceCaptured) {
+					Raylib.PlaySound(view.captureSound);
+				} else if (move.MoveFlag == Move.CastleFlag) {
+					Raylib.PlaySound(view.castleSound);
+				} else {
+					Raylib.PlaySound(view.moveSound);
 				}
 				return;
 			}

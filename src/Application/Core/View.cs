@@ -11,6 +11,9 @@ namespace ChessBot.Application {
 		public Model model;
 		public Camera2D camera;
 		public List<IInteractable> pipeline;
+		public Sound castleSound;
+		public Sound captureSound;
+		public Sound moveSound;
 
 		public float fTimeElapsed = 0.0f;
 		public float TimeOfLastMove = 0.0f;
@@ -36,6 +39,10 @@ namespace ChessBot.Application {
 			this.model = model;
 			this.model.enforceColorToMove = true;
 			this.camera = cam;
+
+			castleSound = Raylib.LoadSound(FileHelper.GetResourcePath("sounds/castle.mp3"));
+			captureSound = Raylib.LoadSound(FileHelper.GetResourcePath("sounds/capture.mp3"));
+			moveSound = Raylib.LoadSound(FileHelper.GetResourcePath("sounds/move-self.mp3"));
 
 			pipeline = new List<IInteractable>();
 

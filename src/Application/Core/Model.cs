@@ -37,7 +37,7 @@ namespace ChessBot.Application {
 		public static NewGameDel NewGameCalls = () => {};
 
 		public Model() {
-			StartNewGame("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
+			StartNewGame();
 			Debug.Assert(board != null);
 
             botMatchStartFens = FileHelper.ReadResourceFile("Fens.txt").Split('\n');
