@@ -17,7 +17,6 @@ namespace ChessBot.Application {
 		public int selectedIndex = -1;
 		public bool[] highlightedSquares = new bool[64];
 		public Move[] movesForSelected = new Move[0];
-		public Color[] squareColors = new Color[64];
 		public bool isDraggingPiece = false;
 		public BoardAnimation? activeAnimation;
 		public bool isFlipped;
@@ -28,10 +27,6 @@ namespace ChessBot.Application {
             Raylib.GenTextureMipmaps(ref piecesTexture);
             Raylib.SetTextureWrap(piecesTexture, TextureWrap.TEXTURE_WRAP_CLAMP);
             Raylib.SetTextureFilter(piecesTexture, TextureFilter.TEXTURE_FILTER_BILINEAR);
-
-			for (int i=0;i<64;i++) {
-				squareColors[i] = IsLightSquare(i) ? BoardTheme.lightCol : BoardTheme.darkCol;
-			}
 		}
 
 		public bool IsLightSquare(int i) => (((i&0b111) + (i>>3)) % 2 == 1);
@@ -43,10 +38,18 @@ namespace ChessBot.Application {
 		}
 
 		public void DrawBoardSquares() {
-			for (int i=0;i<64;i++) {				
+			for (int i=0;i<64;i++) {	
+				bool IsLight = IsLightSquare(i);			
 				Vector2 squarePos = new Vector2(i & 0b111, 7-(i>>3));
 				Vector2 temp = squareSize * (squarePos - new Vector2(3.5f));
-				DrawRectangleCentered(temp, squareSizeV, squareColors[i]);
+				DrawRectangleCentered(temp, squareSizeV, IsLight ? BoardTheme.lightCol : BoardTheme.darkCol);
+				Color textColor = (!IsLight) ? BoardTheme.lightCol : BoardTheme.darkCol;
+				if (squarePos.Y == 7) { // If square is on the bottom edge, draw the file
+					UIHelper.DrawText($"{BoardHelper.fileNames[(! isFlipped ? i&0b111 : 7-i&0b111)]}", temp+(squareSizeV/2)-(3*squareSizeV/128), squareSize/4, 0, textColor, UIHelper.AlignH.Right, UIHelper.AlignV.Bottom);
+				}
+				if (squarePos.X == 0) { // If square is on the left edge, draw the rank
+					UIHelper.DrawText($"{BoardHelper.rankNames[(! isFlipped ? i>>3 : 7-(i>>3))]}", temp-(squareSizeV/2)+(3*squareSizeV/128), squareSize/4, 0, textColor, UIHelper.AlignH.Left, UIHelper.AlignV.Top);
+				}
 				if (highlightedSquares[isFlipped ? 63-i : i]) {
 					DrawRectangleCentered(temp, squareSizeV, BoardTheme.selectedHighlight);
 				}
@@ -76,9 +79,6 @@ namespace ChessBot.Application {
 			Raylib.DrawRectangleV(position-size/2, size, color);
 		}
 
-		public void ResetBoardColors() {
-			for (int i=0;i<64;i++) { squareColors[i] = IsLightSquare(i) ? BoardTheme.lightCol : BoardTheme.darkCol; }
-		}
 
 
 		public void DrawPiecesOnBoard(Board board) {

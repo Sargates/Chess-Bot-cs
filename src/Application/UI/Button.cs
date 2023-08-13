@@ -44,7 +44,7 @@ namespace ChessBot.Application {
 				Raylib.DrawRectangleV(Position, Size, this.highlightColor);
 			}
 
-			UIHelper.DrawText(text, Position+(Size/2), 24, 0, Color.WHITE, UIHelper.AlignH.Centre, UIHelper.AlignV.Centre);
+			UIHelper.DrawText(text, Position+(Size/2), 24, 0, Color.WHITE, UIHelper.AlignH.Center, UIHelper.AlignV.Center);
 		}
 
 		public void Update() {

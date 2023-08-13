@@ -84,7 +84,6 @@ namespace ChessBot.Application {
 			ui.DrawBoardBorder();
 			ui.DrawBoardSquares();
 			ui.DrawPiecesOnBoard(model.board);
-			ui.ResetBoardColors();
 
 			ui.activeAnimation?.Draw(ui.isFlipped);
 

@@ -16,13 +16,13 @@ namespace ChessBot.Helpers {
         public enum AlignH
         {
             Left,
-            Centre,
+            Center,
             Right
         }
         public enum AlignV
         {
             Top,
-            Centre,
+            Center,
             Bottom
         }
 
@@ -53,11 +53,11 @@ namespace ChessBot.Helpers {
             font = Raylib.LoadFontEx(FileHelper.GetResourcePath("Fonts", fontName), 128, null, 0);
         }
 
-        public static void DrawText(string text, Vector2 pos, int size, int spacing, Color col, AlignH alignH = AlignH.Left, AlignV alignV = AlignV.Centre)
+        public static void DrawText(string text, Vector2 pos, int size, int spacing, Color col, AlignH alignH = AlignH.Left, AlignV alignV = AlignV.Center)
         {
             Vector2 boundSize = Raylib.MeasureTextEx(font, text, size, spacing);
-            float offsetX = alignH == AlignH.Left ? 0 : (alignH == AlignH.Centre ? -boundSize.X / 2 : -boundSize.X);
-            float offsetY = alignV == AlignV.Top ? 0 : (alignV == AlignV.Centre ? -boundSize.Y / 2 : -boundSize.Y);
+            float offsetX = alignH == AlignH.Left ? 0 : (alignH == AlignH.Center ? -boundSize.X / 2 : -boundSize.X);
+            float offsetY = alignV == AlignV.Top ? 0 : (alignV == AlignV.Center ? -boundSize.Y / 2 : -boundSize.Y);
             Vector2 offset = new(offsetX, offsetY);
 
             if (SDF_Enabled) {
