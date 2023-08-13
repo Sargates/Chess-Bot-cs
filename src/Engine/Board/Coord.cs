@@ -1,5 +1,5 @@
 using System;
-namespace ChessBot.Engine { // ! Copied from SebLague
+namespace ChessBot.Engine { //* Copied from SebLague
 	// Structure for representing squares on the chess board as file/rank integer pairs.
 	// (0, 0) = a1, (7, 7) = h8.
 	// Coords can also be used as offsets. For example, while a Coord of (-1, 0) is not

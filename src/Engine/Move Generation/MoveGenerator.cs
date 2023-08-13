@@ -18,14 +18,11 @@ namespace ChessBot.Engine {
 				return moves;
 			}
 
-			// !!! Game crashes when pawn is at edge of board, need to find way to check these pieces, (precomputed move data?)
-
-
 			Coord coord = new Coord(index);
 			Coord delta = new Coord(board.forwardDir(piece.Color));
 			Coord newPos = coord+delta;
 			Piece pawnOneUp = board.GetSquare(newPos.SquareIndex);
-			if (newPos.IsInBounds() && pawnOneUp == Piece.None) { // ! add pinning capabilities
+			if (newPos.IsInBounds() && pawnOneUp == Piece.None) {
 				moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
 				
 				if (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 1 : 6) && board.GetSquare(index + 2*board.forwardDir(piece.Color)) == Piece.None) {
@@ -37,7 +34,7 @@ namespace ChessBot.Engine {
 			newPos = coord+delta;
 			Piece pawnAttackPositive = board.GetSquare(newPos.SquareIndex);
 			if (newPos.IsInBounds()) {
-				if ((pawnAttackPositive.Type != Piece.None) && pawnAttackPositive.Color != piece.Color ) { // ! add pinning capabilities
+				if ((pawnAttackPositive.Type != Piece.None) && pawnAttackPositive.Color != piece.Color ) {
 					moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
 				} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index + 1) != piece.Color)) {
 					moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
@@ -48,23 +45,37 @@ namespace ChessBot.Engine {
 			newPos = coord+delta;
 			Piece pawnAttackNegative = board.GetSquare(newPos.SquareIndex);
 			if (newPos.IsInBounds()) {
-				if ((pawnAttackNegative.Type != Piece.None) && pawnAttackNegative.Color != piece.Color ) { // ! add pinning capabilities
+				if ((pawnAttackNegative.Type != Piece.None) && pawnAttackNegative.Color != piece.Color ) {
 					moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
 				} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index - 1) != piece.Color)) {
 					moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
 				}
 			}
 
-			if (pinsBySquare[index] == 0) {
-				return moves;
-			}
 
 			for (int i=moves.Count-1; i>-1; i--) { // TODO: Change for compat. with PrecomputedMoveData
 				Move move = moves[i];
-				// Console.WriteLine(move.TargetSquare-move.StartSquare);
-				// Console.WriteLine(pinsBySquare[index]);
+				if (pinsBySquare[index]==0 && move.MoveFlag!=Move.EnPassantCaptureFlag) { continue; }
 				if ((move.TargetSquare - move.StartSquare) == pinsBySquare[index] || (move.TargetSquare - move.StartSquare) == -pinsBySquare[index]) { continue; }
-				if (move.MoveFlag == Move.PawnTwoUpFlag && (move.TargetSquare - move.StartSquare)/2 == pinsBySquare[index] || (move.TargetSquare - move.StartSquare)/2 == -pinsBySquare[index]) { continue; }
+				if (move.MoveFlag == Move.PawnTwoUpFlag && ((move.TargetSquare - move.StartSquare)/2 == pinsBySquare[index] || (move.TargetSquare - move.StartSquare)/2 == -pinsBySquare[index])) { continue; }
+				// Edge case in enpassant capture
+				// See: https://www.chessprogramming.org/Perft_Results#cite_note-9:~:text=8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8
+				if (move.MoveFlag == Move.EnPassantCaptureFlag) {
+					// If the move is en-passant capture, then we need to check if the king would be in check after the move, 
+					// if the colorToMove's king is in the same file as both pawns and say a rook, en-passant capture would be illegal,
+					// We need to cache the piece that's taken, and check if the pawn that gets moved is pinned,
+
+					int enemyPawnIndex = board.enPassantIndex - board.forwardDir(piece.Color);
+					Piece enemyPawn = board.board[enemyPawnIndex];
+					board.board[enemyPawnIndex] = Piece.None;
+					(int, int)[] pins = MoveGenerator.GetCheckData(board, piece.Color == Piece.White ? board.whiteKingPos : board.blackKingPos, piece.Color).Item2;
+					board.board[enemyPawnIndex] = enemyPawn;
+					if (pins.Length == 0) { continue; }
+				}
+
+
+
+				// Console.WriteLine($"Move removed: {move}");
 				moves.RemoveAt(i);
 			}
 
@@ -91,7 +102,7 @@ namespace ChessBot.Engine {
 
 				Piece newPiece = board.GetSquare(newPos.SquareIndex);
 
-				if (newPiece.Type == Piece.None || newPiece.Color != piece.Color) { // ! add pinning capabilities
+				if (newPiece.Type == Piece.None || newPiece.Color != piece.Color) {
 					moves.Add(new Move(index, newPos.SquareIndex));
 				}
 			}
@@ -122,7 +133,7 @@ namespace ChessBot.Engine {
 					Piece newPiece = board.GetSquare(newPos.SquareIndex);
 					
 					
-					if (newPiece.Type == Piece.None) { // ! add pinning capabilities
+					if (newPiece.Type == Piece.None) {
 						moves.Add(new Move(index, newPos.SquareIndex));
 						continue;
 					} else if (newPiece.Color != piece.Color) {
@@ -159,7 +170,7 @@ namespace ChessBot.Engine {
 					Piece newPiece = board.GetSquare(newPos.SquareIndex);
 					
 					
-					if (newPiece.Type == Piece.None) { // ! add pinning capabilities
+					if (newPiece.Type == Piece.None) {
 						moves.Add(new Move(index, newPos.SquareIndex));
 						continue;
 					} else if (newPiece.Color != piece.Color) {
@@ -198,7 +209,7 @@ namespace ChessBot.Engine {
 
 					Piece newPiece = board.GetSquare(newPos.SquareIndex);
 					
-					if (newPiece.Type == Piece.None) { // ! add pinning capabilities
+					if (newPiece.Type == Piece.None) {
 						moves.Add(new Move(index, newPos.SquareIndex));
 						continue;
 					} else if (newPiece.Color != piece.Color) {
@@ -226,7 +237,7 @@ namespace ChessBot.Engine {
 
 				Piece newPiece = board.GetSquare(newPos.SquareIndex);
 
-				if (newPiece.Type == Piece.None || newPiece.Color != piece.Color) { // ! add pinning capabilities
+				if (newPiece.Type == Piece.None || newPiece.Color != piece.Color) {
 					moves.Add(new Move(index, newPos.SquareIndex));
 				}
 			}
@@ -285,8 +296,6 @@ namespace ChessBot.Engine {
 		// TODO: Add method to sum number of moves to an given depth (recursive? iterative?)
 		public static Move[] GetMoves(Board board, int index) { // ! check edgecases
 
-			// !!! Add pinning capabilities
-			// !!! Make sure moving in opposite direction of pin doesnt work; moving in same direction as pin does
 
 			Piece piece = board.GetSquare(index);
 
@@ -297,9 +306,11 @@ namespace ChessBot.Engine {
 			pinsBySquare = new int[64];
 			foreach ((int squareIndex, int dirFromKing) pin in checkData.Item2) {
 				pinsBySquare[pin.squareIndex] = pin.dirFromKing;
+				// Console.WriteLine($"{pin.squareIndex} {pin.dirFromKing}");
 			}
 			// Console.WriteLine(kingPos);
 			currentChecks[(piece.Color == Piece.White) ? 0 : 1] = checkData.Item3;
+			
 			
 
 			List<Move> moves = piece.Type switch {
@@ -312,17 +323,6 @@ namespace ChessBot.Engine {
 				_ => new List<Move>() // Space is invalid, no moves, this is for Computer players not causing the program to crash
 			};
 
-			// Console.Write("  Pins: ");
-			// for (int i=0; i<pinsBySquare.Length; i++) {
-			// 	if (pinsBySquare[i] == 0) continue;
-				
-			// 	Console.Write($"{i} {pinsBySquare[i]}, ");
-			// }
-			// Console.WriteLine();
-
-			if (! isInCheck) {
-				return moves.ToArray();
-			} // Passes guard clause if king is checked
 
 			if (piece.Type == Piece.King || currentChecks[(piece.Color == Piece.White) ? 0 : 1].Length == 2) { // Check if each end square is in attacked for each king move
 				// Combined `if king in double check` logic because outcome is the same (moves should be empty if king is in doublecheck)
@@ -334,6 +334,11 @@ namespace ChessBot.Engine {
 				}
 				return moves.ToArray();
 			}
+
+			if (! isInCheck) {
+				return moves.ToArray();
+			} // Passes guard clause if king is checked
+
 
 			for (int i=moves.Count-1; i>-1; i--) { // Check each move against needed squares to block the check
 				Move move = moves[i];
@@ -350,7 +355,6 @@ namespace ChessBot.Engine {
 				}
 
 				if (NotHit) { moves.RemoveAt(i); }
-				
 			}
 			return moves.ToArray();
 

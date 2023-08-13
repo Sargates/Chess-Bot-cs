@@ -247,7 +247,8 @@ namespace ChessBot.Application {
 					ui.DeselectActiveSquare();
 					Piece[] old = model.board.board.ToArray();
 					model.SetPrevState();
-					model.SetPrevState();
+					// model.SetPrevState();
+					Model.SuspendPlay = true;
 					ui.activeAnimation = new BoardAnimation(old, model.board.board, 0.08f);
 					break;
 				}
@@ -255,13 +256,18 @@ namespace ChessBot.Application {
 					ui.DeselectActiveSquare();
 					Piece[] old = model.board.board.ToArray();
 					model.SetNextState();
-					model.SetNextState();
+					// model.SetNextState();
+					Model.SuspendPlay = true;
 					ui.activeAnimation = new BoardAnimation(old, model.board.board, 0.08f);
 					break;
 				}
 				case (int) KeyboardKey.KEY_C :{
-					ui.DeselectActiveSquare();
-					Model.SuspendPlay = ! Model.SuspendPlay;
+					if (model.ActivePlayer.Computer == null) {
+						ui.DeselectActiveSquare();
+						Model.SuspendPlay = ! Model.SuspendPlay;
+						break;
+					}
+					Console.WriteLine("Cannot Unsuspend player if Computer player would move");
 					break;
 				}
 

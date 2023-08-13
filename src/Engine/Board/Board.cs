@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ChessBot.Application;
 using ChessBot.Helpers;
 
@@ -29,7 +30,9 @@ namespace ChessBot.Engine {
 			currentFen = currentStateNode.Value;
 
 			// TODO: Add FEN string loading, StartNewGame should be in Controller/Model.cs, board should just be able to load a fen string in place
-            board = FenToBoard(this.currentFen.fenBoard);
+			UpdateFromState();
+			Debug.Assert(board!=null);
+            // board = FenToBoard(this.currentFen.fenBoard);
 			prevBoard = board;
 			for (int i = 0; i < board.Length; i++) {
 				if (board[i] == (Piece.White | Piece.King)) { whiteKingPos = i; }
@@ -41,7 +44,7 @@ namespace ChessBot.Engine {
 
 
 		public void UpdateFromState() {
-			board = FenToBoard(currentFen.fenBoard);
+			this.board = FenToBoard(currentFen.fenBoard);
 			for (int i = 0; i < board.Length; i++) {
 				if (board[i] == (Piece.White | Piece.King)) { whiteKingPos = i; }
 				if (board[i] == (Piece.Black | Piece.King)) { blackKingPos = i; }
