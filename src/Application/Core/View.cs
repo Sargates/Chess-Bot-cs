@@ -58,18 +58,21 @@ namespace ChessBot.Application {
 			pressedKey = Raylib.GetKeyPressed();
 
 			fTimeElapsed += dt;
-			if (ui.activeAnimation != null) {
-				ui.activeAnimation.Update(dt);
-				if (ui.activeAnimation.HasFinished) {
-					ui.activeAnimation = null;
-				}
-			}
+			foreach (PieceAnimation anim in ui.activeAnimations) {
+				anim.Update(dt);
+			} 
+			
+			// if (ui.activeAnimations != null) {
+			// 	if (ui.activeAnimations.HasFinished) {
+			// 		ui.activeAnimations = null;
+			// 	}
+			// }
 
 			
 			if (pressedKey != 0) {
 				HandleKeyboardInput();
 			}
-			if (ui.activeAnimation is null && mouseButtonsClicked > 0) {
+			if (ui.activeAnimations.Count == 0 && mouseButtonsClicked > 0) {
 				HandleMouseInput();
 			}
 
@@ -86,9 +89,7 @@ namespace ChessBot.Application {
 
 			ui.DrawBoardBorder();
 			ui.DrawBoardSquares();
-			ui.DrawPiecesOnBoard(model.board);
-
-			ui.activeAnimation?.Draw(ui.isFlipped);
+			ui.DrawPiecesOnBoard(model.board); // Includes Animations
 
 			DrawPlayerInfo();
 
@@ -250,7 +251,8 @@ namespace ChessBot.Application {
 					model.SetPrevState();
 					// model.SetPrevState();
 					Model.SuspendPlay = true;
-					ui.activeAnimation = new BoardAnimation(old, model.board.board, 0.08f);
+					ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(old, model.board.board, 0.08f));
+					// ui.activeAnimations.AddRange(AnimationHelper.FromMove(model.board.currentStateNode.Value.moveMade, 0.08f));
 					break;
 				}
 				case (int) KeyboardKey.KEY_X :{
@@ -259,23 +261,21 @@ namespace ChessBot.Application {
 					model.SetNextState();
 					// model.SetNextState();
 					Model.SuspendPlay = true;
-					ui.activeAnimation = new BoardAnimation(old, model.board.board, 0.08f);
+					ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(old, model.board.board, 0.08f));
+					// ui.activeAnimations.AddRange(AnimationHelper.FromMove(model.board.currentStateNode.Value.moveMade, 0.08f));
 					break;
 				}
 				case (int) KeyboardKey.KEY_C :{
 					int activeColor = model.board.whiteToMove ? 0b10 : 0b01;
 					if (model.humanColor != 0 && Model.SuspendPlay && activeColor != (model.humanColor & activeColor)) { 
 						Console.Write(System.Convert.ToString(model.humanColor, 2));
-						Console.WriteLine(" not poggies");
-						break; } // If activeColor is not a human
+						Console.WriteLine("Cannot Unsuspend player if Computer player would move");
+						break;
+					} // Passes guard clause if it should switch suspend play
+					// If exactly 1 player is human and the active player is not a computer
 
-					// if (model.ActivePlayer.Computer == null) { break; } // If activeplayer is a computer, break
-
-					// if (Model.SuspendPlay == false || model.ActivePlayer.Computer == null && (model.humanColor == 3 || model.humanColor == 0)) { break; }
 					ui.DeselectActiveSquare();
 					Model.SuspendPlay = ! Model.SuspendPlay;
-					Console.WriteLine("poggies");
-					// Console.WriteLine("Cannot Unsuspend player if Computer player would move");
 					break;
 				}
 
@@ -351,19 +351,19 @@ namespace ChessBot.Application {
 			// }));
 			AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Freeplay").SetCallback(() => {
 				model.StartNewGame();
-				ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+				ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(model.oldBoard, model.board.board, 0.2f));
 			}));
 			AddToPipeline(new Button(new Rectangle(40, 480, 210, 50), "Human vs. Gatesfish").SetCallback(() => {
 				model.StartNewGame(Model.Gametype.HvC);
-				ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+				ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(model.oldBoard, model.board.board, 0.2f));
 			}));
 			AddToPipeline(new Button(new Rectangle(40, 540, 210, 50), "Human vs. Stockfish").SetCallback(() => {
 				model.StartNewGame(Model.Gametype.HvU);
-				ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+				ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(model.oldBoard, model.board.board, 0.2f));
 			}));
 			AddToPipeline(new Button(new Rectangle(40, 600, 210, 50), "Stockfish vs. Stockfish").SetCallback(() => {
 				model.StartNewGame(Model.Gametype.UvU);
-				ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+				ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(model.oldBoard, model.board.board, 0.2f));
 			}));
 
 			// AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Flip Board").SetCallback(() => {

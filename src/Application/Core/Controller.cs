@@ -98,10 +98,11 @@ namespace ChessBot.Application {
 		public void MakeMove(Move move, bool animate=true) {
 			model.ActivePlayer.IsSearching = false;
 			if (! move.IsNull) { // When null move is attempted, it's assumed it's checkmate, active color is the loser
+				Piece pieceMoved = model.board.GetSquare(move.StartSquare);
 				bool wasPieceCaptured = model.board.GetSquare(move.TargetSquare) != Piece.None || move.MoveFlag == Move.EnPassantCaptureFlag;
 				model.board.MakeMove(move);
 				view.TimeOfLastMove = view.fTimeElapsed;
-				if (animate) { view.ui.activeAnimation = new BoardAnimation(model.board.prevBoard, model.board.board, .12f); }
+				if (animate) { view.ui.activeAnimations.AddRange(AnimationHelper.FromMove(move, pieceMoved, 0.08f)); }
 				if (MoveGenerator.IsSquareAttacked(model.board, model.board.activeColor == Piece.White ? model.board.whiteKingPos : model.board.blackKingPos, model.board.activeColor))
 													   	{	Raylib.PlaySound(view.sounds[(int)View.Sounds.Check]); } else
 				if (wasPieceCaptured) 				   	{	Raylib.PlaySound(view.sounds[(int)View.Sounds.Capture]); } else
