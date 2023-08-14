@@ -49,7 +49,7 @@ public class UCIPlayer : ComputerPlayer {
 	public override Move Think() { // position should already be set
 		string fen = model.board.currentFen.ToFEN();
 		engine.SetPosition($"position fen {fen}");
-		string response = engine.GetBestMoveTime(1000);
+		string response = engine.GetBestMoveTime(1500);
 
 		int startSquare = BoardHelper.NameToSquareIndex(response.Substring(0, 2));
 		int targetSquare = BoardHelper.NameToSquareIndex(response.Substring(2, 2));
@@ -61,7 +61,7 @@ public class UCIPlayer : ComputerPlayer {
 		// GetMoves returns empty Move[] if startSquare is empty, the only reason this should happen is if the
 		// thread is supposed to exit. Otherwise something is actually wrong and an exception should be thrown
 		if (ExitFlag) { return Move.NullMove; } // This shouldnt raise checkmate when it returns
-		throw new Exception("AI attempted invalid Move");
+		return Move.NullMove;
 	}
 
 	~UCIPlayer() { // In case player object ever goes out of scope

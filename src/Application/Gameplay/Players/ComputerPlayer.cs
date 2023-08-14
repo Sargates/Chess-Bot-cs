@@ -9,7 +9,7 @@ public class ComputerPlayer : Player {
 	public bool HasStarted;
 	public Thread thread;
 	public readonly ConsoleColor threadColor;
-	public static ConsoleColor[] ThreadColorBlacklist = { ConsoleColor.Black, ConsoleColor.DarkBlue, ConsoleColor.White, ConsoleColor.DarkYellow, ConsoleColor.Yellow };
+	public static ConsoleColor[] ThreadColorBlacklist = { ConsoleColor.Black, ConsoleColor.DarkBlue, ConsoleColor.White, ConsoleColor.Gray, ConsoleColor.DarkGray, ConsoleColor.DarkYellow, ConsoleColor.Yellow };
 
 	public ComputerPlayer(char color, Model model) : base(color) {
 		this.model = model;
@@ -31,6 +31,7 @@ public class ComputerPlayer : Player {
 
 
 	public virtual void Start() {
+		Thread.Sleep(500);
 		ConsoleHelper.WriteLine($"Starting Thread {color}", threadColor);
 		HasStarted = true;
 		while (true) {

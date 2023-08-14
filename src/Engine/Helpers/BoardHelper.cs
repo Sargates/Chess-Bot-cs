@@ -51,7 +51,7 @@ namespace ChessBot.Helpers {
 		}
 
 		
-		public static int BoardCharToEnum(char pieceEnum) {
+		public static int FenCharToPieceEnum(char pieceEnum) {
 			return pieceEnum switch {
 				'p' => Piece.Black | Piece.Pawn,
 				'n' => Piece.Black | Piece.Knight,
@@ -69,7 +69,7 @@ namespace ChessBot.Helpers {
 			};
 		}
 
-		public static char BoardEnumToChar(int pieceEnum) {
+		public static char PieceEnumToFenChar(int pieceEnum) {
 			return pieceEnum switch {
 				Piece.Black | Piece.Pawn   => 'p',
 				Piece.Black | Piece.Knight => 'n',
@@ -100,7 +100,7 @@ namespace ChessBot.Helpers {
 						continue;
 					} // Passes guard clause if square is not empty
 					if (gap != 0) { o += $"{gap}"; }
-					o += $"{BoardEnumToChar(pieceEnum)}";
+					o += $"{PieceEnumToFenChar(pieceEnum)}";
 					gap = 0;
 				}
 				if (gap != 0) { o += $"{gap}"; }

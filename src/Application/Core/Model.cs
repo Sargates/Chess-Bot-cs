@@ -45,12 +45,12 @@ namespace ChessBot.Application {
 
 
 		public void ExitPlayerThreads() { whitePlayer.RaiseExitFlag(); blackPlayer.RaiseExitFlag(); }
-		public void JoinPlayerThreads() { ActivePlayer.Join(); InactivePlayer.Join(); } // Join the active player first because that's the one that will be searching
+		public void JoinPlayerThreads() { whitePlayer.Join(); blackPlayer.Join(); }
 		public void SetBoardPosition() { SetBoardPosition(Fen.startpos); }
 		public void SetBoardPosition(string fenString) {
 			if (board != null) SetOldBoard();
 			board = new Board(fenString);
-			
+
 			whitePlayer.UCI?.RaiseManualUpdateFlag();
 			blackPlayer.UCI?.RaiseManualUpdateFlag();
 		}
@@ -67,12 +67,12 @@ namespace ChessBot.Application {
 				(Gametype.CvC, true) => new ChessPlayer(new ComputerPlayer('w', this), 60f),
 				(Gametype.CvU, true) => new ChessPlayer(new ComputerPlayer('w', this), 60f),
 				(Gametype.UvU, true) => new ChessPlayer(new UCIPlayer('w', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
-				(Gametype.HvH, false) => new ChessPlayer(new Player('b'), 300f),
-				(Gametype.HvC, false) => new ChessPlayer(new ComputerPlayer('b', this), 60f),
-				(Gametype.HvU, false) => new ChessPlayer(new UCIPlayer('b', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
-				(Gametype.CvC, false) => new ChessPlayer(new ComputerPlayer('b', this), 60f),
-				(Gametype.CvU, false) => new ChessPlayer(new UCIPlayer('b', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
-				(Gametype.UvU, false) => new ChessPlayer(new UCIPlayer('b', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
+				(Gametype.HvH, false) => new ChessPlayer(new Player('w'), 300f),
+				(Gametype.HvC, false) => new ChessPlayer(new ComputerPlayer('w', this), 60f),
+				(Gametype.HvU, false) => new ChessPlayer(new UCIPlayer('w', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
+				(Gametype.CvC, false) => new ChessPlayer(new ComputerPlayer('w', this), 60f),
+				(Gametype.CvU, false) => new ChessPlayer(new UCIPlayer('w', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
+				(Gametype.UvU, false) => new ChessPlayer(new UCIPlayer('w', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
 				_ => throw new Exception("Shut up compiler!")
 			};
 			blackPlayer = (type, gameIndex%2==1) switch {
@@ -82,12 +82,12 @@ namespace ChessBot.Application {
 				(Gametype.CvC, true) => new ChessPlayer(new ComputerPlayer('b', this), 60f),
 				(Gametype.CvU, true) => new ChessPlayer(new UCIPlayer('b', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
 				(Gametype.UvU, true) => new ChessPlayer(new UCIPlayer('b', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
-				(Gametype.HvH, false) => new ChessPlayer(new Player('w'), 300f),
-				(Gametype.HvC, false) => new ChessPlayer(new Player('w'), 300f),
-				(Gametype.HvU, false) => new ChessPlayer(new Player('w'), 300f),
-				(Gametype.CvC, false) => new ChessPlayer(new ComputerPlayer('w', this), 60f),
-				(Gametype.CvU, false) => new ChessPlayer(new ComputerPlayer('w', this), 60f),
-				(Gametype.UvU, false) => new ChessPlayer(new UCIPlayer('w', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
+				(Gametype.HvH, false) => new ChessPlayer(new Player('b'), 300f),
+				(Gametype.HvC, false) => new ChessPlayer(new Player('b'), 300f),
+				(Gametype.HvU, false) => new ChessPlayer(new Player('b'), 300f),
+				(Gametype.CvC, false) => new ChessPlayer(new ComputerPlayer('b', this), 60f),
+				(Gametype.CvU, false) => new ChessPlayer(new ComputerPlayer('b', this), 60f),
+				(Gametype.UvU, false) => new ChessPlayer(new UCIPlayer('b', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
 				_ => throw new Exception("Shut up compiler!")
 			};
 			activeGameType = type;

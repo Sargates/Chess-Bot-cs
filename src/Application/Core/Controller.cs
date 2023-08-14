@@ -16,33 +16,29 @@ namespace ChessBot.Application {
 		Model model;
 		View view;
 		public static Random random = new Random();
-		
-
-
-		
-		// Return active player based on color passed, throw error if invalid color
-		public ChessPlayer GetPlayerFromColor(char color) => ("wb".IndexOf(color) == -1) ? throw new Exception("Invalid Color") : (color == 'w') ? model.whitePlayer : model.blackPlayer;
-		
+		public static dynamic appSettings = new ApplicationSettings(FileHelper.GetResourcePath("settings.txt"));
 
 
 		public Controller() {
 
+			screenSize = new Vector2(appSettings.uiScreenWidth, appSettings.uiScreenHeight);
+			View.screenSize = screenSize;
 			Raylib.SetConfigFlags(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 			Raylib.SetTraceLogLevel(TraceLogLevel.LOG_FATAL); // Ignore Raylib Errors unless fatal
-			Raylib.InitWindow(1600, 900, "Chess");
+			Raylib.InitWindow((int)screenSize.X, (int)screenSize.Y, "Chess");
 			Raylib.InitAudioDevice();
+			Raylib.SetMasterVolume(appSettings.uiSoundVolume);
 
 			Debug.Assert(random != null);
 
 			cam = new Camera2D();
-            int screenWidth = Raylib.GetScreenWidth();
-            int screenHeight = Raylib.GetScreenHeight();
+            int screenWidth = (int)screenSize.X;
+            int screenHeight = (int)screenSize.Y;
             cam.target = new Vector2(0, 0);
             cam.offset = new Vector2(screenWidth / 2f, screenHeight / 2f);
             cam.zoom = 1.0f;
 
 			Player.OnMoveChosen += MakeMove;
-			screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
 			model = new Model();
 			view = new View(screenSize, model, cam);
 			Model.NewGameCalls += () => {
@@ -81,34 +77,43 @@ namespace ChessBot.Application {
 			Raylib.CloseWindow();
 			model.ExitPlayerThreads();
 			model.JoinPlayerThreads();
-			
-
 			Raylib.CloseAudioDevice();
+			SaveApplicationSettings();
+
 			view.Release();
             UIHelper.Release();
 		}
-		
+
+		public void SaveApplicationSettings() {
+			using (StreamWriter writer = new StreamWriter(FileHelper.GetResourcePath("settings.txt"))) {
+				writer.WriteLine($"uiScreenWidth={View.screenSize.X}");
+				writer.WriteLine($"uiScreenHeight={View.screenSize.Y}");
+				foreach (var pair in Controller.appSettings._dictionary) {
+					if (pair.Key == "uiScreenWidth" || pair.Key == "uiScreenHeight") continue;
+					writer.WriteLine($"{pair.Key}={pair.Value}");
+				}
+			}
+		}
+
 		public void MakeMove(Move move, bool animate=true) {
+			model.ActivePlayer.IsSearching = false;
 			if (! move.IsNull) { // When null move is attempted, it's assumed it's checkmate, active color is the loser
-				model.ActivePlayer.IsSearching = false;
 				bool wasPieceCaptured = model.board.GetSquare(move.TargetSquare) != Piece.None || move.MoveFlag == Move.EnPassantCaptureFlag;
 				model.board.MakeMove(move);
 				view.TimeOfLastMove = view.fTimeElapsed;
 				if (animate) { view.ui.activeAnimation = new BoardAnimation(model.board.prevBoard, model.board.board, .12f); }
-				if (wasPieceCaptured) {
-					Raylib.PlaySound(view.captureSound);
-				} else if (move.MoveFlag == Move.CastleFlag) {
-					Raylib.PlaySound(view.castleSound);
-				} else {
-					Raylib.PlaySound(view.moveSound);
-				}
+				if (MoveGenerator.IsSquareAttacked(model.board, model.board.activeColor == Piece.White ? model.board.whiteKingPos : model.board.blackKingPos, model.board.activeColor))
+													   	{	Raylib.PlaySound(view.sounds[(int)View.Sounds.Check]); } else
+				if (wasPieceCaptured) 				   	{	Raylib.PlaySound(view.sounds[(int)View.Sounds.Capture]); } else
+				if (move.MoveFlag == Move.CastleFlag)  	{	Raylib.PlaySound(view.sounds[(int)View.Sounds.Castle]); } else
+														{	Raylib.PlaySound(view.sounds[(int)View.Sounds.Move]); }
 				return;
 			}
 
 			Model.SuspendPlay = true;
 
 			ConsoleHelper.WriteLine("Checkmate!", ConsoleColor.DarkBlue);
-			ConsoleHelper.WriteLine($"Winner: {(model.ActivePlayer.color == 'w' ? 'b' : 'w')}, Loser: {model.ActivePlayer.color}", ConsoleColor.DarkBlue);
+			ConsoleHelper.WriteLine($"Winner: {model.InactivePlayer.color}, Loser: {model.ActivePlayer.color}", ConsoleColor.DarkBlue);
 			// Handle Checkmate
 		}
 	}

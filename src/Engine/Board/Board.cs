@@ -78,7 +78,7 @@ namespace ChessBot.Engine {
 					continue;
 				}
 
-				board[index] = BoardHelper.BoardCharToEnum(c);
+				board[index] = BoardHelper.FenCharToPieceEnum(c);
 				file += 1;
 			}
 

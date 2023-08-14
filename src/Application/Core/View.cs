@@ -10,10 +10,11 @@ namespace ChessBot.Application {
 		public static Vector2 screenSize;
 		public Model model;
 		public Camera2D camera;
-		public List<IInteractable> pipeline;
-		public Sound castleSound;
-		public Sound captureSound;
-		public Sound moveSound;
+		public List<ScreenObject> pipeline = new List<ScreenObject>();
+		
+		public Sound[] sounds = new Sound[] {Raylib.LoadSound(FileHelper.GetResourcePath("sounds/move-self.mp3")), Raylib.LoadSound(FileHelper.GetResourcePath("sounds/capture.mp3")), Raylib.LoadSound(FileHelper.GetResourcePath("sounds/move-check.mp3")), Raylib.LoadSound(FileHelper.GetResourcePath("sounds/castle.mp3"))};
+		public enum Sounds :int { Move=0, Capture=1, Check=2, Castle=3, }
+
 
 		public float fTimeElapsed = 0.0f;
 		public float TimeOfLastMove = 0.0f;
@@ -35,21 +36,16 @@ namespace ChessBot.Application {
 
 		public View(Vector2 screenSize, Model model, Camera2D cam) {
 			ui = new BoardUI();
-			View.screenSize = screenSize;
 			this.model = model;
 			this.model.enforceColorToMove = true;
 			this.camera = cam;
+			// dynamic appSettings = new ApplicationSettings(FileHelper.GetResourcePath("settings.txt"));
 
-			castleSound = Raylib.LoadSound(FileHelper.GetResourcePath("sounds/castle.mp3"));
-			captureSound = Raylib.LoadSound(FileHelper.GetResourcePath("sounds/capture.mp3"));
-			moveSound = Raylib.LoadSound(FileHelper.GetResourcePath("sounds/move-self.mp3"));
-
-			pipeline = new List<IInteractable>();
 
 			AddButtons();
 		}
 
-		public void AddToPipeline(IInteractable interactable) {
+		public void AddToPipeline(ScreenObject interactable) {
 			pipeline.Add(interactable);
 		}
 
@@ -78,7 +74,7 @@ namespace ChessBot.Application {
 			}
 
 
-			foreach (IInteractable asset in pipeline) {
+			foreach (ScreenObject asset in pipeline) {
 				asset.Update();
 			}
 
@@ -99,12 +95,10 @@ namespace ChessBot.Application {
 			Raylib.EndMode2D();
 
 
-			foreach (IInteractable asset in pipeline) {
+			foreach (ScreenObject asset in pipeline) {
 				asset.Draw();
 			}
 		}
-
-
 
 
 		public void DrawPlayerInfo() { // Draw this in Camera space
@@ -269,12 +263,19 @@ namespace ChessBot.Application {
 					break;
 				}
 				case (int) KeyboardKey.KEY_C :{
-					if (model.ActivePlayer.Computer == null) {
-						ui.DeselectActiveSquare();
-						Model.SuspendPlay = ! Model.SuspendPlay;
-						break;
-					}
-					Console.WriteLine("Cannot Unsuspend player if Computer player would move");
+					int activeColor = model.board.whiteToMove ? 0b10 : 0b01;
+					if (model.humanColor != 0 && Model.SuspendPlay && activeColor != (model.humanColor & activeColor)) { 
+						Console.Write(System.Convert.ToString(model.humanColor, 2));
+						Console.WriteLine(" not poggies");
+						break; } // If activeColor is not a human
+
+					// if (model.ActivePlayer.Computer == null) { break; } // If activeplayer is a computer, break
+
+					// if (Model.SuspendPlay == false || model.ActivePlayer.Computer == null && (model.humanColor == 3 || model.humanColor == 0)) { break; }
+					ui.DeselectActiveSquare();
+					Model.SuspendPlay = ! Model.SuspendPlay;
+					Console.WriteLine("poggies");
+					// Console.WriteLine("Cannot Unsuspend player if Computer player would move");
 					break;
 				}
 
@@ -284,7 +285,15 @@ namespace ChessBot.Application {
 					break;
 				}
 				case (int) KeyboardKey.KEY_O :{
+					int maxOut = 20;
 					LinkedListNode<Fen>? currNode = model.board.stateHistory.First;
+					if (model.board.stateHistory.Count > maxOut) {
+						for (int i=0; i<model.board.stateHistory.Count-maxOut; i++) {
+							if (currNode==null) break; // Never happens, compiler gives warning
+							currNode = currNode.Next;
+						}
+					}
+
 					while (currNode != null) {
 						if (currNode == model.board.currentStateNode) {
 							ConsoleHelper.WriteLine($"{currNode.Value} {currNode.Value.moveMade}", ConsoleColor.Red);
@@ -342,19 +351,19 @@ namespace ChessBot.Application {
 			// }));
 			AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Freeplay").SetCallback(() => {
 				model.StartNewGame();
-				// ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+				ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
 			}));
 			AddToPipeline(new Button(new Rectangle(40, 480, 210, 50), "Human vs. Gatesfish").SetCallback(() => {
 				model.StartNewGame(Model.Gametype.HvC);
-				// ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+				ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
 			}));
 			AddToPipeline(new Button(new Rectangle(40, 540, 210, 50), "Human vs. Stockfish").SetCallback(() => {
 				model.StartNewGame(Model.Gametype.HvU);
-				// ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+				ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
 			}));
 			AddToPipeline(new Button(new Rectangle(40, 600, 210, 50), "Stockfish vs. Stockfish").SetCallback(() => {
 				model.StartNewGame(Model.Gametype.UvU);
-				// ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
+				ui.activeAnimation = new BoardAnimation(model.oldBoard, model.board.board, 0.2f);
 			}));
 
 			// AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Flip Board").SetCallback(() => {

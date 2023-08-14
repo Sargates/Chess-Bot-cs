@@ -10,7 +10,7 @@ public class BoardAnimation {
 	public bool HasFinished=false;
 
 	public ulong identicalPieces;
-	List<Animation> leftoverAnimations;
+	List<IAnimation> leftoverAnimations;
 
 
 	public BoardAnimation(Piece[] oldBoard, Piece[] newBoard, float totalTime) {
@@ -18,7 +18,7 @@ public class BoardAnimation {
 		List<(Piece piece, int index)> oldPiecesThatDontFit = new List<(Piece piece, int index)>();
 		List<(Piece piece, int index)> newPiecesThatDontFit = new List<(Piece piece, int index)>();
 
-		leftoverAnimations = new List<Animation>();
+		leftoverAnimations = new List<IAnimation>();
 
 		for (int i=0; i<64; i++) { // Iterate over every square in board, if the piece on the old square matches the new square, cache that and don't do anything
 			Piece pieceOnStart = oldBoard[i]; Piece pieceOnEnd = newBoard[i];
@@ -41,7 +41,7 @@ public class BoardAnimation {
 			for (int j=newPiecesThatDontFit.Count-1; j>-1; j--) {
 				Piece endPiece = newPiecesThatDontFit[j].piece;
 				if (startPiece == endPiece) {
-					leftoverAnimations.Add(new Animation(oldPiecesThatDontFit[i].index, newPiecesThatDontFit[j].index, startPiece, totalTime));
+					leftoverAnimations.Add(new MoveAnimation(new Move(oldPiecesThatDontFit[i].index, newPiecesThatDontFit[j].index), startPiece, totalTime));
 					newPiecesThatDontFit.RemoveAt(j);
 					oldPiecesThatDontFit.RemoveAt(i);
 					break;
@@ -57,7 +57,7 @@ public class BoardAnimation {
 		if (newPiecesThatDontFit.Count > 0) {
 			foreach ((Piece piece, int index) tup in newPiecesThatDontFit) {
 				// identicalPieces |= (1ul << tup.index);
-				leftoverAnimations.Add(new Animation(tup.index, tup.index, tup.piece, totalTime));
+				leftoverAnimations.Add(new MoveAnimation(new Move(tup.index, tup.index), tup.piece, totalTime));
 			}
 		}
 	}
@@ -66,14 +66,14 @@ public class BoardAnimation {
 
 	public void Draw(bool isFlipped) {
 		// Draw piece at position
-		foreach (Animation anim in leftoverAnimations) {
+		foreach (IAnimation anim in leftoverAnimations) {
 			anim.Draw(isFlipped);
 		}
 	}
 
 	public void Update(float dt) {
 		// Update T [0, 1]
-		foreach (Animation anim in leftoverAnimations) {
+		foreach (IAnimation anim in leftoverAnimations) {
 			anim.Update(dt);
 		}
 		ElapsedTime += dt;
