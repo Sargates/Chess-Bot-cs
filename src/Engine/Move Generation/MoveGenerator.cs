@@ -81,7 +81,6 @@ namespace ChessBot.Engine {
 
 			return moves;
 		}
-
 		public static List<Move> GetKnightMoves(Board board, int index) {
 			List<Move> moves = new List<Move>();
 
@@ -292,8 +291,6 @@ namespace ChessBot.Engine {
 			return moves;
 		}
 
-
-		// TODO: Add method to sum number of moves to an given depth (recursive? iterative?)
 		public static Move[] GetMoves(Board board, int index) { // ! check edgecases
 
 
@@ -374,6 +371,16 @@ namespace ChessBot.Engine {
 
 		}
 
+		public static Move[] GetAllMoves(Board board, int color) {
+			List<Move> totalMoves = new List<Move>();
+
+			for (int i=0; i<64;i++) {
+				if (board.GetSquare(i).Color != color) continue;
+				totalMoves.AddRange(GetMoves(board, i));
+			}
+
+			return totalMoves.ToArray();
+		}
 		public static bool IsSquareAttacked(Board board, int index, int color) {
 			return GetCheckData(board, index, color).Item1;
 		}

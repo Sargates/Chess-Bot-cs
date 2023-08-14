@@ -1,3 +1,4 @@
+using Raylib_cs;
 using System.Diagnostics;
 using ChessBot.Engine;
 using ChessBot.Helpers;
@@ -27,14 +28,16 @@ namespace ChessBot.Application {
 
 		public Gametype activeGameType = Gametype.HvH;
 
-		public static bool SuspendPlay = false;
+		public bool SuspendPlay = false;
 		public ChessPlayer whitePlayer = new ChessPlayer();
 		public ChessPlayer blackPlayer = new ChessPlayer();
 		public ChessPlayer ActivePlayer => board.whiteToMove ? whitePlayer : blackPlayer;
 		public ChessPlayer InactivePlayer => board.whiteToMove ? blackPlayer : whitePlayer;
 
-		public delegate void NewGameDel();
-		public static NewGameDel NewGameCalls = () => {};
+		public delegate void VoidCallbackDel();
+		public delegate void AnimationCallbackDel(List<PieceAnimation> gaming);
+		public VoidCallbackDel NewGameCalls = () => {};
+		public AnimationCallbackDel PushNewAnimations = (anims) => {};
 
 		public Model() {
 			StartNewGame();
@@ -127,19 +130,64 @@ namespace ChessBot.Application {
 			if (board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get previous state, is null"); return; }
 			
 			board.currentStateNode = board.currentStateNode.Previous;
-			board.currentFen = board.currentStateNode.Value;
 			board.UpdateFromState();
 			whitePlayer.UCI?.RaiseManualUpdateFlag();
 			blackPlayer.UCI?.RaiseManualUpdateFlag();
-
 		}
 		public void SetNextState() {
 			if (board.currentStateNode.Next == null) { Console.WriteLine("Cannot get next state, is null"); return; }
 			board.currentStateNode = board.currentStateNode.Next;
-			board.currentFen = board.currentStateNode.Value;
 			board.UpdateFromState();
 			whitePlayer.UCI?.RaiseManualUpdateFlag();
-			blackPlayer.UCI?.RaiseManualUpdateFlag();			
+			blackPlayer.UCI?.RaiseManualUpdateFlag();
+		}
+
+		public void SinglePrevState() {
+			if (board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get first previous state, is null"); return; }
+			Move move; Piece piece;
+			SetPrevState();
+			move = board.currentStateNode.Value.moveMade;
+			piece = board.GetSquare(move.StartSquare);
+			PushNewAnimations(AnimationHelper.ReverseFromMove(move, piece, 0.08f));
+		}
+		public void SingleNextState() {
+			if (board.currentStateNode.Next == null) { Console.WriteLine("Cannot get first next state, is null"); return; }
+			Move move; Piece piece;
+			move = board.currentStateNode.Value.moveMade;
+			piece = board.GetSquare(move.StartSquare);
+			SetNextState();
+			PushNewAnimations(AnimationHelper.FromMove(move, piece, 0.08f));
+		}
+
+		public void DoublePrevState() {
+			if (board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get first previous state, is null"); return; }
+			Move move; Piece piece;
+			SetPrevState();
+			move = board.currentStateNode.Value.moveMade;
+			piece = board.GetSquare(move.StartSquare);
+			PushNewAnimations(AnimationHelper.ReverseFromMove(move, piece, 0.08f));
+
+
+			if (board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get second previous state, is null"); return; }
+			SetPrevState();
+			move = board.currentStateNode.Value.moveMade;
+			piece = board.GetSquare(move.StartSquare);
+			PushNewAnimations(AnimationHelper.ReverseFromMove(move, piece, 0.08f, lag:-0.04f));
+		}
+		public void DoubleNextState() {
+			if (board.currentStateNode.Next == null) { Console.WriteLine("Cannot get first next state, is null"); return; }
+			Move move; Piece piece;
+			move = board.currentStateNode.Value.moveMade;
+			piece = board.GetSquare(move.StartSquare);
+			SetNextState();
+			PushNewAnimations(AnimationHelper.FromMove(move, piece, 0.08f));
+
+
+			if (board.currentStateNode.Next == null) { Console.WriteLine("Cannot get second next state, is null"); return; }
+			move = board.currentStateNode.Value.moveMade;
+			piece = board.GetSquare(move.StartSquare);
+			SetNextState();
+			PushNewAnimations(AnimationHelper.FromMove(move, piece, 0.08f, lag:-0.04f));
 		}
 
 		public void Update() {

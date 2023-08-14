@@ -17,7 +17,11 @@ namespace ChessBot.Engine {
 
 		public LinkedList<Fen> stateHistory;
 		public LinkedListNode<Fen> currentStateNode;
-		public Fen currentFen;
+		public Fen currentFen {
+			get {
+				return currentStateNode.Value;
+			}
+		}
 
 
 
@@ -27,7 +31,6 @@ namespace ChessBot.Engine {
 			stateHistory = new LinkedList<Fen>();
 			currentStateNode = new LinkedListNode<Fen>(new Fen(fen));
 			stateHistory.AddLast(currentStateNode);
-			currentFen = currentStateNode.Value;
 
 			// TODO: Add FEN string loading, StartNewGame should be in Controller/Model.cs, board should just be able to load a fen string in place
 			UpdateFromState();
@@ -215,22 +218,48 @@ namespace ChessBot.Engine {
 				return;
 			}
 
+			SoundStates sound = SoundStates.Move;
+			if (pieceTaken != Piece.None) { sound = SoundStates.Capture; } else
+			if (move.MoveFlag == Move.CastleFlag) { sound = SoundStates.Castle; }
+
+
 			Fen temp = currentStateNode.Value;
+			move.moveSoundEnum = (int)sound;
 			temp.moveMade = move;
 			currentStateNode.Value = temp;
 
-			currentFen = new Fen(currentFen.ToFEN());
+			temp = new Fen(temp.ToFEN());
 
-			currentFen.castlePrivsBin &= castlesToRemove;
-			currentFen.enpassantSquare = (enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(enPassantIndex);
-			if (pieceTaken != Piece.None || pieceMoved.Type == Piece.Pawn) { currentFen.halfMoveCount = 0; }
-			else { currentFen.halfMoveCount += 1; }
-			if (tempWhiteToMove) currentFen.fullMoveCount += 1;
+			temp.castlePrivsBin &= castlesToRemove;
+			temp.enpassantSquare = (enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(enPassantIndex);
+			if (pieceTaken != Piece.None || pieceMoved.Type == Piece.Pawn) { temp.halfMoveCount = 0; }
+			else { temp.halfMoveCount += 1; }
+			if (tempWhiteToMove) temp.fullMoveCount += 1;
 
-			currentFen.fenColor = tempWhiteToMove ? 'w' : 'b';
-			BoardHelper.UpdateFenAttachedToBoard(this);
+			temp.fenColor = tempWhiteToMove ? 'w' : 'b';
+			String o = "";
+			int gap = 0;
+			for (int i=0; i<8;i++) {
+				for (int j=0; j<8; j++) {
+					int index = 8*(7-i)+j;
+					int pieceEnum = GetSquare(index);
+					if (pieceEnum == Piece.None) {
+						gap += 1;
+						continue;
+					} // Passes guard clause if square is not empty
+					if (gap != 0) { o += $"{gap}"; }
+					o += $"{BoardHelper.PieceEnumToFenChar(pieceEnum)}";
+					gap = 0;
+				}
+				if (gap != 0) { o += $"{gap}"; }
+				if (i!=7) {
+					o += '/';
+					gap = 0;
+				}
+			}
+			temp.fenBoard = o;
 
-			PushNewState(this.currentFen);
+			PushNewState(temp);
 			
 			whiteToMove = tempWhiteToMove; // Need to change whiteToMove after pushing state to fix threading issues between two computer opponents
 		}

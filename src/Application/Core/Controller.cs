@@ -5,7 +5,6 @@ using System.Diagnostics;
 using ChessBot.Engine;
 using ChessBot.Helpers;
 
-
 namespace ChessBot.Application {
 	using static MoveGenerator;
 
@@ -41,8 +40,11 @@ namespace ChessBot.Application {
 			Player.OnMoveChosen += MakeMove;
 			model = new Model();
 			view = new View(screenSize, model, cam);
-			Model.NewGameCalls += () => {
+			model.NewGameCalls += () => {
 				view.ui.isFlipped = model.humanColor == 0b01; // if white is not a player and black is a player
+			};
+			model.PushNewAnimations += (args) => {
+				view.ui.activeAnimations.AddRange(args);
 			};
 		}
 
@@ -65,7 +67,7 @@ namespace ChessBot.Application {
 				view.Update(dt);
 				view.Draw();
 
-				if ((model.ActivePlayer.Computer?.HasStarted ?? true) && ! model.ActivePlayer.IsSearching && ! Model.SuspendPlay) {
+				if ((model.ActivePlayer.Computer?.HasStarted ?? true) && ! model.ActivePlayer.IsSearching && ! model.SuspendPlay) {
 					model.ActivePlayer.IsSearching = true;
 				}
 
@@ -96,25 +98,57 @@ namespace ChessBot.Application {
 		}
 
 		public void MakeMove(Move move, bool animate=true) {
-			model.ActivePlayer.IsSearching = false;
-			if (! move.IsNull) { // When null move is attempted, it's assumed it's checkmate, active color is the loser
-				Piece pieceMoved = model.board.GetSquare(move.StartSquare);
-				bool wasPieceCaptured = model.board.GetSquare(move.TargetSquare) != Piece.None || move.MoveFlag == Move.EnPassantCaptureFlag;
-				model.board.MakeMove(move);
-				view.TimeOfLastMove = view.fTimeElapsed;
-				if (animate) { view.ui.activeAnimations.AddRange(AnimationHelper.FromMove(move, pieceMoved, 0.08f)); }
-				if (MoveGenerator.IsSquareAttacked(model.board, model.board.activeColor == Piece.White ? model.board.whiteKingPos : model.board.blackKingPos, model.board.activeColor))
-													   	{	Raylib.PlaySound(view.sounds[(int)View.Sounds.Check]); } else
-				if (wasPieceCaptured) 				   	{	Raylib.PlaySound(view.sounds[(int)View.Sounds.Capture]); } else
-				if (move.MoveFlag == Move.CastleFlag)  	{	Raylib.PlaySound(view.sounds[(int)View.Sounds.Castle]); } else
-														{	Raylib.PlaySound(view.sounds[(int)View.Sounds.Move]); }
-				return;
+			if (move.IsNull) {
+				throw new Exception("Null move was played");
 			}
 
-			Model.SuspendPlay = true;
+			model.ActivePlayer.IsSearching = false;
 
-			ConsoleHelper.WriteLine("Checkmate!", ConsoleColor.DarkBlue);
-			ConsoleHelper.WriteLine($"Winner: {model.InactivePlayer.color}, Loser: {model.ActivePlayer.color}", ConsoleColor.DarkBlue);
+
+			Piece pieceMoved = model.board.GetSquare(move.StartSquare);
+			model.board.MakeMove(move);
+			view.TimeOfLastMove = view.fTimeElapsed;
+
+			bool opponentInCheck = MoveGenerator.IsSquareAttacked(model.board, model.board.activeColor == Piece.White ? model.board.whiteKingPos : model.board.blackKingPos, model.board.activeColor);
+			bool canOpponentRespond = MoveGenerator.GetAllMoves(model.board, model.board.activeColor).Length != 0; // Negated for readability
+
+			if (model.board.currentStateNode.Previous == null) { throw new Exception("Something went wrong"); }
+			Fen temp = model.board.currentStateNode.Previous.Value;
+
+			if (opponentInCheck && canOpponentRespond) {
+				temp.moveMade.moveSoundEnum = (int)SoundStates.Check;
+			} else
+			if (opponentInCheck && ! canOpponentRespond) {
+				temp.moveMade.moveSoundEnum = 0; // Sound is played separately if game is over
+			} else
+			if (! opponentInCheck && ! canOpponentRespond) {
+				temp.moveMade.moveSoundEnum = 0; // Sound is played separately if game is over
+			}
+
+			Debug.Assert(model.board.currentStateNode.Previous != null);
+			model.board.currentStateNode.Previous.Value = temp;
+
+			if (animate) {
+				view.ui.activeAnimations.AddRange(AnimationHelper.FromMove(temp.moveMade, pieceMoved, 0.08f));
+			} else {
+				Raylib.PlaySound(BoardUI.sounds[model.board.currentStateNode.Previous.Value.moveMade.moveSoundEnum]);
+			}
+
+			// If opponent can't respond, fallthrough to game end handling
+			if (canOpponentRespond) return;
+
+			model.SuspendPlay = true;
+
+			if (opponentInCheck) { // Checkmate
+				Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Checkmate]);
+				ConsoleHelper.WriteLine("Checkmate!", ConsoleColor.DarkBlue);
+				ConsoleHelper.WriteLine($"Winner: {model.InactivePlayer.color}, Loser: {model.ActivePlayer.color}", ConsoleColor.DarkBlue);
+			} else { // Stalemate
+				Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Stalemate]);
+				ConsoleHelper.WriteLine("Stalemate", ConsoleColor.DarkBlue);
+				ConsoleHelper.WriteLine($"Draw.", ConsoleColor.DarkBlue);
+			}
+
 			// Handle Checkmate
 		}
 	}

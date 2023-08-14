@@ -11,9 +11,7 @@ namespace ChessBot.Application {
 		public Model model;
 		public Camera2D camera;
 		public List<ScreenObject> pipeline = new List<ScreenObject>();
-		
-		public Sound[] sounds = new Sound[] {Raylib.LoadSound(FileHelper.GetResourcePath("sounds/move-self.mp3")), Raylib.LoadSound(FileHelper.GetResourcePath("sounds/capture.mp3")), Raylib.LoadSound(FileHelper.GetResourcePath("sounds/move-check.mp3")), Raylib.LoadSound(FileHelper.GetResourcePath("sounds/castle.mp3"))};
-		public enum Sounds :int { Move=0, Capture=1, Check=2, Castle=3, }
+
 
 
 		public float fTimeElapsed = 0.0f;
@@ -34,12 +32,13 @@ namespace ChessBot.Application {
 		public static bool IsRightPressed => (mouseButtonsClicked & 2) == 2;
 		public static bool IsRightReleased => (mouseButtonsClicked & 1) == 1;
 
+			
 		public View(Vector2 screenSize, Model model, Camera2D cam) {
+
 			ui = new BoardUI();
 			this.model = model;
 			this.model.enforceColorToMove = true;
 			this.camera = cam;
-			// dynamic appSettings = new ApplicationSettings(FileHelper.GetResourcePath("settings.txt"));
 
 
 			AddButtons();
@@ -100,7 +99,6 @@ namespace ChessBot.Application {
 				asset.Draw();
 			}
 		}
-
 
 		public void DrawPlayerInfo() { // Draw this in Camera space
 			// Draw player timer
@@ -182,7 +180,7 @@ namespace ChessBot.Application {
 					bool isHumanColor = false;
 					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.White && (model.humanColor & 0b10) != 0);
 					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.Black && (model.humanColor & 0b01) != 0);
-					isHumanColor = isHumanColor || Model.SuspendPlay; // if play is suspended, allow view to move pieces
+					isHumanColor = isHumanColor || model.SuspendPlay; // if play is suspended, allow view to move pieces
 					if (isHumanColor && clickedPiece.Color == model.board.activeColor) {
 						ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
 					}
@@ -194,7 +192,7 @@ namespace ChessBot.Application {
 					ui.movesForSelected = new Move[0];
 					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.White && (model.humanColor & 0b10) != 0);
 					isHumanColor = isHumanColor || (clickedPiece.Color == Piece.Black && (model.humanColor & 0b01) != 0);
-					isHumanColor = isHumanColor || Model.SuspendPlay; // if play is suspended, allow view to move pieces
+					isHumanColor = isHumanColor || model.SuspendPlay; // if play is suspended, allow view to move pieces
 					if (isHumanColor && clickedPiece.Color == model.board.activeColor) {
 						ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
 					}
@@ -246,42 +244,42 @@ namespace ChessBot.Application {
 		public void HandleKeyboardInput() {
 			switch (pressedKey) {
 				case (int) KeyboardKey.KEY_Z :{
+					if ((model.ActivePlayer.Computer?.IsSearching ?? false)) { break; }
+					// If there is exactly one human, undo two moves
+					if ((((model.humanColor >> 0) & 1) ^ ((model.humanColor >> 1) & 1)) == 1) {
+
+						// If a human is playing black and a computer is playing white, you can force the AI to rethink it's first move
+						if ((model.board.currentStateNode.Previous?.Previous == null)) { break; }
+
+						model.DoublePrevState();
+					} else { // otherwise undo a single move
+						model.SinglePrevState();
+					}
 					ui.DeselectActiveSquare();
-					Piece[] old = model.board.board.ToArray();
-					model.SetPrevState();
-					// model.SetPrevState();
-					Model.SuspendPlay = true;
-					ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(old, model.board.board, 0.08f));
-					// ui.activeAnimations.AddRange(AnimationHelper.FromMove(model.board.currentStateNode.Value.moveMade, 0.08f));
 					break;
 				}
 				case (int) KeyboardKey.KEY_X :{
+					if ((model.ActivePlayer.Computer?.IsSearching ?? false)) { break; }
+					// If there is exactly one human, undo two moves
+					if ((((model.humanColor >> 0) & 1) ^ ((model.humanColor >> 1) & 1)) == 1) {
+						model.DoubleNextState();
+					} else { // otherwise undo a single move
+						model.SingleNextState();
+					}
 					ui.DeselectActiveSquare();
-					Piece[] old = model.board.board.ToArray();
-					model.SetNextState();
-					// model.SetNextState();
-					Model.SuspendPlay = true;
-					ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(old, model.board.board, 0.08f));
-					// ui.activeAnimations.AddRange(AnimationHelper.FromMove(model.board.currentStateNode.Value.moveMade, 0.08f));
 					break;
 				}
 				case (int) KeyboardKey.KEY_C :{
-					int activeColor = model.board.whiteToMove ? 0b10 : 0b01;
-					if (model.humanColor != 0 && Model.SuspendPlay && activeColor != (model.humanColor & activeColor)) { 
-						Console.Write(System.Convert.ToString(model.humanColor, 2));
-						Console.WriteLine("Cannot Unsuspend player if Computer player would move");
-						break;
-					} // Passes guard clause if it should switch suspend play
-					// If exactly 1 player is human and the active player is not a computer
-
 					ui.DeselectActiveSquare();
-					Model.SuspendPlay = ! Model.SuspendPlay;
+					model.SuspendPlay = ! model.SuspendPlay;
 					break;
 				}
 
 				case (int) KeyboardKey.KEY_P :{
-					Console.WriteLine();
-					Console.WriteLine(model.board.GetUCIGameFormat());
+					Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Check]);
+					Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Checkmate]);
+					// Console.WriteLine();
+					// Console.WriteLine(model.board.GetUCIGameFormat());
 					break;
 				}
 				case (int) KeyboardKey.KEY_O :{
@@ -319,8 +317,6 @@ namespace ChessBot.Application {
 				}
 			}
 		}
-
-
 		public void GetAttackedSquares() {
 			string o = "";
 
@@ -396,6 +392,21 @@ namespace ChessBot.Application {
 			// 	UpdateIsFlipped();
 			// }));
 		}
+		
+		// public Sound SoundFromState(int state) {
+		// 	if (MoveGenerator.IsSquareAttacked(model.board, model.board.activeColor == Piece.White ? model.board.whiteKingPos : model.board.blackKingPos, model.board.activeColor)) {
+		// 		return sounds[(int)StateSounds.Check];
+		// 	} else
+		// 	if (wasPieceCaptured) {
+		// 		return sounds[(int)StateSounds.Capture];
+		// 	} else
+		// 	if (move.MoveFlag == Move.CastleFlag){
+		// 		return sounds[(int)StateSounds.Castle];
+		// 	} else {
+		// 		return sounds[(int)StateSounds.Move];
+		// 	}
+		// }
+		
 		public void Release() {
 			ui.Release();
 		}

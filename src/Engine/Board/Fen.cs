@@ -9,6 +9,7 @@ namespace ChessBot.Engine {
 		public readonly bool isStartPos = false;
 
 		public Move moveMade; // Move made on current state, current state + moveMade yields new FEN string
+
 		public string fenBoard;
 		public char fenColor;
 		public int castlePrivsBin;

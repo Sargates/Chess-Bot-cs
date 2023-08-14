@@ -1,6 +1,6 @@
 using ChessBot.Helpers;
 namespace ChessBot.Engine {
-	public readonly struct Move {
+	public struct Move {
 		
 
 		// 16bit move value // Copied from SebLague
@@ -22,7 +22,8 @@ namespace ChessBot.Engine {
 		public const int targetSquareMask = 0b0000111111000000;
 		public const int flagMask = 0b1111000000000000;
 
-		//* Look at SebLague's implementation
+		public int moveSoundEnum = 0; // Sound that's played when this move is made on the board
+
 
 		public Move(ushort moveValue) {
 			this.moveValue = moveValue;

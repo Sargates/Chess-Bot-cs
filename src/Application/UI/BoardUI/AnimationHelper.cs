@@ -1,3 +1,4 @@
+using Raylib_cs;
 using ChessBot.Engine;
 using ChessBot.Helpers;
 
@@ -8,7 +9,7 @@ public static class AnimationHelper {
 		// Interpolating animation between positions
 		List<PieceAnimation> animations = new List<PieceAnimation>();
 
-		animations.Add(new PieceAnimation(move.StartSquare, move.TargetSquare, piece, tTotal, lag));
+		animations.Add(new PieceAnimation(move.StartSquare, move.TargetSquare, piece, tTotal, lag, soundEnum:move.moveSoundEnum));
 
 		if (move.MoveFlag == Move.NoFlag) { return animations; }
 
@@ -22,6 +23,34 @@ public static class AnimationHelper {
 					animations.Add(new PieceAnimation(BoardHelper.a8, BoardHelper.d8, Piece.Rook|piece.Color, tTotal, lag)); break;
 				case (BoardHelper.g8, false):
 					animations.Add(new PieceAnimation(BoardHelper.h8, BoardHelper.f8, Piece.Rook|piece.Color, tTotal, lag)); break;
+				default:
+					throw new Exception("False castle flag in move");
+			}
+		}
+		// if (move.IsPromotion) {
+
+		// }
+
+		return animations;
+	}
+	public static List<PieceAnimation> ReverseFromMove(Move move, Piece piece, float tTotal, float lag=0) {
+		// Interpolating animation between positions
+		List<PieceAnimation> animations = new List<PieceAnimation>();
+
+		animations.Add(new PieceAnimation(move.TargetSquare, move.StartSquare, piece, tTotal, lag, soundEnum:move.moveSoundEnum));
+
+		if (move.MoveFlag == Move.NoFlag) { return animations; }
+
+		if (move.MoveFlag == Move.CastleFlag) {
+			switch (move.TargetSquare, piece.Color == Piece.White) {
+				case (BoardHelper.c1, true):
+					animations.Add(new PieceAnimation(BoardHelper.d1, BoardHelper.a1, Piece.Rook|piece.Color, tTotal, lag)); break;
+				case (BoardHelper.g1, true):
+					animations.Add(new PieceAnimation(BoardHelper.f1, BoardHelper.h1, Piece.Rook|piece.Color, tTotal, lag)); break;
+				case (BoardHelper.c8, false):
+					animations.Add(new PieceAnimation(BoardHelper.d8, BoardHelper.a8, Piece.Rook|piece.Color, tTotal, lag)); break;
+				case (BoardHelper.g8, false):
+					animations.Add(new PieceAnimation(BoardHelper.f8, BoardHelper.h8, Piece.Rook|piece.Color, tTotal, lag)); break;
 				default:
 					throw new Exception("False castle flag in move");
 			}

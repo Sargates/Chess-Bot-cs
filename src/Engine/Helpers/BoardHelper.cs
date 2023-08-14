@@ -87,30 +87,5 @@ namespace ChessBot.Helpers {
 			};
 		}
 
-		
-		public static void UpdateFenAttachedToBoard(Board board) {
-			String o = "";
-			int gap = 0;
-			for (int i=0; i<8;i++) {
-				for (int j=0; j<8; j++) {
-					int index = 8*(7-i)+j;
-					int pieceEnum = board.GetSquare(index);
-					if (pieceEnum == Piece.None) {
-						gap += 1;
-						continue;
-					} // Passes guard clause if square is not empty
-					if (gap != 0) { o += $"{gap}"; }
-					o += $"{PieceEnumToFenChar(pieceEnum)}";
-					gap = 0;
-				}
-				if (gap != 0) { o += $"{gap}"; }
-				if (i!=7) {
-					o += '/';
-					gap = 0;
-				}
-			}
-
-			board.currentFen.fenBoard = o;
-		}
 	}
 }

@@ -5,7 +5,19 @@ using ChessBot.Engine;
 using ChessBot.Helpers;
 
 namespace ChessBot.Application {
+	public enum SoundStates :int {
+		None=0,
+		Move=1,
+		Capture=2,
+		Check=3,
+		Castle=4,
+		Checkmate=5,
+		Stalemate=6,
+		GameEnd=7,
+	}
 	public class BoardUI {
+		public static Sound[] sounds = new Sound[0];
+
 		public static Texture2D piecesTexture;
 		public static int squareSize = 100;
 		public static Vector2 squareSizeV = new Vector2(squareSize);
@@ -23,6 +35,18 @@ namespace ChessBot.Application {
 
 
 		public BoardUI() {
+			if (sounds.Length == 0) {
+				BoardUI.sounds = new Sound[] {
+					new Sound(), 
+					Raylib.LoadSound(FileHelper.GetResourcePath("sounds/move-self.mp3")),
+					Raylib.LoadSound(FileHelper.GetResourcePath("sounds/capture.mp3")),
+					Raylib.LoadSound(FileHelper.GetResourcePath("sounds/move-check.mp3")),
+					Raylib.LoadSound(FileHelper.GetResourcePath("sounds/castle.mp3")),
+					Raylib.LoadSound(FileHelper.GetResourcePath("sounds/checkmate.mp3")),
+					Raylib.LoadSound(FileHelper.GetResourcePath("sounds/stalemate.mp3")),
+					Raylib.LoadSound(FileHelper.GetResourcePath("sounds/game-end.mp3"))
+				};
+			}
 			piecesTexture = Raylib.LoadTexture(FileHelper.GetResourcePath("Pieces.png"));
             Raylib.GenTextureMipmaps(ref piecesTexture);
             Raylib.SetTextureWrap(piecesTexture, TextureWrap.TEXTURE_WRAP_CLAMP);
@@ -85,6 +109,7 @@ namespace ChessBot.Application {
 			ulong animatedSquares = 0;
 			foreach (PieceAnimation anim in activeAnimations) {
 				animatedSquares |= anim.affectedSquares;
+				if (anim.ShouldPlaySound) { Raylib.PlaySound(sounds[anim.soundEnum]); }
 			}
 
 			Vector2 cachedRenderPos = Vector2.Zero;
@@ -154,4 +179,6 @@ namespace ChessBot.Application {
 		}
 
 	}
+
+	
 }

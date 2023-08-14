@@ -34,10 +34,10 @@ public class UCIPlayer : ComputerPlayer {
 			if (IsSearching) {
 				Move bestMove = Think();
 				// If the bot gets a manual update request it means the board state has changed and the previous move is garbage
-				if (! ExitFlag && ! ShouldManualUpdate && ! Model.SuspendPlay) {
+				if (! ExitFlag && ! ShouldManualUpdate && ! model.SuspendPlay) {
 					OnMoveChosen(bestMove);
 				}
-				// Console.WriteLine($"{ExitFlag} {ShouldManualUpdate} {Model.SuspendPlay}");
+				// Console.WriteLine($"{ExitFlag} {ShouldManualUpdate} {model.SuspendPlay}");
 				IsSearching = false;
 			}
 		}
