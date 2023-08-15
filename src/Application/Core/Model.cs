@@ -1,5 +1,6 @@
 using Raylib_cs;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using ChessBot.Engine;
 using ChessBot.Helpers;
 
@@ -24,6 +25,8 @@ namespace ChessBot.Application {
 			UvU, // 	  UCI vs. UCI
 		}
 
+		public string stockfishExecutable;
+
 		public int humanColor = 0b00; // 0b10 for white, 0b01 for black, 0b11 for both
 
 		public Gametype activeGameType = Gametype.HvH;
@@ -40,6 +43,14 @@ namespace ChessBot.Application {
 		public AnimationCallbackDel PushNewAnimations = (anims) => {};
 
 		public Model() {
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+				stockfishExecutable = "stockfish-windows-x86-64-avx2.exe";
+			} else
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+				stockfishExecutable = "stockfish";
+			} else {
+				throw new Exception("This program can only run on Windows and Linux");
+			}
 			StartNewGame();
 			Debug.Assert(board != null);
 
@@ -69,28 +80,28 @@ namespace ChessBot.Application {
 				(Gametype.HvU, true) => new ChessPlayer(new Player('w'), 300f),
 				(Gametype.CvC, true) => new ChessPlayer(new ComputerPlayer('w', this), 60f),
 				(Gametype.CvU, true) => new ChessPlayer(new ComputerPlayer('w', this), 60f),
-				(Gametype.UvU, true) => new ChessPlayer(new UCIPlayer('w', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
+				(Gametype.UvU, true) => new ChessPlayer(new UCIPlayer('w', this, stockfishExecutable), 30f),
 				(Gametype.HvH, false) => new ChessPlayer(new Player('w'), 300f),
 				(Gametype.HvC, false) => new ChessPlayer(new ComputerPlayer('w', this), 60f),
-				(Gametype.HvU, false) => new ChessPlayer(new UCIPlayer('w', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
+				(Gametype.HvU, false) => new ChessPlayer(new UCIPlayer('w', this, stockfishExecutable), 30f),
 				(Gametype.CvC, false) => new ChessPlayer(new ComputerPlayer('w', this), 60f),
-				(Gametype.CvU, false) => new ChessPlayer(new UCIPlayer('w', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
-				(Gametype.UvU, false) => new ChessPlayer(new UCIPlayer('w', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
+				(Gametype.CvU, false) => new ChessPlayer(new UCIPlayer('w', this, stockfishExecutable), 30f),
+				(Gametype.UvU, false) => new ChessPlayer(new UCIPlayer('w', this, stockfishExecutable), 30f),
 				_ => throw new Exception("Shut up compiler!")
 			};
 			blackPlayer = (type, gameIndex%2==1) switch {
 				(Gametype.HvH, true) => new ChessPlayer(new Player('b'), 300f),
 				(Gametype.HvC, true) => new ChessPlayer(new ComputerPlayer('b', this), 60f),
-				(Gametype.HvU, true) => new ChessPlayer(new UCIPlayer('b', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
+				(Gametype.HvU, true) => new ChessPlayer(new UCIPlayer('b', this, stockfishExecutable), 30f),
 				(Gametype.CvC, true) => new ChessPlayer(new ComputerPlayer('b', this), 60f),
-				(Gametype.CvU, true) => new ChessPlayer(new UCIPlayer('b', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
-				(Gametype.UvU, true) => new ChessPlayer(new UCIPlayer('b', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
+				(Gametype.CvU, true) => new ChessPlayer(new UCIPlayer('b', this, stockfishExecutable), 30f),
+				(Gametype.UvU, true) => new ChessPlayer(new UCIPlayer('b', this, stockfishExecutable), 30f),
 				(Gametype.HvH, false) => new ChessPlayer(new Player('b'), 300f),
 				(Gametype.HvC, false) => new ChessPlayer(new Player('b'), 300f),
 				(Gametype.HvU, false) => new ChessPlayer(new Player('b'), 300f),
 				(Gametype.CvC, false) => new ChessPlayer(new ComputerPlayer('b', this), 60f),
 				(Gametype.CvU, false) => new ChessPlayer(new ComputerPlayer('b', this), 60f),
-				(Gametype.UvU, false) => new ChessPlayer(new UCIPlayer('b', this, "stockfish-windows-x86-64-avx2.exe"), 30f),
+				(Gametype.UvU, false) => new ChessPlayer(new UCIPlayer('b', this, stockfishExecutable), 30f),
 				_ => throw new Exception("Shut up compiler!")
 			};
 			activeGameType = type;
