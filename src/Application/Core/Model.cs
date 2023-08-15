@@ -204,9 +204,5 @@ namespace ChessBot.Application {
 		public void Update() {
 			
 		}
-
-		
-
-
 	}
 }

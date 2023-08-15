@@ -175,10 +175,10 @@ namespace ChessBot.Application {
         }
 
 		public void Release() {
+			foreach (Sound sound in BoardUI.sounds) {
+				Raylib.UnloadSound(sound);
+			}
 			Raylib.UnloadTexture(piecesTexture);
 		}
-
 	}
-
-	
 }

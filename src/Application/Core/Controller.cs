@@ -76,14 +76,14 @@ namespace ChessBot.Application {
 				Raylib.EndDrawing();
 			}
 
-			Raylib.CloseWindow();
 			model.ExitPlayerThreads();
 			model.JoinPlayerThreads();
-			Raylib.CloseAudioDevice();
 			SaveApplicationSettings();
-
 			view.Release();
             UIHelper.Release();
+			Raylib.CloseAudioDevice();
+
+			Raylib.CloseWindow();
 		}
 
 		public void SaveApplicationSettings() {
