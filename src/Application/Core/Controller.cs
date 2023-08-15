@@ -102,6 +102,7 @@ namespace ChessBot.Application {
 				throw new Exception("Null move was played");
 			}
 
+			// view.ui.DeselectActiveSquare();
 			model.ActivePlayer.IsSearching = false;
 
 
@@ -135,7 +136,10 @@ namespace ChessBot.Application {
 			}
 
 			// If opponent can't respond, fallthrough to game end handling
-			if (canOpponentRespond) return;
+			if (canOpponentRespond) {
+				if (view.ui.selectedIndex!=-1) view.ui.movesForSelected = MoveGenerator.GetMoves(model.board, view.ui.selectedIndex);
+				return;
+			}
 
 			model.SuspendPlay = true;
 

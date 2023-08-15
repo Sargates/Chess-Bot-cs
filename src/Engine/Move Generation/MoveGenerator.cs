@@ -21,19 +21,21 @@ namespace ChessBot.Engine {
 			Coord coord = new Coord(index);
 			Coord delta = new Coord(board.forwardDir(piece.Color));
 			Coord newPos = coord+delta;
-			Piece pawnOneUp = board.GetSquare(newPos.SquareIndex);
-			if (newPos.IsInBounds() && pawnOneUp == Piece.None) {
-				moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
-				
-				if (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 1 : 6) && board.GetSquare(index + 2*board.forwardDir(piece.Color)) == Piece.None) {
-					moves.Add(new Move(index, index + 2*board.forwardDir(piece.Color), Move.PawnTwoUpFlag));
+			if (newPos.IsInBounds()) {
+				Piece pawnOneUp = board.GetSquare(newPos.SquareIndex);
+				if (pawnOneUp == Piece.None) {
+					moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
+					
+					if (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 1 : 6) && board.GetSquare(index + 2*board.forwardDir(piece.Color)) == Piece.None) {
+						moves.Add(new Move(index, index + 2*board.forwardDir(piece.Color), Move.PawnTwoUpFlag));
+					}
 				}
 			}
 
 			delta = new Coord(+1, Math.Sign(board.forwardDir(piece.Color)));
 			newPos = coord+delta;
-			Piece pawnAttackPositive = board.GetSquare(newPos.SquareIndex);
 			if (newPos.IsInBounds()) {
+				Piece pawnAttackPositive = board.GetSquare(newPos.SquareIndex);
 				if ((pawnAttackPositive.Type != Piece.None) && pawnAttackPositive.Color != piece.Color ) {
 					moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
 				} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index + 1) != piece.Color)) {
@@ -43,8 +45,8 @@ namespace ChessBot.Engine {
 
 			delta = new Coord(-1, Math.Sign(board.forwardDir(piece.Color)));
 			newPos = coord+delta;
-			Piece pawnAttackNegative = board.GetSquare(newPos.SquareIndex);
 			if (newPos.IsInBounds()) {
+				Piece pawnAttackNegative = board.GetSquare(newPos.SquareIndex);
 				if ((pawnAttackNegative.Type != Piece.None) && pawnAttackNegative.Color != piece.Color ) {
 					moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
 				} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index - 1) != piece.Color)) {
@@ -61,9 +63,9 @@ namespace ChessBot.Engine {
 				// Edge case in enpassant capture
 				// See: https://www.chessprogramming.org/Perft_Results#cite_note-9:~:text=8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8
 				if (move.MoveFlag == Move.EnPassantCaptureFlag) {
-					// If the move is en-passant capture, then we need to check if the king would be in check after the move, 
+					// If the move is en-passant capture, then we need to check if the king would be in check after the move,
 					// if the colorToMove's king is in the same file as both pawns and say a rook, en-passant capture would be illegal,
-					// We need to cache the piece that's taken, and check if the pawn that gets moved is pinned,
+					// We need to cache the piece that's taken, remove it from the board, and check if the pawn to move is pinned by an enemy piece,
 
 					int enemyPawnIndex = board.enPassantIndex - board.forwardDir(piece.Color);
 					Piece enemyPawn = board.board[enemyPawnIndex];

@@ -1,7 +1,9 @@
 MIT License
 
-Copyright (c) 2023 Nicholas Glenn
-Credits to Yaroslav Bondarev (Stockfish.NET) (https://github.com/Oremiro/Stockfish.NET)
+Copyright (c) 2023 Nicholas Glenn\
+Credits to Ramon Santamaria 	(Raylib) 		(2013-2023) (https://github.com/raysan5/raylib)\
+Credits to ChrisDill 			(Raylib-cs) 	(2018-2023) (https://github.com/ChrisDill/Raylib-cs/)\
+Credits to Yaroslav Bondarev 	(Stockfish.NET) (2020)  	(https://github.com/Oremiro/Stockfish.NET)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
