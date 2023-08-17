@@ -9,6 +9,7 @@ public class UCISettings {
 	public int MultiPV;
 	public bool LimitStrength;
 	public int Elo;
+	public bool UseNNUE;
 	public int SkillLevel;
 	public int MoveOverhead;
 	public int SlowMover;
@@ -21,6 +22,7 @@ public class UCISettings {
 		int multiPV = 1,
 		bool limitStrength = true,
 		int elo = 3000,
+		bool useNNUE = true,
 		int skillLevel = 20,
 		int moveOverhead = 30,
 		int slowMover = 10,
@@ -31,6 +33,7 @@ public class UCISettings {
 		Threads = threads;
 		LimitStrength = limitStrength;
 		Elo = elo;
+		UseNNUE = useNNUE;
 		MultiPV = multiPV;
 		SkillLevel = skillLevel;
 		MoveOverhead = moveOverhead;
@@ -46,7 +49,7 @@ public class UCISettings {
 			["MultiPV"] = MultiPV.ToString(),
 			["UCI_LimitStrength"] = LimitStrength.ToString(),
 			["UCI_Elo"] = Elo.ToString(),
-			// ["Skill Level"] = SkillLevel.ToString(),
+			["Use NNUE"] = UseNNUE.ToString(),
 			["Move Overhead"] = MoveOverhead.ToString(),
 			["Slow Mover"] = SlowMover.ToString(),
 			["UCI_Chess960"] = UCIChess960.ToString(),

@@ -35,15 +35,17 @@ public class UCIEngine {
 			UCISettings? settings = null) {
 		_processStartInfo = new ProcessStartInfo {
 			FileName = FileHelper.GetResourcePath(pathToExe),
-			UseShellExecute = false,
+			CreateNoWindow = true,
 			RedirectStandardError = true,
 			RedirectStandardInput = true,
-			RedirectStandardOutput = true
+			RedirectStandardOutput = true,
+			UseShellExecute = false,
 		};
 		_process = new Process {StartInfo = _processStartInfo};
 
 		Depth = depth;
 		Settings = (settings ?? (new UCISettings()));
+		// Settings = (settings ?? (new UCISettings { UseNNUE = false }));
 	}
 
 	public void Start() {
@@ -77,6 +79,7 @@ public class UCIEngine {
 	}
 
 	private void setOption(string name, string value) {
+		// Console.WriteLine($"Sending: setoption name {name} value {value}");
 		send($"setoption name {name} value {value}");
 		if (!isReady()) {
 			throw new ApplicationException();
@@ -158,7 +161,10 @@ public class UCIEngine {
 			}
 
 			string? response = ReadLine();
-			if (response==null) { continue; }
+			if (response==null) {
+				tries++;
+				continue;
+			}
 			// Console.WriteLine(response);
 			List<string> parsedData = response.Split(" ").ToList();
 			if (parsedData[0] == "bestmove") {
@@ -169,6 +175,7 @@ public class UCIEngine {
 
 				return parsedData[1];
 			}
+			tries++;
 		}
 	}
 

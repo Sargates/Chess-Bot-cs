@@ -89,27 +89,6 @@ public class View : IView {
 			ui.DrawRectangleCentered(displayPosition, new Vector2(0.8f*BoardUI.squareSize), playerInfoColor);
 		}
 	}
-
-	public void AddNewAnimations(List<PieceAnimation> l) {
-		ui.activeAnimations.AddRange(l);
-	}
-
-	// public void AddButtons() {
-		
-	// }
-	// public Sound SoundFromState(int state) {
-	// 	if (MoveGenerator.IsSquareAttacked(model.board, model.board.activeColor == Piece.White ? model.board.whiteKingPos : model.board.blackKingPos, model.board.activeColor)) {
-	// 		return sounds[(int)StateSounds.Check];
-	// 	} else
-	// 	if (wasPieceCaptured) {
-	// 		return sounds[(int)StateSounds.Capture];
-	// 	} else
-	// 	if (move.MoveFlag == Move.CastleFlag){
-	// 		return sounds[(int)StateSounds.Castle];
-	// 	} else {
-	// 		return sounds[(int)StateSounds.Move];
-	// 	}
-	// }
 	
 	public void Release() {
 		ui.Release();

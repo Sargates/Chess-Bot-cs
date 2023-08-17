@@ -50,6 +50,7 @@ public class UCIPlayer : ComputerPlayer {
 		string fen = model.board.currentFen.ToFEN();
 		engine.SetPosition($"position fen {fen}");
 		string response = engine.GetBestMoveTime(1500);
+		// Console.WriteLine(response);
 
 		int startSquare = BoardHelper.NameToSquareIndex(response.Substring(0, 2));
 		int targetSquare = BoardHelper.NameToSquareIndex(response.Substring(2, 2));

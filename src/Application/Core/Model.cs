@@ -42,7 +42,7 @@ public class Model {
 		this.view = view;
 		
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-			stockfishExeExt = "stockfish-windows-x86-64-avx2.exe";
+			stockfishExeExt = "stockfish.exe";
 		} else
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
 			stockfishExeExt = "stockfish";
