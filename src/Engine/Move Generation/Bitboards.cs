@@ -1,4 +1,4 @@
-namespace ChessBot.Engine {
+namespace ChessBot.Engine;
 	public static class Bitboards {
 		public static ulong pawns;
 		public static ulong knights;
@@ -7,4 +7,3 @@ namespace ChessBot.Engine {
 		public static ulong queens;
 		public static ulong kings;
 	}
-}

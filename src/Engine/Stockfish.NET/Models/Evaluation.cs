@@ -1,15 +1,14 @@
-﻿namespace ChessBot.Engine.Stockfish {
-    public class Evaluation {
-        public string Type { get; set; }
-        public int Value { get; set; }
+﻿namespace Stockfish.NET;
+public class Evaluation {
+	public string Type { get; set; }
+	public int Value { get; set; }
 
-        public Evaluation() {
-			Type = "";
-        }
+	public Evaluation() {
+		Type = "";
+	}
 
-        public Evaluation(string type, int value) {
-            Type = type;
-            Value = value;
-        }
-    }
+	public Evaluation(string type, int value) {
+		Type = type;
+		Value = value;
+	}
 }

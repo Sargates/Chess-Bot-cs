@@ -1,6 +1,5 @@
-﻿namespace ChessBot.Engine.Stockfish.NET.Models {
-    public enum Color {
-        Black,
-        White
-    }
+﻿namespace Stockfish.NET;
+public enum Color {
+	Black,
+	White
 }

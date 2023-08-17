@@ -5,9 +5,10 @@ using ChessBot.Helpers;
 namespace ChessBot.Application;
 
 public static class AnimationHelper {
-	public static List<PieceAnimation> FromMove(Move move, Piece piece, float tTotal, float lag=0) {
+	public static List<PieceAnimation> FromMove(Move move, Piece piece, float lag=0) {
 		// Interpolating animation between positions
 		List<PieceAnimation> animations = new List<PieceAnimation>();
+		float tTotal = MainController.Instance.appSettings.uiMoveTime;
 
 		animations.Add(new PieceAnimation(move.StartSquare, move.TargetSquare, piece, tTotal, lag, soundEnum:move.moveSoundEnum));
 
@@ -27,15 +28,12 @@ public static class AnimationHelper {
 					throw new Exception("False castle flag in move");
 			}
 		}
-		// if (move.IsPromotion) {
-
-		// }
-
 		return animations;
 	}
-	public static List<PieceAnimation> ReverseFromMove(Move move, Piece piece, float tTotal, float lag=0) {
+	public static List<PieceAnimation> ReverseFromMove(Move move, Piece piece, float lag=0) {
 		// Interpolating animation between positions
 		List<PieceAnimation> animations = new List<PieceAnimation>();
+		float tTotal = MainController.Instance.appSettings.uiMoveTime;
 
 		animations.Add(new PieceAnimation(move.TargetSquare, move.StartSquare, piece, tTotal, lag, soundEnum:move.moveSoundEnum));
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
-namespace ChessBot.Engine.Stockfish {
+namespace Stockfish.NET;
 	internal class StockfishProcess {
 		/// <summary>
 		/// Default process info for Stockfish process
@@ -75,4 +75,3 @@ namespace ChessBot.Engine.Stockfish {
 			_process.Close();
 		}
 	}
-}

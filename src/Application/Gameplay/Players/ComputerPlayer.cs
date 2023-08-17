@@ -17,7 +17,7 @@ public class ComputerPlayer : Player {
 		IsSearching = false;
 		ConsoleColor newThreadColor = 0;
 		while (ThreadColorBlacklist.Contains(newThreadColor) ) {
-			newThreadColor = (ConsoleColor) Controller.random.Next(16);
+			newThreadColor = (ConsoleColor) MainController.Instance.random.Next(16);
 		}
 		threadColor = newThreadColor;
 		HasStarted = false;

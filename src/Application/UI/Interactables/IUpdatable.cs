@@ -1,5 +1,4 @@
-namespace ChessBot.Application {
-	public interface IUpdatable {
-		public void Update();
-	}
+namespace ChessBot.Application;
+public interface IUpdatable {
+	public void Update();
 }

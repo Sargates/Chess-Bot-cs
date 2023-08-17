@@ -1,7 +1,7 @@
 using Raylib_cs;
 using System.Globalization;
 
-namespace ChessBot.Helpers {
+namespace ChessBot.Helpers;
 	static class ColorHelper {
 		public static Color HexToColor(string hex) {
 
@@ -23,6 +23,4 @@ namespace ChessBot.Helpers {
 			byte.TryParse(hex.AsSpan(6, 2), NumberStyles.HexNumber, null, out a);
 			return new Color(r, g, b, a);
 		}
-
 	}
-}

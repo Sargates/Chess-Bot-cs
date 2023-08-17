@@ -1,7 +1,7 @@
 // using ChessBot.Application;
 // using ChessBot.Helpers;
 
-// namespace ChessBot.Engine {
+// namespace ChessBot.Helpers;
 // 	public static class Perft {
 // 		public static int[] depthList = new int[23];
 // 		static int maxDepth = 4;

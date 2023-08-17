@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ChessBot.Engine.Stockfish;
-using ChessBot.Engine.Stockfish.NET.Models;
 using ChessBot.Helpers;
 
-namespace ChessBot.Engine.Stockfish {
+namespace Stockfish.NET;
 	public class Stockfish : IStockfish {
 		#region private variables
 
@@ -385,4 +383,3 @@ namespace ChessBot.Engine.Stockfish {
 
 		#endregion
 	}
-}

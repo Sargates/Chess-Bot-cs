@@ -1,6 +1,6 @@
-namespace ChessBot.Engine {
+namespace ChessBot.Engine;
 	public static class PrecomputedMoveData {
-
 		
 	}
-}
+
+		
