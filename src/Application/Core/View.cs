@@ -8,12 +8,11 @@ namespace ChessBot.Application;
 public class View : IView {
 	public BoardUI ui;
 	public static Vector2 screenSize;
+
 	public Camera2D camera;
 	public List<ScreenObject> pipeline = new List<ScreenObject>();
 	public float fTimeElapsed = 0.0f;
 	public float TimeOfLastMove = 0.0f;
-
-	public List<(int tail, int head)> drawnArrows = new List<(int tail, int head)>();
 
 
 
@@ -47,6 +46,8 @@ public class View : IView {
 		ui.DrawBoardBorder();
 		ui.DrawBoardSquares();
 		ui.DrawPiecesOnBoard(); // Includes Animations
+		// TODO: Check for arrows not getting emptied on move
+		ui.DrawArrowsOnBoard();
 
 		DrawPlayerInfo();
 
@@ -66,7 +67,7 @@ public class View : IView {
 		// TODO: Improve this logic
 		for (int i=0; i<2; i++) {
 			ChessPlayer player = i==0 ? MainController.Instance.model.whitePlayer : MainController.Instance.model.blackPlayer;
-			Vector2 displayPosition = new Vector2(500f, 350f * (ui.isFlipped ? -1 : 1) * (player == MainController.Instance.model.whitePlayer ? 1 : -1));
+			Vector2 displayPosition = new Vector2(500f, 350f * (ui.IsFlipped ? -1 : 1) * (player == MainController.Instance.model.whitePlayer ? 1 : -1));
 			Color playerInfoColor = ColorHelper.HexToColor("#2c2c2c"); // inactive color
 			if (MainController.Instance.model.ActivePlayer == player) {
 				playerInfoColor = ColorHelper.HexToColor("#79ff2b");

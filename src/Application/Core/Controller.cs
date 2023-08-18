@@ -11,7 +11,7 @@ using static MoveGenerator;
 
 public class MainController { // I would use `AppController` but OmniSharp's autocomplete keeps giving me `AppContext`
 
-	public static MainController? instance; // singleton
+	private static MainController? instance; // singleton
 	public static MainController Instance {
 		get {
 			if (instance == null) {
@@ -36,14 +36,16 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 	// Square selected on each interaction, -1 for invalid square
 	// { leftDown, leftUp, rightDown, rightUp }
 	public int[] mouseClickInfo = {-1, -1, -1, -1};
-	// in the format of: leftReleased, leftPressed, rightPressed, rightReleased
-	public int mouseButtonsClicked; // 0b1111
-	public int pressedKey=0;
+
+	// in the format of: rightReleased, rightPressed, leftPressed, leftReleased
+	public bool WildlySpecificBooleanToTellIfShouldDeselectSquare;
+	public int mouseButtonsClicked=0; // 0b1111
+	public int PressedKey=0;
 	
-	public bool IsLeftPressed => (mouseButtonsClicked & 8) == 8;
-	public bool IsLeftReleased => (mouseButtonsClicked & 4) == 4;
-	public bool IsRightPressed => (mouseButtonsClicked & 2) == 2;
-	public bool IsRightReleased => (mouseButtonsClicked & 1) == 1;
+	public bool IsRightReleased => (mouseButtonsClicked & 8) == 8;
+	public bool IsRightPressed => (mouseButtonsClicked & 4) == 4;
+	public bool IsLeftReleased => (mouseButtonsClicked & 2) == 2;
+	public bool IsLeftPressed => (mouseButtonsClicked & 1) == 1;
 
 	private MainController() {
 		screenSize = new Vector2(appSettings.uiScreenWidth, appSettings.uiScreenHeight);
@@ -75,7 +77,7 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 			view.fTimeElapsed = fTimeElapsed;
 			UpdateMouseButtons();
 			
-			if (pressedKey != 0) {
+			if (PressedKey != 0) {
 				HandleKeyboardInput();
 			}
 			if (view.ui.activeAnimations.Count == 0 && mouseButtonsClicked > 0) {
@@ -113,117 +115,146 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 		SaveApplicationSettings();
 	}
 
-	
-	public void HandleMouseInput() {
-		// TODO Test how ineffective it would be to constantly update mousePos and check if mouse is on a square
-		Piece clickedPiece = Piece.None;
-		int squareClicked = -1;
-		Move validMove = new Move(0);
+	public int GetSquareMouseIsOver() {
 
+		int squareClicked = -1;
 		Vector2 pos = Raylib.GetMousePosition() - screenSize/2;
 
 		Vector2 boardPos = (pos/BoardUI.squareSize);
-		if (view.ui.isFlipped) { boardPos *= -1; }
+		if (view.ui.IsFlipped) { boardPos *= -1; }
 		boardPos += new Vector2(4);
 
 		if ((0 <= boardPos.X && boardPos.X < 8 && 0 <= boardPos.Y && boardPos.Y < 8) ) {
 			squareClicked = 8*((int)(8-boardPos.Y))+(int)boardPos.X;
-			clickedPiece = model.board.GetSquare(squareClicked);
 		} // If the interaction (click/release) is in bounds, set square clicked and clicked piece, otherwise they will be -1 and {Piece.None}
 
-		if (squareClicked == -1) { // Case 1
+		return squareClicked;
+	}
+
+	
+	public void HandleMouseInput() {
+		// TODO Test how ineffective it would be to constantly update mousePos and check if mouse is on a square
+
+		//* Precondition: Mouse button has changed state
+
+		Piece clickedPiece = Piece.None;
+		int squareClicked = -1;
+		Move validMove = new Move(0);
+
+		squareClicked = GetSquareMouseIsOver();
+		if (squareClicked == -1) { //! Case 1
 			view.ui.DeselectActiveSquare();
 			return;
-		} // Passes guard clause if the click was in bounds
+		} //* Passes guard clause if the click was in bounds
+		clickedPiece = model.board.GetSquare(squareClicked);
 
-		if (view.ui.selectedIndex != -1) {
-			foreach (Move move in view.ui.movesForSelected) {
-				if (move == new Move(view.ui.selectedIndex, squareClicked)) {
-					validMove = move;
-					break;
-				}
+		//* By this point a we know that the mouse was over a square when it changed state
+
+		if (view.ui.SelectedIndex != -1) { //* If it's a second click (a square was already selected thus a move was tried), check if the move is valid
+			foreach (Move move in view.ui.MovesForSelected) { //* Iterate through valid moves to 
+				if (move == new Move(view.ui.SelectedIndex, squareClicked)) { validMove = move; break; }
 			}
 		}
 
-		if (IsLeftPressed) {
-			mouseClickInfo[0] = squareClicked;
+		if (IsLeftPressed) mouseClickInfo[0] = squareClicked;
+		if (IsLeftReleased) mouseClickInfo[1] = squareClicked;
+		if (IsRightPressed) mouseClickInfo[2] = squareClicked;
+		if (IsRightReleased) mouseClickInfo[3] = squareClicked;
+
+
+		if (mouseClickInfo[0] != -1 && mouseClickInfo[1] == -1 && mouseClickInfo[2] == -1 ) { //* Rising edge left click
 			view.ui.highlightedSquares = new bool[64];
-			if (! validMove.IsNull ) { // Case 3
-				view.ui.DeselectActiveSquare();
-				Player.OnMoveChosen(validMove);
-				view.TimeOfLastMove = fTimeElapsed;
-			} else
-			if (view.ui.selectedIndex != -1 && squareClicked == view.ui.selectedIndex) { // Case 5
-				view.ui.isDraggingPiece = true;
-			} else
-			if (view.ui.selectedIndex == -1 && clickedPiece != Piece.None) { // Case 2
-				view.ui.selectedIndex = squareClicked;
-				view.ui.isDraggingPiece = true;
-				bool isHumanColor = false;
-				isHumanColor = isHumanColor || (clickedPiece.Color == Piece.White && (model.humanColor & 0b10) != 0);
-				isHumanColor = isHumanColor || (clickedPiece.Color == Piece.Black && (model.humanColor & 0b01) != 0);
-				isHumanColor = isHumanColor || model.SuspendPlay; // if play is suspended, allow view to move pieces
-				if (isHumanColor && clickedPiece.Color == model.board.activeColor) {
-					view.ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
-				}
-			} else
-			if (validMove.IsNull && clickedPiece.Type != Piece.None) { // Case 6
-				bool isHumanColor = false;
-				view.ui.selectedIndex = squareClicked;
-				view.ui.isDraggingPiece = true;
-				view.ui.movesForSelected = new Move[0];
-				isHumanColor = isHumanColor || (clickedPiece.Color == Piece.White && (model.humanColor & 0b10) != 0);
-				isHumanColor = isHumanColor || (clickedPiece.Color == Piece.Black && (model.humanColor & 0b01) != 0);
-				isHumanColor = isHumanColor || model.SuspendPlay; // if play is suspended, allow view to move pieces
-				if (isHumanColor && clickedPiece.Color == model.board.activeColor) {
-					view.ui.movesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
-				}
-			} else
-			if (validMove.IsNull) { // Case 4
-				view.ui.DeselectActiveSquare();
+			view.ui.ArrowsOnBoard.Clear();
+			view.ui.IsDraggingPiece = true;
+			if (view.ui.SelectedIndex == mouseClickInfo[0]) { //! Case 5
+				WildlySpecificBooleanToTellIfShouldDeselectSquare = true;
+				return;
 			}
+			WildlySpecificBooleanToTellIfShouldDeselectSquare = false;
+
+			if (! validMove.IsNull) { //! Case 3
+				model.MakeMoveOnBoard(validMove);
+				return;
+			} //* Passes guard clause if the move tried is invalid, either because it's illegal or because a square wasn't selected
+			//* Need to check if move was valid before exitting because a piece wasnt clicked
+			if (clickedPiece == Piece.None) { //! Case 8
+				view.ui.DeselectActiveSquare();
+				return;
+			} //* Passes guard clause if a piece was clicked
+
+
+
+
+			//! Case 2
+			//* Case 2 is satisfied by this point, do additional checks to get desired behavior
+			view.ui.SelectedIndex = squareClicked;
+			view.ui.MovesForSelected = new Move[0]; // Reset moves because we're going to potentially recalculate them anyways
+			if (! ((model.humanColor >> 1) == 1 && clickedPiece.Color == Piece.White || (model.humanColor & 1) == 1 && clickedPiece.Color == Piece.Black)) { //! Case 2a
+				return;
+			} //* Passes guard clause if square clicked is a human color
+			if (! (!model.enforceColorToMove || model.enforceColorToMove && (model.board.whiteToMove ? Piece.White : Piece.Black) == clickedPiece.Color)) { //! Case 2b
+				return;
+			} //* Passes guard clause if it's that color's turn to move
+
+			//! Case 2c
+
+			//* Desired behavior is that when a piece is selected, it will only generate moves for that piece if it satisfies the two above conditions
+			view.ui.MovesForSelected = MoveGenerator.GetMoves(model.board, squareClicked);
 		}
 
-		if (IsLeftReleased) {
-			mouseClickInfo[1] = squareClicked;
-			view.ui.isDraggingPiece = false;
-
+		if (mouseClickInfo[1] != -1) { //* Release of left click
+			view.ui.IsDraggingPiece = false;
 			if (! validMove.IsNull) {
+				model.MakeMoveOnBoard(validMove, false); //* Don't animate because it's a release
+			}
+			if (mouseClickInfo[0] == mouseClickInfo[1] && WildlySpecificBooleanToTellIfShouldDeselectSquare) {
 				view.ui.DeselectActiveSquare();
-				Player.OnMoveChosen(validMove, false); // Do not animate a move made by a release
+				WildlySpecificBooleanToTellIfShouldDeselectSquare = false;
 			}
-			mouseClickInfo[0] = -1; mouseClickInfo[1] = -1;
 		}
 
-		if (IsRightPressed) {
-			mouseClickInfo[2] = squareClicked;
-			view.ui.DeselectActiveSquare();
-			view.ui.isDraggingPiece = false;
-		}
-
-		if (IsRightReleased) {
-			mouseClickInfo[3] = squareClicked;
-			if (view.ui.selectedIndex == -1 && mouseClickInfo[0] == -1) {
-				view.ui.highlightedSquares[squareClicked] = ! view.ui.highlightedSquares[squareClicked];
-			} else
-			if (true) {
-				view.drawnArrows.Add((mouseClickInfo[2], mouseClickInfo[3]));
+		if (mouseClickInfo[2] != -1 && mouseClickInfo[3] == -1) {
+			if (mouseClickInfo[0] != -1 ) { //* Mouse is dragging a piece, deselect active piece
+				view.ui.IsDraggingPiece = false;
+				view.ui.DeselectActiveSquare();
+				return;
 			}
-			mouseClickInfo[2] = -1; mouseClickInfo[3] = -1;
+		}
+		if (mouseClickInfo[3] != -1) { //* Release of right click
+			if (mouseClickInfo[0] == -1) {
+				if (mouseClickInfo[2] == mouseClickInfo[3]) { //* Should highlight square
+					view.ui.highlightedSquares[mouseClickInfo[2]] = ! view.ui.highlightedSquares[mouseClickInfo[2]];
+				} else { //* Draw arrow
+					var tup = (mouseClickInfo[2], mouseClickInfo[3]);
+					if (view.ui.ArrowsOnBoard.Contains(tup)) {
+						// Console.WriteLine($"Removed Arrow From Draw: <{mouseClickInfo[2]}, {mouseClickInfo[3]}>");
+						view.ui.ArrowsOnBoard.Remove(tup);
+					} else {
+						// Console.WriteLine($"Add Arrow To Draw: <{mouseClickInfo[2]}, {mouseClickInfo[3]}>");
+						view.ui.ArrowsOnBoard.Add(tup);
+					}
+				}
+			}
 		}
 
-		//* Case 1: 	No square is selected, and square clicked is out of bounds 			=> call DeselectActiveSquare ✓
-		//* Case 2: 	No square is selected and piece is clicked 							=> Set selectedIndex to square clicked ✘
-		//* Case 3: 	Square is selected and square clicked is a valid move				=> call model.board.MakeMove ✘
-		//* Case 4: 	Square is selected and square clicked is not a valid move			=> Deselect piece and fallthrough to case 7 ✘
-		//* Case 5: 	Square is selected and square clicked == selected index				=> set isDragging to true ✘
-		//* Case 6: 	Square is selected and clicked piece is the same color				=> Subset of Case 7 ✓
-		//* Case 7: 	Square is selected and clicked piece is not in the valid moves		=> Superset of case 4 ✘
-		//* Case 7.1: 	If clicked square is a piece, select that square
+		if (mouseClickInfo[1] != -1) { mouseClickInfo[0] = -1; mouseClickInfo[1] = -1; }; //* If a button was released, reset the mouse info for that button
+		if (mouseClickInfo[3] != -1) { mouseClickInfo[2] = -1; mouseClickInfo[3] = -1; }; //* If a button was released, reset the mouse info for that button
+		return;
+
+		//* Cases for left button press (see writeup)
+		//* Default:																		=> Set IsDragging to true;
+		//* Case  1: 	No square is selected, and square clicked is out of bounds			=> call DeselectActiveSquare
+		//* Case  5: 	Square is already selected and square clicked == selected index		=> Set special boolean value (see note)
+		//* Case  3: 	Square is already selected and square clicked is a valid move		=> call model.board.MakeMove -- Fallthrough to 8, 2
+		//* Case  8: 	Square is already selected and a piece is not clicked				=> call DeselectActiveSquare -- DO NOT fallthrough to case 2
+		//* Case  2: 	No square is selected and piece is clicked							=> Set selectedIndex to square clicked -- Fallthrough to case 2a
+		//* Case  2a:	ClickedPiece.Color is not a human color, (it's a computer's piece)	=> Do not fallthrough to case 2b
+		//* Case  2b:	ClickedPiece.Color is not the color to move							=> Do not fallthrough to case 2c
+		//* Case  2c:	2a and 2b were both false											=> Generate the moves for the selected index and save to the View
 	}
 
 	public void HandleKeyboardInput() {
-		switch (pressedKey) {
+		switch (PressedKey) {
 			case (int) KeyboardKey.KEY_Z :{
 				if ((model.ActivePlayer.Computer?.IsSearching ?? false)) { break; }
 				// If there is exactly one human, undo two moves
@@ -257,8 +288,11 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 			}
 
 			case (int) KeyboardKey.KEY_P :{
-				Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Check]);
-				Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Checkmate]);
+				// foreach (int i in mouseClickInfo) {
+				// 	Console.Write($"{i}, ");
+				// } Console.WriteLine();
+				// Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Check]);
+				// Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Checkmate]);
 				// Console.WriteLine();
 				// Console.WriteLine(model.board.GetUCIGameFormat());
 				break;
@@ -301,11 +335,11 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 
 	public void UpdateMouseButtons() {
 		mouseButtonsClicked = 0;
-		mouseButtonsClicked += Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)   ? 8 : 0;
-		mouseButtonsClicked += Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)  ? 4 : 0;
-		mouseButtonsClicked += Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)  ? 2 : 0;
-		mouseButtonsClicked += Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_RIGHT) ? 1 : 0;
-		pressedKey = Raylib.GetKeyPressed();
+		mouseButtonsClicked += Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_RIGHT) ? 8 : 0;
+		mouseButtonsClicked += Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)  ? 4 : 0;
+		mouseButtonsClicked += Raylib.IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)  ? 2 : 0;
+		mouseButtonsClicked += Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)   ? 1 : 0;
+		PressedKey = Raylib.GetKeyPressed();
 	}
 
 	public void SaveApplicationSettings() {

@@ -22,17 +22,20 @@ public class BoardUI {
 	public static Sound[] sounds = new Sound[0];
 	public static Texture2D piecesTexture;
 	public static Vector2 squareSizeV = new Vector2(squareSize);
+	public bool IsFlipped;
 	static readonly int[] pieceImageOrder = { 5, 3, 2, 4, 1, 0 };
 
-	public int oppMovedFrom = -1;
-	public int oppMovedTo	= -1;
+	public int OppMovedFrom = -1;
+	public int OppMovedTo	= -1;
 
-	public int selectedIndex = -1;
+	public int SelectedIndex = -1;
+	public Move[] MovesForSelected = new Move[0];
+	public bool IsDraggingPiece = false;
+
+	public HashSet<(int tail, int head)> ArrowsOnBoard = new HashSet<(int tail, int head)>();
 	public bool[] highlightedSquares = new bool[64];
-	public Move[] movesForSelected = new Move[0];
-	public bool isDraggingPiece = false;
+	
 	public List<PieceAnimation> activeAnimations = new List<PieceAnimation>();
-	public bool isFlipped;
 
 
 	public BoardUI() {
@@ -70,29 +73,29 @@ public class BoardUI {
 			DrawRectangleCentered(temp, squareSizeV, IsLight ? BoardTheme.lightCol : BoardTheme.darkCol);
 			Color textColor = (!IsLight) ? BoardTheme.lightCol : BoardTheme.darkCol;
 			if (squarePos.Y == 7) { // If square is on the bottom edge, draw the file
-				UIHelper.DrawText($"{BoardHelper.fileNames[(! isFlipped ? i&0b111 : 7-i&0b111)]}", temp+(squareSizeV/2)-(3*squareSizeV/128), squareSize/4, 0, textColor, UIHelper.AlignH.Right, UIHelper.AlignV.Bottom);
+				UIHelper.DrawText($"{BoardHelper.fileNames[(! IsFlipped ? i&0b111 : 7-i&0b111)]}", temp+(squareSizeV/2)-(3*squareSizeV/128), squareSize/4, 0, textColor, UIHelper.AlignH.Right, UIHelper.AlignV.Bottom);
 			}
 			if (squarePos.X == 0) { // If square is on the left edge, draw the rank
-				UIHelper.DrawText($"{BoardHelper.rankNames[(! isFlipped ? i>>3 : 7-(i>>3))]}", temp-(squareSizeV/2)+(3*squareSizeV/128), squareSize/4, 0, textColor, UIHelper.AlignH.Left, UIHelper.AlignV.Top);
+				UIHelper.DrawText($"{BoardHelper.rankNames[(! IsFlipped ? i>>3 : 7-(i>>3))]}", temp-(squareSizeV/2)+(3*squareSizeV/128), squareSize/4, 0, textColor, UIHelper.AlignH.Left, UIHelper.AlignV.Top);
 			}
-			if (highlightedSquares[isFlipped ? 63-i : i]) {
+			if (highlightedSquares[IsFlipped ? 63-i : i]) {
 				DrawRectangleCentered(temp, squareSizeV, BoardTheme.selectedHighlight);
 			}
 		}
-		foreach (Move move in movesForSelected) {
+		foreach (Move move in MovesForSelected) {
 			Vector2 squarePos = new Vector2(move.TargetSquare%8, (7-move.TargetSquare/8));
 			Vector2 temp = squareSize * (squarePos - new Vector2(3.5f));
-			if (isFlipped) {
+			if (IsFlipped) {
 				temp *= -1;
 			}
 			// squareColors[move.TargetSquare] = IsLightSquare(move.TargetSquare) ? BoardTheme.legalLight : BoardTheme.legalDark;
 			DrawRectangleCentered(temp, squareSizeV, BoardTheme.legalHighlight);
 		}
 
-		if (selectedIndex != -1) {
-			Vector2 squarePos = new Vector2(selectedIndex%8, (7-selectedIndex/8));
+		if (SelectedIndex != -1) {
+			Vector2 squarePos = new Vector2(SelectedIndex%8, (7-SelectedIndex/8));
 			Vector2 temp = squareSize * (squarePos - new Vector2(3.5f));
-			if (isFlipped) {
+			if (IsFlipped) {
 				temp *= -1;
 			}
 			// squareColors[selectedIndex] = IsLightSquare(selectedIndex) ? BoardTheme.selectedLight : BoardTheme.selectedLight; // TODO fix redundant line
@@ -103,8 +106,6 @@ public class BoardUI {
 	public void DrawRectangleCentered(Vector2 position, Vector2 size, Color color) {
 		Raylib.DrawRectangleV(position-size/2, size, color);
 	}
-
-
 
 	public void DrawPiecesOnBoard() {
 		ulong animatedSquares = 0;
@@ -120,11 +121,11 @@ public class BoardUI {
 			Vector2 indexVector = new Vector2(x, y);
 
 			Vector2 renderPosition = (indexVector - new Vector2(3.5f)) * squareSize;
-			if (isFlipped) {
+			if (IsFlipped) {
 				renderPosition *= -1;
 			}
 
-			if (selectedIndex == i && isDraggingPiece) {
+			if (SelectedIndex == i && IsDraggingPiece) {
 				cachedRenderPos = renderPosition;
 				continue;
 			}
@@ -141,22 +142,127 @@ public class BoardUI {
 		for (int i=activeAnimations.Count-1;i>-1; i--) {
 			PieceAnimation anim = activeAnimations[i];
 			if (anim.HasFinished) { activeAnimations.RemoveAt(i); continue;}
-			anim.Draw(isFlipped);
+			anim.Draw(IsFlipped);
 		}
 
 
-		if (selectedIndex != -1 && isDraggingPiece) {
+		if (SelectedIndex != -1 && IsDraggingPiece) {
 			Vector2 mousePos = Raylib.GetMousePosition() - View.screenSize/2; // Mouse position in camera space converted to worldspace (centered at the origin)
 			Vector2 renderedPosition = cachedRenderPos; // center of selected square
 
-			DrawPiece(boardToRender[selectedIndex], Vector2.Clamp(mousePos, -4*squareSizeV, 4*squareSizeV));
+			DrawPiece(boardToRender[SelectedIndex], Vector2.Clamp(mousePos, -4*squareSizeV, 4*squareSizeV));
 
 		}
 	}
 
+	public void DrawArrowsOnBoard() {
+		float triangleHeight = 3.0f/8.0f;
+		float triangleBaseWidth = 1.0f/2.0f;
+
+		MainController controller = MainController.Instance;
+
+
+		float widthFactor = controller.appSettings.uiArrowWidthFactor;
+		foreach ((int tail, int head) arrow in ArrowsOnBoard) {
+			int tail = arrow.tail; int head = arrow.head;
+
+
+			Vector2 tailPos = new Vector2(tail & 0b111, 7-(tail>>3));						// All in board space [0, 8)
+			Vector2 headPos = new Vector2(head & 0b111, 7-(head>>3));						// All in board space [0, 8)
+			Vector2 deltaV = headPos-tailPos;
+			bool isKnight = false;
+			int sign = (Math.Sign(head-tail) == -1 ? 1 : -1);
+
+			if (new int[] { 6, 15, 17, 10, -6, -15, -17, -10 }.Contains(head-tail)) { // Is a Knight move, draw differently
+				isKnight = true;
+				Vector2 newTail = new Vector2();
+				Vector2 newHead = new Vector2();
+				switch (head-tail) {
+					case   6:
+						newTail = tailPos - new Vector2(triangleHeight, 0);
+						newHead = new Vector2(headPos.X, tailPos.Y) - new Vector2(widthFactor/2, 0);
+						tailPos = new Vector2(headPos.X, tailPos.Y) - new Vector2(0, widthFactor/2);
+						break;
+					case  15:
+						newTail = tailPos - new Vector2(0, triangleHeight);
+						newHead = new Vector2(tailPos.X, headPos.Y) - new Vector2(0, widthFactor/2);
+						tailPos = new Vector2(tailPos.X, headPos.Y) - new Vector2(widthFactor/2, 0);
+						break;
+					case  17:
+						newTail = tailPos - new Vector2(0, triangleHeight);
+						newHead = new Vector2(tailPos.X, headPos.Y) - new Vector2(0, widthFactor/2);
+						tailPos = new Vector2(tailPos.X, headPos.Y) + new Vector2(widthFactor/2, 0);
+						break;
+					case  10:
+						newTail = tailPos + new Vector2(triangleHeight, 0);
+						newHead = new Vector2(headPos.X, tailPos.Y) + new Vector2(widthFactor/2, 0);
+						tailPos = new Vector2(headPos.X, tailPos.Y) - new Vector2(0, widthFactor/2);
+						break;
+					case  -6:
+						newTail = tailPos + new Vector2(triangleHeight, 0);
+						newHead = new Vector2(headPos.X, tailPos.Y) + new Vector2(widthFactor/2, 0);
+						tailPos = new Vector2(headPos.X, tailPos.Y) + new Vector2(0, widthFactor/2);
+						break;
+					case -15:
+						newTail = tailPos + new Vector2(0, triangleHeight);
+						newHead = new Vector2(tailPos.X, headPos.Y) + new Vector2(0, widthFactor/2);
+						tailPos = new Vector2(tailPos.X, headPos.Y) + new Vector2(widthFactor/2, 0);
+						break;
+					case -17:
+						newTail = tailPos + new Vector2(0, triangleHeight);
+						newHead = new Vector2(tailPos.X, headPos.Y) + new Vector2(0, widthFactor/2);
+						tailPos = new Vector2(tailPos.X, headPos.Y) - new Vector2(widthFactor/2, 0);
+						break;
+					case -10:
+						newTail = tailPos - new Vector2(triangleHeight, 0);
+						newHead = new Vector2(headPos.X, tailPos.Y) - new Vector2(widthFactor/2, 0);
+						tailPos = new Vector2(headPos.X, tailPos.Y) + new Vector2(0, widthFactor/2);
+						break;
+				}
+				newTail = squareSize * (newTail - new Vector2(3.5f)) * (IsFlipped ? -1 : 1);
+				newHead = squareSize * (newHead - new Vector2(3.5f)) * (IsFlipped ? -1 : 1);
+
+				Raylib.DrawLineEx(newTail, newHead, squareSize*widthFactor, BoardTheme.arrowOutlineHighlight);
+			}
+
+
+
+
+
+			Vector2 basisHeadWing1 = new Vector2(triangleHeight, +triangleBaseWidth/2);	// All in board space [0, 8) (Technically this isn't)
+			Vector2 basisHeadWing2 = new Vector2(triangleHeight, -triangleBaseWidth/2);	// All in board space [0, 8)
+
+			float fullArrowMag = Vector2.Distance(tailPos, headPos);
+			double angle = Math.Acos(Vector2.Dot(tailPos-headPos, new Vector2(1, 0)) / fullArrowMag) * (head - tail < 0 ? -1 : 1);
+
+			double sinTheta = Math.Sin(angle);
+			double cosTheta = Math.Cos(angle);
+
+			Vector2 headWing1 = new Vector2((float)(basisHeadWing1.X * cosTheta - basisHeadWing1.Y * sinTheta), (float)(basisHeadWing1.X * sinTheta + basisHeadWing1.Y * cosTheta));
+			Vector2 headWing2 = new Vector2((float)(basisHeadWing2.X * cosTheta - basisHeadWing2.Y * sinTheta), (float)(basisHeadWing2.X * sinTheta + basisHeadWing2.Y * cosTheta));
+
+			Vector2 finalTailPos 	= squareSize * (  tailPos - new Vector2(3.5f)) * (IsFlipped ? -1 : 1);
+			Vector2 finalHeadPos 	= squareSize * (  headPos - new Vector2(3.5f)) * (IsFlipped ? -1 : 1);
+			Vector2 finalHeadWing1 	= finalHeadPos + squareSize * headWing1 * (IsFlipped ? -1 : 1);
+			Vector2 finalHeadWing2 	= finalHeadPos + squareSize * headWing2 * (IsFlipped ? -1 : 1);
+
+
+			if (isKnight) Raylib.DrawLineEx(finalTailPos, (finalHeadWing2 + finalHeadWing1)/2, squareSize*widthFactor, BoardTheme.arrowOutlineHighlight);
+			else Raylib.DrawLineEx(finalTailPos+(finalHeadPos-(finalHeadWing2 + finalHeadWing1)/2), (finalHeadWing2 + finalHeadWing1)/2, squareSize*widthFactor, BoardTheme.arrowOutlineHighlight);
+			Raylib.DrawTriangle(finalHeadPos, finalHeadWing1, finalHeadWing2, BoardTheme.arrowOutlineHighlight);
+		}
+	}
+
+	public List<Vector2> GetVerticesToBoardSquare(int start, int end) { // Does not compose the arrow on the end
+		List<Vector2> vertexList = new List<Vector2>();
+
+
+		return vertexList;
+	}
+
 	public void DeselectActiveSquare() {
-		selectedIndex = -1;
-		movesForSelected = new Move[0];
+		SelectedIndex = -1;
+		MovesForSelected = new Move[0];
 	}
 
 	public static void DrawPiece(Piece piece, Vector2 posAbsCenter, float alpha = 1) { //* Copied from SebLague

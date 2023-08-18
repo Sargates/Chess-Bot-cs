@@ -10,7 +10,7 @@ using ChessBot.Engine;
 namespace ChessBot.Application;
 
 public class UCIEngine {
-	private const int MAX_TRIES = 200;
+	private const int MAX_TRIES = 300;
 	public int Depth;
 	public UCISettings Settings;
 	private int _elo;
@@ -154,7 +154,6 @@ public class UCIEngine {
 	public string GetBestMoveTime(int time = 1000) {
 		goTime(time);
 		var tries = 0;
-		// ConsoleHelper.WriteLine("Start Stockfish output", ConsoleColor.DarkRed);
 		while (true) {
 			if (tries > MAX_TRIES) {
 				throw new Exception("Max tries Exceeded");
@@ -168,7 +167,6 @@ public class UCIEngine {
 			// Console.WriteLine(response);
 			List<string> parsedData = response.Split(" ").ToList();
 			if (parsedData[0] == "bestmove") {
-				// ConsoleHelper.WriteLine("End Stockfish output", ConsoleColor.DarkRed);
 				if (parsedData[1] == "(none)") {
 					return "a1a1";
 				}

@@ -9,7 +9,7 @@ public class Model {
 
 	public View view;
 	public Board board;
-	public bool enforceColorToMove = false;
+	public bool enforceColorToMove = true;
 	public readonly string[] botMatchStartFens;
 
 	public Piece[] oldBoard = new Piece[64];
@@ -201,7 +201,7 @@ public class Model {
 		ConsoleHelper.WriteLine($"\nGame number {gameIndex} started\nFEN: {fenString}", ConsoleColor.DarkYellow);
 		SetPlayerTypes(type);
 		view.ui.boardToRender = board.board;
-		view.ui.isFlipped = humanColor == 0b01; // if white is not a player and black is a player
+		view.ui.IsFlipped = humanColor == 0b01; // if white is not a player and black is a player
 		gameIndex++;
 		view.ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(oldBoard, board.board, 0.2f));
 	}

@@ -319,12 +319,12 @@ public class MoveGenerator {
 			Piece.Rook => GetRookMoves(board, index),
 			Piece.Queen => GetQueenMoves(board, index),
 			Piece.King => GetKingMoves(board, index),
-			_ => new List<Move>() // Space is invalid, no moves, this is for Computer players not causing the program to crash
+			_ => new List<Move>() //* Space is invalid, no moves, this is for Computer players not causing the program to crash
 		};
 
 
-		if (piece.Type == Piece.King || currentChecks[(piece.Color == Piece.White) ? 0 : 1].Length == 2) { // Check if each end square is in attacked for each king move
-			// Combined `if king in double check` logic because outcome is the same (moves should be empty if king is in doublecheck)
+		if (piece.Type == Piece.King || currentChecks[(piece.Color == Piece.White) ? 0 : 1].Length == 2) { //* Check if each end square is in attacked for each king move
+			//* Combined `if king in double check` logic because outcome is the same (moves should be empty if king is in doublecheck)
 			for (int i=moves.Count-1; i>-1; i--) {
 				Move move = moves[i];
 				if (IsSquareAttacked(board, move.TargetSquare, piece.Color)) {
@@ -336,15 +336,15 @@ public class MoveGenerator {
 
 		if (! isInCheck) {
 			return moves.ToArray();
-		} // Passes guard clause if king is checked
+		} //* Passes guard clause if king is checked
 
 
-		for (int i=moves.Count-1; i>-1; i--) { // Check each move against needed squares to block the check
+		for (int i=moves.Count-1; i>-1; i--) { //* Check each move against needed squares to block the check
 			Move move = moves[i];
 			bool NotHit = true;
 			int checkingPosition = currentChecks[(piece.Color == Piece.White) ? 0 : 1][0].checkerPos;
 			int dirFromKing = currentChecks[(piece.Color == Piece.White) ? 0 : 1][0].dirFromKing;
-			while (checkingPosition != kingPos) { // Start at position of checker, subtract dirFromKing until checkingPosition == kingPos
+			while (checkingPosition != kingPos) { //* Start at position of checker, subtract dirFromKing until checkingPosition == kingPos
 				if (move.TargetSquare == checkingPosition) {
 					NotHit = false;
 					break;
@@ -356,21 +356,6 @@ public class MoveGenerator {
 			if (NotHit) { moves.RemoveAt(i); }
 		}
 		return moves.ToArray();
-
-		// Console.WriteLine();
-		// Console.Write("Checks: ");
-		// foreach ((int squareIndex, int dirFromKing) check in currentChecks[(piece.Color == Piece.White) ? 0 : 1]) {
-		// 	Console.Write($"{check.squareIndex} {check.dirFromKing}, ");
-		// }
-		// Console.WriteLine();
-		// Console.WriteLine();
-
-
-		// ConsoleHelper.WriteLine($"{Piece.EnumToRepr[piece]}");
-		// foreach (Move move in moves) {
-		// 	ConsoleHelper.WriteLine($"{BoardHelper.IndexToSquareName(move.StartSquare)} {BoardHelper.IndexToSquareName(move.TargetSquare)} {move.MoveFlag}", ConsoleColor.DarkMagenta);
-		// }
-
 	}
 
 	public static Move[] GetAllMoves(Board board, int color) {
@@ -389,8 +374,8 @@ public class MoveGenerator {
 
 
 	public static (bool, (int, int)[], (int, int)[]) GetCheckData(Board board, int index, int color) {
-		// Credits to Eddie Sharick for this algorithm (adapted from python)
-		// https://youtu.be/coAOXj6ZnSI
+		//* Credits to Eddie Sharick for this algorithm (adapted from python)
+		//* https://youtu.be/coAOXj6ZnSI
 
 		List<(int, int)> pins = new List<(int, int)>();
 		List<(int, int)> checks = new List<(int, int)>();
@@ -440,9 +425,7 @@ public class MoveGenerator {
 							break;
 						}
 					}
-					else {
-						break;
-					}
+					else { break; }
 				}
 			}
 		}

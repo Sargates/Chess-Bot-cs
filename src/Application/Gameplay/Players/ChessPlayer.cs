@@ -49,7 +49,6 @@ public class ChessPlayer { // Stole this idea from SebLague, able to reference a
 		return "Human Player";
 	}
 
-	
 	public void StartThread() {
 		Computer?.StartThread();
 	}
