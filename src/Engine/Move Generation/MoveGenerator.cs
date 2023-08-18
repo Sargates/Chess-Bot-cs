@@ -362,7 +362,7 @@ public class MoveGenerator {
 		List<Move> totalMoves = new List<Move>();
 
 		for (int i=0; i<64;i++) {
-			if (board.GetSquare(i).Color != color) continue;
+			if (board.GetSquare(i) != Piece.None && board.GetSquare(i).Color != color) continue;
 			totalMoves.AddRange(GetMoves(board, i));
 		}
 

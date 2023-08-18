@@ -6,7 +6,6 @@ namespace ChessBot.Engine;
 
 public class Board {
 
-	public Piece[] prevBoard;
 	public Piece[] board;
 
 	public bool whiteToMove;
@@ -36,7 +35,6 @@ public class Board {
 		UpdateFromState();
 		Debug.Assert(board!=null);
 		// board = FenToBoard(this.currentFen.fenBoard);
-		prevBoard = board;
 		for (int i = 0; i < board.Length; i++) {
 			if (board[i] == (Piece.White | Piece.King)) { whiteKingPos = i; }
 			if (board[i] == (Piece.Black | Piece.King)) { blackKingPos = i; }
@@ -88,9 +86,9 @@ public class Board {
 		return board;
 	}
 
-	public int activeColor => whiteToMove ? Piece.White : Piece.Black;
+	public int ActiveColor => whiteToMove ? Piece.White : Piece.Black;
 
-	public int opponentColour(int color) => whiteToMove ? Piece.Black : Piece.White;
+	public int InactiveColor => whiteToMove ? Piece.Black : Piece.White;
 	public int forwardDir(int color) => color == Piece.White ? 8 : -8;
 
 	public string GetUCIGameFormat() {
@@ -122,14 +120,13 @@ public class Board {
 		return o;
 	}
 
-	public void MakeMove(Move move, bool quiet = false) { //* Wrapper method for MovePiece, calls MovePiece and handles things like board history, 50 move rule, 3 move repition, 
+	public void MakeMove(Move move) { //* Wrapper method for MovePiece, calls MovePiece and handles things like board history, 50 move rule, 3 move repition, 
 		int movedFrom = move.StartSquare;
 		int movedTo = move.TargetSquare;
 		int moveFlag = move.MoveFlag;
 
 		Piece pieceMoved = GetSquare(movedFrom);
-		Piece pieceTaken = (moveFlag==Move.EnPassantCaptureFlag) ? (opponentColour(pieceMoved.Color)|Piece.Pawn) : GetSquare(movedTo);
-		prevBoard = this.board.ToArray();
+		Piece pieceTaken = (moveFlag==Move.EnPassantCaptureFlag) ? (InactiveColor|Piece.Pawn) : GetSquare(movedTo);
 
 		MovePiece(pieceMoved, movedFrom, movedTo);
 
@@ -214,9 +211,9 @@ public class Board {
 		}
 
 		bool tempWhiteToMove = !whiteToMove; // ForwardDir / anything related to the active color will be the same up until this point
-		if (quiet) {
-			return;
-		}
+		// if (quiet) { // TODO: Change whiteToMove behavior below
+		// 	return;
+		// }
 
 		SoundStates sound = SoundStates.Move;
 		if (pieceTaken != Piece.None) { sound = SoundStates.Capture; } else
@@ -272,6 +269,37 @@ public class Board {
 		board[movedFrom] = Piece.None;
 	}
 
+	// public void UnmakeMove(Move move) {
+	// 	if (currentStateNode.Previous == null) {
+	// 		throw new Exception("Tried to unmake move with no previous board state");
+	// 	}
+	// 	int movedFrom = move.TargetSquare;
+	// 	int movedTo = move.StartSquare;
+	// 	int moveFlag = move.MoveFlag;
+
+	// 	Piece pieceMoved = GetSquare(movedFrom);
+
+	// 	MovePiece(pieceMoved, movedFrom, movedTo);
+
+	// 	enPassantIndex = -1;
+	// 	if (moveFlag == Move.EnPassantCaptureFlag) { // Replace take piece and set en-passant index
+	// 		board[movedFrom-forwardDir(ActiveColor)] = Piece.Pawn|ActiveColor;
+	// 	}
+
+	// 	if (moveFlag == Move.PawnTwoUpFlag) {
+
+	// 	}
+
+	// 	// Is a promotion
+	// 	if (move.IsPromotion) {
+	// 		board[movedTo] = Piece.Pawn|pieceMoved.Color;
+	// 	}
+
+	// 	currentStateNode = currentStateNode.Previous;
+	// 	whiteToMove = ! whiteToMove;
+
+
+	// }
 	public void PushNewState(Fen newFen) {
 		if (stateHistory.Last == null) {
 			throw new Exception("`stateHistory.Last` is null");

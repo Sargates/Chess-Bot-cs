@@ -257,10 +257,12 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 		switch (PressedKey) {
 			case (int) KeyboardKey.KEY_Z :{
 				if ((model.ActivePlayer.Computer?.IsSearching ?? false)) { break; }
-				// If there is exactly one human, undo two moves
+				if (model.board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get second previous state, is null"); return; }
+				//* If there is exactly one human, undo two moves
 				if ((((model.humanColor >> 0) & 1) ^ ((model.humanColor >> 1) & 1)) == 1) {
 
-					// If a human is playing black and a computer is playing white, you can force the AI to rethink it's first move
+					//* If a human is playing black and a computer is playing white, you can force the AI to rethink it's first move
+					//* This fixes that
 					if ((model.board.currentStateNode.Previous?.Previous == null)) { break; }
 
 					model.DoublePrevState();
@@ -288,13 +290,8 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 			}
 
 			case (int) KeyboardKey.KEY_P :{
-				// foreach (int i in mouseClickInfo) {
-				// 	Console.Write($"{i}, ");
-				// } Console.WriteLine();
-				// Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Check]);
-				// Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Checkmate]);
-				// Console.WriteLine();
-				// Console.WriteLine(model.board.GetUCIGameFormat());
+				Console.WriteLine($"White Eval: {Evaluation.SumFromBoard(model.board, Piece.White)}");
+				Console.WriteLine($"Black Eval: {Evaluation.SumFromBoard(model.board, Piece.Black)}");
 				break;
 			}
 			case (int) KeyboardKey.KEY_O :{

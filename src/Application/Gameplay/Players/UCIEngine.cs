@@ -221,52 +221,52 @@ public class UCIEngine {
 		return board;
 	}
 
-	public Evaluation GetEvaluation() {
-		Evaluation evaluation = new Evaluation();
-		var fen = GetFenPosition();
-		char compare;
-		// fen sequence for white always contains w
-		if (fen.Contains("w")) {
-			compare = 'w';
-		}
-		else {
-			compare = 'b';
-		}
+	// public Evaluation GetEvaluation() {
+	// 	Evaluation evaluation = new Evaluation();
+	// 	var fen = GetFenPosition();
+	// 	char compare;
+	// 	// fen sequence for white always contains w
+	// 	if (fen.Contains("w")) {
+	// 		compare = 'w';
+	// 	}
+	// 	else {
+	// 		compare = 'b';
+	// 	}
 
-		// I'm not sure this is the good way to handle evaluation of position, but why not?
-		// Another way we need to somehow limit engine depth? 
-		goTime(10000);
-		var tries = 0;
-		while (true) {
-			if (tries > MAX_TRIES) {
-				throw new Exception("Max tries Exceeded");
-			}
+	// 	// I'm not sure this is the good way to handle evaluation of position, but why not?
+	// 	// Another way we need to somehow limit engine depth? 
+	// 	goTime(10000);
+	// 	var tries = 0;
+	// 	while (true) {
+	// 		if (tries > MAX_TRIES) {
+	// 			throw new Exception("Max tries Exceeded");
+	// 		}
 
-			var data = readLineAsList();
-			if (data[0] == "info") {
-				for (int i = 0; i < data.Count; i++) {
-					if (data[i] == "score") {
-						//don't use ternary operator here for readability
-						int k;
-						if (compare == 'w') {
-							k = 1;
-						}
-						else {
-							k = -1;
-						}
+	// 		var data = readLineAsList();
+	// 		if (data[0] == "info") {
+	// 			for (int i = 0; i < data.Count; i++) {
+	// 				if (data[i] == "score") {
+	// 					//don't use ternary operator here for readability
+	// 					int k;
+	// 					if (compare == 'w') {
+	// 						k = 1;
+	// 					}
+	// 					else {
+	// 						k = -1;
+	// 					}
 
-						evaluation = new Evaluation(data[i + 1], Convert.ToInt32(data[i + 2]) * k);
-					}
-				}
-			}
+	// 					evaluation = new Evaluation(data[i + 1], Convert.ToInt32(data[i + 2]) * k);
+	// 				}
+	// 			}
+	// 		}
 
-			if (data[0] == "bestmove") {
-				return evaluation;
-			}
+	// 		if (data[0] == "bestmove") {
+	// 			return evaluation;
+	// 		}
 
-			tries++;
-		}
-	}
+	// 		tries++;
+	// 	}
+	// }
 	public void Wait(int millisecond) {
 		this._process.WaitForExit(millisecond);
 	}

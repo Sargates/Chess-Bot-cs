@@ -8,6 +8,7 @@ public class ComputerPlayer : Player {
 	public bool IsThreaded;
 	public bool HasStarted;
 	public Thread thread;
+	public Bot bot;
 	public readonly ConsoleColor threadColor;
 	public static ConsoleColor[] ThreadColorBlacklist = { ConsoleColor.Black, ConsoleColor.DarkBlue, ConsoleColor.White, ConsoleColor.Gray, ConsoleColor.DarkGray, ConsoleColor.DarkYellow, ConsoleColor.Yellow };
 
@@ -19,6 +20,7 @@ public class ComputerPlayer : Player {
 		while (ThreadColorBlacklist.Contains(newThreadColor) ) {
 			newThreadColor = (ConsoleColor) MainController.Instance.random.Next(16);
 		}
+		bot = new Bot(model);
 		threadColor = newThreadColor;
 		HasStarted = false;
 		ThreadStart ths = new ThreadStart(Start);
@@ -31,7 +33,6 @@ public class ComputerPlayer : Player {
 
 
 	public virtual void Start() {
-		Thread.Sleep(500);
 		ConsoleHelper.WriteLine($"Starting Thread {color}", threadColor);
 		HasStarted = true;
 		while (true) {
@@ -53,7 +54,7 @@ public class ComputerPlayer : Player {
 	}
 
 	public override Move Think() {
-		return Move.NullMove;
+		return bot.Think();
 	}
 
 

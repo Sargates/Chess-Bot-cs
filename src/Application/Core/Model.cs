@@ -69,6 +69,9 @@ public class Model {
 		view.AddToPipeline(new Button(new Rectangle(40, 600, 210, 50), "Stockfish vs. Stockfish"	).SetCallback(delegate {
 			StartNewGame(type:Gametype.UvU);
 		}));
+		view.AddToPipeline(new Button(new Rectangle(40, 660, 210, 50), "Perft Test"	).SetCallback(delegate {
+			Perft.Main();
+		}));
 	}
 
 
@@ -87,8 +90,8 @@ public class Model {
 		board.MakeMove(move);
 		view.TimeOfLastMove = view.fTimeElapsed;
 
-		bool opponentInCheck = MoveGenerator.IsSquareAttacked(board, board.activeColor == Piece.White ? board.whiteKingPos : board.blackKingPos, board.activeColor);
-		bool canOpponentRespond = MoveGenerator.GetAllMoves(board, board.activeColor).Length != 0; // Negated for readability
+		bool opponentInCheck = MoveGenerator.IsSquareAttacked(board, board.ActiveColor == Piece.White ? board.whiteKingPos : board.blackKingPos, board.ActiveColor);
+		bool canOpponentRespond = MoveGenerator.GetAllMoves(board, board.ActiveColor).Length != 0; // Negated for readability
 
 		if (board.currentStateNode.Previous == null) { throw new Exception("Something went wrong"); }
 		Fen temp = board.currentStateNode.Previous.Value;
