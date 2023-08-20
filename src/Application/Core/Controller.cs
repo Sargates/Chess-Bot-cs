@@ -189,7 +189,7 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 			//* Case 2 is satisfied by this point, do additional checks to get desired behavior
 			view.ui.SelectedIndex = squareClicked;
 			view.ui.MovesForSelected = new Move[0]; // Reset moves because we're going to potentially recalculate them anyways
-			if (! ((model.humanColor >> 1) == 1 && clickedPiece.Color == Piece.White || (model.humanColor & 1) == 1 && clickedPiece.Color == Piece.Black)) { //! Case 2a
+			if (! ((model.humanColor >> 1) == 1 && clickedPiece.Color == Piece.White || (model.humanColor & 1) == 1 && clickedPiece.Color == Piece.Black) && ! model.SuspendPlay) { //! Case 2a
 				return;
 			} //* Passes guard clause if square clicked is a human color
 			if (! (!model.enforceColorToMove || model.enforceColorToMove && (model.board.whiteToMove ? Piece.White : Piece.Black) == clickedPiece.Color)) { //! Case 2b
@@ -220,7 +220,7 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 				return;
 			}
 		}
-		if (mouseClickInfo[3] != -1) { //* Release of right click
+		if (mouseClickInfo[3] != -1 && mouseClickInfo[2] != -1) { //* Release of right click
 			if (mouseClickInfo[0] == -1) {
 				if (mouseClickInfo[2] == mouseClickInfo[3]) { //* Should highlight square
 					view.ui.highlightedSquares[mouseClickInfo[2]] = ! view.ui.highlightedSquares[mouseClickInfo[2]];
@@ -266,7 +266,7 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 					if ((model.board.currentStateNode.Previous?.Previous == null)) { break; }
 
 					model.DoublePrevState();
-				} else { // otherwise undo a single move
+				} else { //* otherwise undo a single move
 					model.SinglePrevState();
 				}
 				view.ui.DeselectActiveSquare();
@@ -274,10 +274,10 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 			}
 			case (int) KeyboardKey.KEY_X :{
 				if ((model.ActivePlayer.Computer?.IsSearching ?? false)) { break; }
-				// If there is exactly one human, undo two moves
+				//* If there is exactly one human, redo two moves
 				if ((((model.humanColor >> 0) & 1) ^ ((model.humanColor >> 1) & 1)) == 1) {
 					model.DoubleNextState();
-				} else { // otherwise undo a single move
+				} else { //* otherwise undo a single move
 					model.SingleNextState();
 				}
 				view.ui.DeselectActiveSquare();

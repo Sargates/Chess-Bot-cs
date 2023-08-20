@@ -77,48 +77,50 @@ public class Model {
 
 	// Below methods handle the changing state of the board
 	public void MakeMoveOnBoard(Move move, bool animate=true) {
-		if (move.IsNull) {
-			Console.WriteLine("Null move was made, assumed checkmate");
-			return;
-		}
-
-		view.ui.DeselectActiveSquare();
-		ActivePlayer.IsSearching = false;
+		bool opponentInCheck;
+		if (! move.IsNull) {
+			view.ui.DeselectActiveSquare();
+			ActivePlayer.IsSearching = false;
 
 
-		Piece pieceMoved = board.GetSquare(move.StartSquare);
-		board.MakeMove(move);
-		view.TimeOfLastMove = view.fTimeElapsed;
+			Piece pieceMoved = board.GetSquare(move.StartSquare);
+			board.MakeMove(move);
+			view.TimeOfLastMove = view.fTimeElapsed;
 
-		bool opponentInCheck = MoveGenerator.IsSquareAttacked(board, board.ActiveColor == Piece.White ? board.whiteKingPos : board.blackKingPos, board.ActiveColor);
-		bool canOpponentRespond = MoveGenerator.GetAllMoves(board, board.ActiveColor).Length != 0; // Negated for readability
+			opponentInCheck = MoveGenerator.IsSquareAttacked(board, board.ActiveColor == Piece.White ? board.whiteKingPos : board.blackKingPos, board.ActiveColor);
+			bool canOpponentRespond = MoveGenerator.GetAllMoves(board, board.ActiveColor).Length != 0; // Negated for readability
 
-		if (board.currentStateNode.Previous == null) { throw new Exception("Something went wrong"); }
-		Fen temp = board.currentStateNode.Previous.Value;
+			if (board.currentStateNode.Previous == null) { throw new Exception("Something went wrong"); }
+			Fen temp = board.currentStateNode.Previous.Value;
 
-		if (opponentInCheck && canOpponentRespond) {
-			temp.moveMade.moveSoundEnum = (int)SoundStates.Check;
-		} else
-		if (opponentInCheck && ! canOpponentRespond) {
-			temp.moveMade.moveSoundEnum = 0; // Sound is played separately if game is over
-		} else
-		if (! opponentInCheck && ! canOpponentRespond) {
-			temp.moveMade.moveSoundEnum = 0; // Sound is played separately if game is over
-		}
+			if (opponentInCheck && canOpponentRespond) {
+				temp.moveMade.moveSoundEnum = (int)SoundStates.Check;
+			} else
+			if (opponentInCheck && ! canOpponentRespond) {
+				temp.moveMade.moveSoundEnum = 0; // Sound is played separately if game is over
+			} else
+			if (! opponentInCheck && ! canOpponentRespond) {
+				temp.moveMade.moveSoundEnum = 0; // Sound is played separately if game is over
+			}
 
-		Debug.Assert(board.currentStateNode.Previous != null);
-		board.currentStateNode.Previous.Value = temp;
+			Debug.Assert(board.currentStateNode.Previous != null);
+			board.currentStateNode.Previous.Value = temp;
 
-		if (animate) { // Sounds are built in to animations, if move is not animated, play sound manually
-			view.ui.activeAnimations.AddRange(AnimationHelper.FromMove(temp.moveMade, pieceMoved));
+			if (animate) { // Sounds are built in to animations, if move is not animated, play sound manually
+				view.ui.activeAnimations.AddRange(AnimationHelper.FromMove(temp.moveMade, pieceMoved));
+			} else {
+				Raylib.PlaySound(BoardUI.sounds[board.currentStateNode.Previous.Value.moveMade.moveSoundEnum]);
+			}
+
+			// If opponent can't respond, fallthrough to game end handling
+			if (canOpponentRespond) {
+				return;
+			}
 		} else {
-			Raylib.PlaySound(BoardUI.sounds[board.currentStateNode.Previous.Value.moveMade.moveSoundEnum]);
+			opponentInCheck = true;
+			Console.WriteLine("Null move was made, assumed checkmate");
 		}
 
-		// If opponent can't respond, fallthrough to game end handling
-		if (canOpponentRespond) {
-			return;
-		}
 
 		SuspendPlay = true;
 
@@ -207,6 +209,7 @@ public class Model {
 		view.ui.IsFlipped = humanColor == 0b01; // if white is not a player and black is a player
 		gameIndex++;
 		view.ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(oldBoard, board.board, 0.2f));
+		SuspendPlay = false;
 	}
 	public void SetPrevState() {
 		if (board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get previous state, is null"); return; }

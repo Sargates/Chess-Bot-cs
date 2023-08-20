@@ -1,7 +1,7 @@
 # Chess Bot (C#)
 ## By Nick Glenn
 
-A chess bot written in C#, using the Raylib_cs library
+A chess bot written in C#, using the Raylib_cs library\
 Heavily influenced by Sebastian Lague's "Chess AI" mini-series
 
 Requires .NET 6.0 and up

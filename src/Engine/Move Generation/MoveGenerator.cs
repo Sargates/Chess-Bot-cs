@@ -336,7 +336,7 @@ public class MoveGenerator {
 
 		if (! isInCheck) {
 			return moves.ToArray();
-		} //* Passes guard clause if king is checked
+		} //* Passes guard clause if king is in check
 
 
 		for (int i=moves.Count-1; i>-1; i--) { //* Check each move against needed squares to block the check

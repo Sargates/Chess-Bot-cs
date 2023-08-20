@@ -60,13 +60,11 @@ public class UCIPlayer : ComputerPlayer {
 			}
 		}
 		// GetMoves returns empty Move[] if startSquare is empty, the only reason this should happen is if the
-		// thread is supposed to exit. Otherwise something is actually wrong and an exception should be thrown
-		if (ExitFlag) { return Move.NullMove; } // This shouldnt raise checkmate when it returns
 		return Move.NullMove;
 	}
 
 	~UCIPlayer() { // In case player object ever goes out of scope
 		ExitFlag = true;
 		thread.Join();
-	} // Apparently deconstructors aren't inherited, kind of makes sense
+	}
 }
