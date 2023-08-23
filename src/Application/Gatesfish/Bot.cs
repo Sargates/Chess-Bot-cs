@@ -22,7 +22,7 @@ public class Bot {
 			maxEval = Math.Max(-Search(depth-1), maxEval);
 
 
-			model.SetPrevState();
+			model.board.SetPrevState();
 		}
 
 		return maxEval;
@@ -45,7 +45,7 @@ public class Bot {
 			}
 
 
-			model.SetPrevState();
+			model.board.SetPrevState();
 		}
 
 		return bestMove;

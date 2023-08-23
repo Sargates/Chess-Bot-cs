@@ -265,9 +265,9 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 					//* This fixes that
 					if ((model.board.currentStateNode.Previous?.Previous == null)) { break; }
 
-					model.DoublePrevState();
+					model.AnimatedDoubleRewind();
 				} else { //* otherwise undo a single move
-					model.SinglePrevState();
+					model.AnimateSingleRewind();
 				}
 				view.ui.DeselectActiveSquare();
 				break;
@@ -276,9 +276,9 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 				if ((model.ActivePlayer.Computer?.IsSearching ?? false)) { break; }
 				//* If there is exactly one human, redo two moves
 				if ((((model.humanColor >> 0) & 1) ^ ((model.humanColor >> 1) & 1)) == 1) {
-					model.DoubleNextState();
+					model.AnimateDoubleForward();
 				} else { //* otherwise undo a single move
-					model.SingleNextState();
+					model.AnimateSingleForward();
 				}
 				view.ui.DeselectActiveSquare();
 				break;
@@ -295,8 +295,9 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 				break;
 			}
 			case (int) KeyboardKey.KEY_O :{
+				Console.WriteLine();
 				int maxOut = 20;
-				LinkedListNode<Fen>? currNode = model.board.stateHistory.First;
+				LinkedListNode<Gamestate>? currNode = model.board.stateHistory.First;
 				if (model.board.stateHistory.Count > maxOut) {
 					for (int i=0; i<model.board.stateHistory.Count-maxOut; i++) {
 						if (currNode==null) break; // Never happens, compiler gives warning
@@ -306,12 +307,12 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 
 				while (currNode != null) {
 					if (currNode == model.board.currentStateNode) {
-						ConsoleHelper.WriteLine($"{currNode.Value} {currNode.Value.moveMade}", ConsoleColor.Red);
+						ConsoleHelper.WriteLine($"{currNode.Value}", ConsoleColor.Red);
 					} else
 					if (currNode == model.board.currentStateNode.Previous || currNode == model.board.currentStateNode.Next) {
-						ConsoleHelper.WriteLine($"{currNode.Value} {currNode.Value.moveMade}", ConsoleColor.Yellow);
+						ConsoleHelper.WriteLine($"{currNode.Value}", ConsoleColor.Yellow);
 					} else {
-						ConsoleHelper.WriteLine($"{currNode.Value} {currNode.Value.moveMade}");
+						ConsoleHelper.WriteLine($"{currNode.Value}");
 					}
 					currNode = currNode.Next;
 				}

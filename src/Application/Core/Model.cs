@@ -23,6 +23,9 @@ public class Model {
 
 	public bool SuspendPlay = false;
 
+
+
+	// Player System //////////////////////////////
 	public enum Gametype {
 		HvH, // 	Human vs. Human
 		HvC, // 	Human vs. Computer
@@ -38,8 +41,12 @@ public class Model {
 	public ChessPlayer ActivePlayer => board.whiteToMove ? whitePlayer : blackPlayer;
 	public ChessPlayer InactivePlayer => board.whiteToMove ? blackPlayer : whitePlayer;
 
+	
 	public Model(View view) {
 		this.view = view;
+
+		
+
 		
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 			stockfishExeExt = "stockfish.exe";
@@ -57,20 +64,26 @@ public class Model {
 	}
 
 	public void AddButtons() {
-		view.AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Freeplay"					).SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Freeplay").SetCallback(delegate {
 			StartNewGame();
 		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 480, 210, 50), "Human vs. Gatesfish"		).SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(40, 480, 210, 50), "Human vs. Gatesfish").SetCallback(delegate {
 			StartNewGame(type:Gametype.HvC);
 		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 540, 210, 50), "Human vs. Stockfish"		).SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(40, 540, 210, 50), "Human vs. Stockfish").SetCallback(delegate {
 			StartNewGame(type:Gametype.HvU);
 		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 600, 210, 50), "Stockfish vs. Stockfish"	).SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(40, 600, 210, 50), "Stockfish vs. Stockfish").SetCallback(delegate {
 			StartNewGame(type:Gametype.UvU);
 		}));
 		view.AddToPipeline(new Button(new Rectangle(40, 660, 210, 50), "Perft Test"	).SetCallback(delegate {
 			Perft.Main();
+		}));
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 540, 210, 50), "Test UndoMove (fast)").SetCallback(delegate {
+			UnmakeMoveHelper.Fast();
+		}));
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 600, 210, 50), "Test UndoMove (full suite)").SetCallback(delegate {
+			UnmakeMoveHelper.FullSuite();
 		}));
 	}
 
@@ -79,68 +92,79 @@ public class Model {
 	public void MakeMoveOnBoard(Move move, bool animate=true) {
 		bool opponentInCheck;
 		if (! move.IsNull) {
+			Gamestate newGamestate = new Gamestate();
 			view.ui.DeselectActiveSquare();
 			ActivePlayer.IsSearching = false;
 
-
 			Piece pieceMoved = board.GetSquare(move.StartSquare);
+			Piece pieceTaken = (move.Flag==Move.EnPassantCaptureFlag) ? (board.InactiveColor|Piece.Pawn) : board.GetSquare(move.TargetSquare);
+
 			board.MakeMove(move);
+
+
 			view.TimeOfLastMove = view.fTimeElapsed;
 
 			opponentInCheck = MoveGenerator.IsSquareAttacked(board, board.ActiveColor == Piece.White ? board.whiteKingPos : board.blackKingPos, board.ActiveColor);
 			bool canOpponentRespond = MoveGenerator.GetAllMoves(board, board.ActiveColor).Length != 0; // Negated for readability
 
 			if (board.currentStateNode.Previous == null) { throw new Exception("Something went wrong"); }
-			Fen temp = board.currentStateNode.Previous.Value;
 
-			if (opponentInCheck && canOpponentRespond) {
-				temp.moveMade.moveSoundEnum = (int)SoundStates.Check;
-			} else
-			if (opponentInCheck && ! canOpponentRespond) {
-				temp.moveMade.moveSoundEnum = 0; // Sound is played separately if game is over
-			} else
-			if (! opponentInCheck && ! canOpponentRespond) {
-				temp.moveMade.moveSoundEnum = 0; // Sound is played separately if game is over
-			}
+			board.currentStateNode.Previous.Value.soundPlayed = GetMoveSound(move, pieceTaken, opponentInCheck, canOpponentRespond);
 
-			Debug.Assert(board.currentStateNode.Previous != null);
-			board.currentStateNode.Previous.Value = temp;
+			// Debug.Assert(currentBoard.currentStateNode.Previous != null);
+			// currentBoard.currentStateNode.Previous.Value = currentBoard.currentState;
 
 			if (animate) { // Sounds are built in to animations, if move is not animated, play sound manually
-				view.ui.activeAnimations.AddRange(AnimationHelper.FromMove(temp.moveMade, pieceMoved));
+				view.ui.activeAnimations.AddRange(AnimationHelper.FromGamestate(board.currentStateNode.Previous.Value));
 			} else {
-				Raylib.PlaySound(BoardUI.sounds[board.currentStateNode.Previous.Value.moveMade.moveSoundEnum]);
+				Raylib.PlaySound(BoardUI.sounds[board.currentStateNode.Previous.Value.soundPlayed]);
 			}
 
 			// If opponent can't respond, fallthrough to game end handling
 			if (canOpponentRespond) {
 				return;
 			}
-		} else {
+		} else { // If the move is null it's assumed it checkmate
 			opponentInCheck = true;
-			Console.WriteLine("Null move was made, assumed checkmate");
+			ConsoleHelper.WriteLine("Null move was made, assumed checkmate", ConsoleColor.DarkBlue);
 		}
 
 
 		SuspendPlay = true;
 
 		if (opponentInCheck) { // Checkmate
-			Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Checkmate]);
 			ConsoleHelper.WriteLine("Checkmate!", ConsoleColor.DarkBlue);
 			ConsoleHelper.WriteLine($"Winner: {InactivePlayer.color}, Loser: {ActivePlayer.color}", ConsoleColor.DarkBlue);
 		} else { // Stalemate
-			Raylib.PlaySound(BoardUI.sounds[(int)SoundStates.Stalemate]);
 			ConsoleHelper.WriteLine("Stalemate", ConsoleColor.DarkBlue);
 			ConsoleHelper.WriteLine($"Draw.", ConsoleColor.DarkBlue);
 		}
 
 		// Handle Checkmate
 	}
+	public int GetMoveSound(Move move, Piece pieceTaken, bool opponentInCheck, bool canOpponentRespond) {
+			MoveSounds sound = MoveSounds.Move;
+			if (pieceTaken != Piece.None) { sound = MoveSounds.Capture; } else
+			if (move.Flag == Move.CastleFlag) { sound = MoveSounds.Castle; }
+
+			if (opponentInCheck && canOpponentRespond) {
+				sound = MoveSounds.Check;
+			} else
+			if (opponentInCheck && ! canOpponentRespond) {
+				sound = MoveSounds.Checkmate; // Sound is played separately if game is over
+			} else
+			if (! opponentInCheck && ! canOpponentRespond) {
+				sound = MoveSounds.Stalemate; // Sound is played separately if game is over
+			}
+
+			return (int) sound;
+	}
+
 	public void ExitPlayerThreads() { whitePlayer.RaiseExitFlag(); blackPlayer.RaiseExitFlag(); }
 	public void JoinPlayerThreads() { whitePlayer.Join(); blackPlayer.Join(); }
 	public void SetBoardPosition() { SetBoardPosition(Fen.startpos); }
 	public void SetBoardPosition(string fenString) {
-		if (board != null) SetOldBoard();
+		// if (currentBoard != null) SetOldBoard();
 		board = new Board(fenString);
 
 		whitePlayer.UCI?.RaiseManualUpdateFlag();
@@ -211,71 +235,44 @@ public class Model {
 		view.ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(oldBoard, board.board, 0.2f));
 		SuspendPlay = false;
 	}
-	public void SetPrevState() {
-		if (board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get previous state, is null"); return; }
-		
-		board.currentStateNode = board.currentStateNode.Previous;
-		board.UpdateFromState();
-		view.ui.boardToRender = board.board;
-		whitePlayer.UCI?.RaiseManualUpdateFlag();
-		blackPlayer.UCI?.RaiseManualUpdateFlag();
-	}
-	public void SetNextState() {
-		if (board.currentStateNode.Next == null) { Console.WriteLine("Cannot get next state, is null"); return; }
-		board.currentStateNode = board.currentStateNode.Next;
-		board.UpdateFromState();
-		view.ui.boardToRender = board.board;
-		whitePlayer.UCI?.RaiseManualUpdateFlag();
-		blackPlayer.UCI?.RaiseManualUpdateFlag();
-	}
-	public void SinglePrevState() {
+	public void AnimateSingleRewind() {
 		if (board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get first previous state, is null"); return; }
-		Move move; Piece piece;
 
-		SetPrevState();
-		move = board.currentStateNode.Value.moveMade;
-		piece = board.GetSquare(move.StartSquare);
+		board.SetPrevState();
+		view.ui.boardToRender = board.board;
+		whitePlayer.UCI?.RaiseManualUpdateFlag();
+		blackPlayer.UCI?.RaiseManualUpdateFlag();
 
-		view.ui.activeAnimations.AddRange(AnimationHelper.ReverseFromMove(move, piece));
+		view.ui.activeAnimations.AddRange(AnimationHelper.ReverseFromGamestate(board.currentState));
 	}
-	public void SingleNextState() {
+	public void AnimateSingleForward() {
 		if (board.currentStateNode.Next == null) { Console.WriteLine("Cannot get first next state, is null"); return; }
-		Move move; Piece piece;
 
-		move = board.currentStateNode.Value.moveMade;
-		piece = board.GetSquare(move.StartSquare);
-		SetNextState();
+		view.ui.activeAnimations.AddRange(AnimationHelper.FromGamestate(board.currentState));
+		board.SetNextState();
+		view.ui.boardToRender = board.board;
+		whitePlayer.UCI?.RaiseManualUpdateFlag();
+		blackPlayer.UCI?.RaiseManualUpdateFlag();
 
-		view.ui.activeAnimations.AddRange(AnimationHelper.FromMove(move, piece));
 	}
-	public void DoublePrevState() {
+	public void AnimatedDoubleRewind() {
 		if (board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get first previous state, is null"); return; }
-		Move move; Piece piece;
-		SetPrevState();
-		move = board.currentStateNode.Value.moveMade;
-		piece = board.GetSquare(move.StartSquare);
-		view.ui.activeAnimations.AddRange(AnimationHelper.ReverseFromMove(move, piece));
+		board.SetPrevState();
+		view.ui.activeAnimations.AddRange(AnimationHelper.ReverseFromGamestate(board.currentState));
 
 		// Just mimics Single____State twice, but adding a lag to the second animation
 		if (board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get second previous state, is null"); return; }
-		SetPrevState();
-		move = board.currentStateNode.Value.moveMade;
-		piece = board.GetSquare(move.StartSquare);
-		view.ui.activeAnimations.AddRange(AnimationHelper.ReverseFromMove(move, piece, lag:-0.04f));
+		board.SetPrevState();
+		view.ui.activeAnimations.AddRange(AnimationHelper.ReverseFromGamestate(board.currentState, lag:-0.04f));
 	}
-	public void DoubleNextState() {
+	public void AnimateDoubleForward() {
 		if (board.currentStateNode.Next == null) { Console.WriteLine("Cannot get first next state, is null"); return; }
-		Move move; Piece piece;
-		move = board.currentStateNode.Value.moveMade;
-		piece = board.GetSquare(move.StartSquare);
-		SetNextState();
-		view.ui.activeAnimations.AddRange(AnimationHelper.FromMove(move, piece));
+		view.ui.activeAnimations.AddRange(AnimationHelper.FromGamestate(board.currentState));
+		board.SetNextState();
 
 		// Just mimics Single____State twice, but adding a lag to the second animation
 		if (board.currentStateNode.Next == null) { Console.WriteLine("Cannot get second next state, is null"); return; }
-		move = board.currentStateNode.Value.moveMade;
-		piece = board.GetSquare(move.StartSquare);
-		SetNextState();
-		view.ui.activeAnimations.AddRange(AnimationHelper.FromMove(move, piece, lag:-0.04f));
+		view.ui.activeAnimations.AddRange(AnimationHelper.FromGamestate(board.currentState, lag:-0.04f));
+		board.SetNextState();
 	}
 }

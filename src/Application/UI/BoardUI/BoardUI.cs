@@ -5,7 +5,7 @@ using ChessBot.Engine;
 using ChessBot.Helpers;
 
 namespace ChessBot.Application;
-public enum SoundStates :int {
+public enum MoveSounds :int {
 	None=0,
 	Move=1,
 	Capture=2,

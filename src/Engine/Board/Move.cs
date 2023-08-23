@@ -1,6 +1,6 @@
 using ChessBot.Helpers;
 namespace ChessBot.Engine;
-public struct Move {
+public readonly struct Move {
 	
 
 	// 16bit move value // Copied from SebLague
@@ -21,8 +21,6 @@ public struct Move {
 	public const int startSquareMask = 0b0000000000111111;
 	public const int targetSquareMask = 0b0000111111000000;
 	public const int flagMask = 0b1111000000000000;
-
-	public int moveSoundEnum = 0; // Sound that's played when this move is made on the board
 
 
 	public Move(ushort moveValue) {
@@ -52,7 +50,7 @@ public struct Move {
 
 	public override string ToString() {
 		if (IsNull) return "null";
-		string promoChar = MoveFlag switch {
+		string promoChar = Flag switch {
 			PromoteToQueenFlag => "q",
 			PromoteToBishopFlag => "b",
 			PromoteToKnightFlag => "n",
@@ -65,13 +63,13 @@ public struct Move {
 	public static bool operator ==(Move a, Move b) => (a.moveValue & ~flagMask) == (b.moveValue & ~flagMask);
 	public static bool operator !=(Move a, Move b) => (a.moveValue & ~flagMask) != (b.moveValue & ~flagMask);
 
-	public bool IsPromotion => MoveFlag >= PromoteToQueenFlag;
+	public bool IsPromotion => Flag >= PromoteToQueenFlag;
 
 	public bool IsNull => moveValue == 0;
 
 	public int StartSquare => moveValue & startSquareMask;
 	public int TargetSquare => (moveValue & targetSquareMask) >> 6;
-	public int MoveFlag => moveValue >> 12;
+	public int Flag => moveValue >> 12;
 
 	public static Move NullMove => new Move(0);
 }

@@ -57,12 +57,12 @@ public class MoveGenerator {
 
 		for (int i=moves.Count-1; i>-1; i--) { // TODO: Change for compat. with PrecomputedMoveData
 			Move move = moves[i];
-			if (pinsBySquare[index]==0 && move.MoveFlag!=Move.EnPassantCaptureFlag) { continue; }
+			if (pinsBySquare[index]==0 && move.Flag!=Move.EnPassantCaptureFlag) { continue; }
 			if ((move.TargetSquare - move.StartSquare) == pinsBySquare[index] || (move.TargetSquare - move.StartSquare) == -pinsBySquare[index]) { continue; }
-			if (move.MoveFlag == Move.PawnTwoUpFlag && ((move.TargetSquare - move.StartSquare)/2 == pinsBySquare[index] || (move.TargetSquare - move.StartSquare)/2 == -pinsBySquare[index])) { continue; }
+			if (move.Flag == Move.PawnTwoUpFlag && ((move.TargetSquare - move.StartSquare)/2 == pinsBySquare[index] || (move.TargetSquare - move.StartSquare)/2 == -pinsBySquare[index])) { continue; }
 			// Edge case in enpassant capture
 			// See: https://www.chessprogramming.org/Perft_Results#cite_note-9:~:text=8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8
-			if (move.MoveFlag == Move.EnPassantCaptureFlag) {
+			if (move.Flag == Move.EnPassantCaptureFlag) {
 				// If the move is en-passant capture, then we need to check if the king would be in check after the move,
 				// if the colorToMove's king is in the same file as both pawns and say a rook, en-passant capture would be illegal,
 				// We need to cache the piece that's taken, remove it from the board, and check if the pawn to move is pinned by an enemy piece,
@@ -245,8 +245,8 @@ public class MoveGenerator {
 
 		int flagKing = piece.Color == Piece.White ? Fen.whiteKingCastle : Fen.blackKingCastle;
 		int flagQueen = piece.Color == Piece.White ? Fen.whiteQueenCastle : Fen.blackQueenCastle;
-		bool kingSide = (board.currentFen.castlePrivsBin & flagKing) == flagKing;
-		bool queenSide = (board.currentFen.castlePrivsBin & flagQueen) == flagQueen;
+		bool kingSide = (board.currentState.castleRights & flagKing) == flagKing;
+		bool queenSide = (board.currentState.castleRights & flagQueen) == flagQueen;
 
 		//! Handle Double checks
 

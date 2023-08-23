@@ -51,6 +51,64 @@ public class BoardHelper {
 	}
 
 	
+	public static void UpdateFromState(Board board, Fen state) {
+		board.board = FenToBoard(state.fenBoard);
+		for (int i = 0; i < board.board.Length; i++) {
+			if (board.board[i] == (Piece.WhiteKing)) { board.whiteKingPos = i; }
+			if (board.board[i] == (Piece.BlackKing)) { board.blackKingPos = i; }
+		}
+		board.whiteToMove = state.fenColor == 'w';
+		board.enPassantIndex = BoardHelper.NameToSquareIndex(state.enpassantSquare);
+		board.currentState.castleRights = state.castleRights;
+
+	}
+
+
+	public static Piece[] FenToBoard(string fen) {
+		Piece[] board = new Piece[64];
+		Piece file = 0; Piece rank = 7;
+		foreach (char c in fen) {
+			if (c == '/') {rank -= 1; file = 0; continue;}
+			Piece index = 8*rank+file;
+
+			if (char.IsNumber(c)) {
+
+				file += int.Parse($"{c}");
+				continue;
+			}
+
+			board[index] = BoardHelper.FenCharToPieceEnum(c);
+			file += 1;
+		}
+
+		return board;
+	}
+
+	public static string BoardToFen(Board board) {
+		string o = "";
+		int gap = 0;
+		for (int i=0; i<8;i++) {
+			for (int j=0; j<8; j++) {
+				int index = 8*(7-i)+j;
+				int pieceEnum = board.GetSquare(index);
+				if (pieceEnum == Piece.None) {
+					gap += 1;
+					continue;
+				} // Passes guard clause if square is not empty
+				if (gap != 0) { o += $"{gap}"; }
+				o += $"{BoardHelper.PieceEnumToFenChar(pieceEnum)}";
+				gap = 0;
+			}
+			if (gap != 0) { o += $"{gap}"; }
+			if (i!=7) {
+				o += '/';
+				gap = 0;
+			}
+		}
+		return o;
+	}
+
+	
 	public static int FenCharToPieceEnum(char pieceEnum) {
 		return pieceEnum switch {
 			'p' => Piece.Black | Piece.Pawn,
@@ -83,7 +141,7 @@ public class BoardHelper {
 			Piece.White | Piece.Rook   => 'R',
 			Piece.White | Piece.Queen  => 'Q',
 			Piece.White | Piece.King   => 'K',
-			_ => throw new Exception("Invalid piece enum for board representation")
+			_ => ' '
 		};
 	}
 }

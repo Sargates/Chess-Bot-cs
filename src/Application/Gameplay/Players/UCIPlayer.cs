@@ -18,7 +18,7 @@ public class UCIPlayer : ComputerPlayer {
 
 	public override void Start() {
 		engine.Start();
-		engine.SetPosition($"position fen {model.board.currentFen.ToFEN()}");
+		engine.SetPosition($"position fen {BoardHelper.BoardToFen(model.board)}");
 		HasStarted = true;
 		ConsoleHelper.WriteLine($"Starting Thread {color}", threadColor);
 		while (true) {
@@ -27,7 +27,7 @@ public class UCIPlayer : ComputerPlayer {
 			if (OnMoveChosen == null) {
 				continue; }
 			if (ShouldManualUpdate) {
-				engine.SetPosition($"position fen {model.board.currentFen.ToFEN()}");
+				engine.SetPosition($"position fen {BoardHelper.BoardToFen(model.board)}");
 				ShouldManualUpdate = false;
 			}
 
@@ -47,7 +47,7 @@ public class UCIPlayer : ComputerPlayer {
 
 
 	public override Move Think() { // position should already be set
-		string fen = model.board.currentFen.ToFEN();
+		string fen = BoardHelper.BoardToFen(model.board);
 		engine.SetPosition($"position fen {fen}");
 		string response = engine.GetBestMoveTime(1500);
 		// Console.WriteLine(response);

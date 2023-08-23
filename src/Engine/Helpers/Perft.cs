@@ -48,7 +48,7 @@ public static class Perft {
 				Console.WriteLine($"{BoardHelper.IndexToSquareName(move.StartSquare)}{BoardHelper.IndexToSquareName(move.TargetSquare)}: {x}");
 			}
 
-			model.SetPrevState();
+			model.board.SetPrevState();
 		}
 
 

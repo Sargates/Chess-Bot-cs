@@ -15,6 +15,21 @@ public struct Piece {
 	public const int White = 0b0000;
 	public const int Black = 0b1000;
 
+	public const int BlackPawn 	 = Black | Pawn;	// 1
+	public const int BlackKnight = Black | Knight;	// 2
+	public const int BlackBishop = Black | Bishop;	// 3
+	public const int BlackRook 	 = Black | Rook;	// 4
+	public const int BlackQueen  = Black | Queen;	// 5
+	public const int BlackKing 	 = Black | King;	// 6
+
+	public const int WhitePawn 	 = White | Pawn;	// 9
+	public const int WhiteKnight = White | Knight;	// 10
+	public const int WhiteBishop = White | Bishop;	// 11
+	public const int WhiteRook 	 = White | Rook;	// 12
+	public const int WhiteQueen  = White | Queen;	// 13
+	public const int WhiteKing 	 = White | King;	// 14
+	
+
 	// Masks
 	public const int TypeMask = 0b111;
 	public const int ColorMask = 0b1000;

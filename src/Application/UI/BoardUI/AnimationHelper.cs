@@ -5,55 +5,62 @@ using ChessBot.Helpers;
 namespace ChessBot.Application;
 
 public static class AnimationHelper {
-	public static List<PieceAnimation> FromMove(Move move, Piece piece, float lag=0) {
+	public static List<PieceAnimation> FromGamestate(Gamestate gamestate, float lag=0) {
 		// Interpolating animation between positions
 		List<PieceAnimation> animations = new List<PieceAnimation>();
 		float tTotal = MainController.Instance.appSettings.uiMoveTime;
 
-		animations.Add(new PieceAnimation(move.StartSquare, move.TargetSquare, piece, tTotal, lag, soundEnum:move.moveSoundEnum));
+		animations.Add(new PieceAnimation(gamestate.moveMade.StartSquare, gamestate.moveMade.TargetSquare, gamestate.pieceMoved, tTotal, lag, soundEnum:gamestate.soundPlayed));
 
-		if (move.MoveFlag == Move.NoFlag) { return animations; }
+		if (gamestate.moveMade.Flag == Move.NoFlag) { return animations; }
 
-		if (move.MoveFlag == Move.CastleFlag) {
-			switch (move.TargetSquare, piece.Color == Piece.White) {
+		if (gamestate.moveMade.Flag == Move.CastleFlag) {
+			switch (gamestate.moveMade.TargetSquare, gamestate.pieceMoved.Color == Piece.White) {
 				case (BoardHelper.c1, true):
-					animations.Add(new PieceAnimation(BoardHelper.a1, BoardHelper.d1, Piece.Rook|piece.Color, tTotal, lag)); break;
+					animations.Add(new PieceAnimation(BoardHelper.a1, BoardHelper.d1, Piece.Rook|gamestate.pieceMoved.Color, tTotal, lag)); break;
 				case (BoardHelper.g1, true):
-					animations.Add(new PieceAnimation(BoardHelper.h1, BoardHelper.f1, Piece.Rook|piece.Color, tTotal, lag)); break;
+					animations.Add(new PieceAnimation(BoardHelper.h1, BoardHelper.f1, Piece.Rook|gamestate.pieceMoved.Color, tTotal, lag)); break;
 				case (BoardHelper.c8, false):
-					animations.Add(new PieceAnimation(BoardHelper.a8, BoardHelper.d8, Piece.Rook|piece.Color, tTotal, lag)); break;
+					animations.Add(new PieceAnimation(BoardHelper.a8, BoardHelper.d8, Piece.Rook|gamestate.pieceMoved.Color, tTotal, lag)); break;
 				case (BoardHelper.g8, false):
-					animations.Add(new PieceAnimation(BoardHelper.h8, BoardHelper.f8, Piece.Rook|piece.Color, tTotal, lag)); break;
+					animations.Add(new PieceAnimation(BoardHelper.h8, BoardHelper.f8, Piece.Rook|gamestate.pieceMoved.Color, tTotal, lag)); break;
 				default:
 					throw new Exception("False castle flag in move");
 			}
 		}
 		return animations;
 	}
-	public static List<PieceAnimation> ReverseFromMove(Move move, Piece piece, float lag=0) {
+	public static List<PieceAnimation> ReverseFromGamestate(Gamestate gamestate, float lag=0) {
 		// Interpolating animation between positions
 		List<PieceAnimation> animations = new List<PieceAnimation>();
 		float tTotal = MainController.Instance.appSettings.uiMoveTime;
+		int soundToPlay = gamestate.soundPlayed;
 
-		animations.Add(new PieceAnimation(move.TargetSquare, move.StartSquare, piece, tTotal, lag, soundEnum:move.moveSoundEnum));
+		// If the sound played is mate (of any kind) switch to a standard move sound when reversing
+		if (gamestate.soundPlayed == (int)MoveSounds.Checkmate || gamestate.soundPlayed == (int)MoveSounds.Stalemate) {
+			soundToPlay = (int)MoveSounds.Move;
+		}
+		
 
-		if (move.MoveFlag == Move.NoFlag) { return animations; }
+		animations.Add(new PieceAnimation(gamestate.moveMade.TargetSquare, gamestate.moveMade.StartSquare, gamestate.pieceMoved, tTotal, lag, soundEnum:soundToPlay));
 
-		if (move.MoveFlag == Move.CastleFlag) {
-			switch (move.TargetSquare, piece.Color == Piece.White) {
+		if (gamestate.moveMade.Flag == Move.NoFlag) { return animations; }
+
+		if (gamestate.moveMade.Flag == Move.CastleFlag) {
+			switch (gamestate.moveMade.TargetSquare, gamestate.pieceMoved.Color == Piece.White) {
 				case (BoardHelper.c1, true):
-					animations.Add(new PieceAnimation(BoardHelper.d1, BoardHelper.a1, Piece.Rook|piece.Color, tTotal, lag)); break;
+					animations.Add(new PieceAnimation(BoardHelper.d1, BoardHelper.a1, Piece.Rook|gamestate.pieceMoved.Color, tTotal, lag)); break;
 				case (BoardHelper.g1, true):
-					animations.Add(new PieceAnimation(BoardHelper.f1, BoardHelper.h1, Piece.Rook|piece.Color, tTotal, lag)); break;
+					animations.Add(new PieceAnimation(BoardHelper.f1, BoardHelper.h1, Piece.Rook|gamestate.pieceMoved.Color, tTotal, lag)); break;
 				case (BoardHelper.c8, false):
-					animations.Add(new PieceAnimation(BoardHelper.d8, BoardHelper.a8, Piece.Rook|piece.Color, tTotal, lag)); break;
+					animations.Add(new PieceAnimation(BoardHelper.d8, BoardHelper.a8, Piece.Rook|gamestate.pieceMoved.Color, tTotal, lag)); break;
 				case (BoardHelper.g8, false):
-					animations.Add(new PieceAnimation(BoardHelper.f8, BoardHelper.h8, Piece.Rook|piece.Color, tTotal, lag)); break;
+					animations.Add(new PieceAnimation(BoardHelper.f8, BoardHelper.h8, Piece.Rook|gamestate.pieceMoved.Color, tTotal, lag)); break;
 				default:
 					throw new Exception("False castle flag in move");
 			}
 		}
-		// if (move.IsPromotion) {
+		// if (gamestate.moveMade.IsPromotion) {
 
 		// }
 

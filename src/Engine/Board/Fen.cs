@@ -12,15 +12,15 @@ public struct Fen {
 
 	public string fenBoard;
 	public char fenColor;
-	public int castlePrivsBin;
+	public int castleRights;
 
-	public string castlePrivs {
+	public string castleRightsString {
 		get {
 			string o = "";
-			if ((castlePrivsBin & whiteKingCastle)  == whiteKingCastle)  o += "K";
-			if ((castlePrivsBin & whiteQueenCastle) == whiteQueenCastle) o += "Q";
-			if ((castlePrivsBin & blackKingCastle)  == blackKingCastle)  o += "k";
-			if ((castlePrivsBin & blackQueenCastle) == blackQueenCastle) o += "q";
+			if ((castleRights & whiteKingCastle)  == whiteKingCastle)  o += "K";
+			if ((castleRights & whiteQueenCastle) == whiteQueenCastle) o += "Q";
+			if ((castleRights & blackKingCastle)  == blackKingCastle)  o += "k";
+			if ((castleRights & blackQueenCastle) == blackQueenCastle) o += "q";
 
 			return (o == "") ? "-" : o;
 		}
@@ -43,9 +43,9 @@ public struct Fen {
 			fenBoard = splitFenString[0];
 			fenColor = splitFenString[1][0];
 
-			castlePrivsBin = 0;
+			castleRights = 0;
 			foreach (char c in splitFenString[2]) {
-				castlePrivsBin += CastleCharToEnum(c);
+				castleRights += CastleCharToEnum(c);
 			}
 			enpassantSquare = splitFenString[3];
 			halfMoveCount = Int32.Parse(splitFenString[4]);
@@ -85,7 +85,7 @@ public struct Fen {
 		string halfMoveCount = $"{this.halfMoveCount}";
 		string fullMoveCount = $"{this.fullMoveCount}";
 
-		return $"{fenBoard} {colorToMove} {castlePrivs} {enpassantSquare} {halfMoveCount} {fullMoveCount}";
+		return $"{fenBoard} {colorToMove} {castleRightsString} {enpassantSquare} {halfMoveCount} {fullMoveCount}";
 	}
 
 	public override string ToString() {
