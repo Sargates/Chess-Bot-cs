@@ -19,7 +19,8 @@ public class ApplicationSettings : DynamicObject {
 
 	public static void ResetDefaultSettings() {
 		File.Delete(FileHelper.GetResourcePath("settings.txt"));
-		// singleton = new ApplicationSettings();
+		File.Copy(FileHelper.GetResourcePath("default.txt"), FileHelper.GetResourcePath("settings.txt"));
+		singleton = new ApplicationSettings();
 		Console.WriteLine("Settings reset to default, relaunch application to take effect");
 	}
 

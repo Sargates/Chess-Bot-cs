@@ -26,7 +26,11 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 	public Model model;
 	public View view;
 	public Random random = new Random();
-	public dynamic appSettings = ApplicationSettings.Get();
+	public dynamic appSettings {
+		get {
+			return ApplicationSettings.Get();
+		}
+	}
 
 
 	public float fTimeElapsed = 0.0f;
@@ -324,7 +328,7 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 	}
 
 	public void SaveApplicationSettings() {
-		if (! File.Exists(FileHelper.GetResourcePath("settings.txt"))) { return; }
+		// if (! File.Exists(FileHelper.GetResourcePath("settings.txt"))) { return; }
 		using (StreamWriter writer = new StreamWriter(FileHelper.GetResourcePath("settings.txt"))) {
 			foreach (var pair in appSettings._dictionary) {
 				writer.WriteLine($"{pair.Key}={pair.Value}");
