@@ -75,11 +75,11 @@ public static class AnimationHelper {
 		for (int i=0; i<64; i++) { // Iterate over every square in board, if the piece on the old square matches the new square, cache that and don't do anything
 			Piece pieceOnStart = oldBoard[i]; Piece pieceOnEnd = newBoard[i];
 
-			if ((! pieceOnStart.IsNull) && pieceOnStart == pieceOnEnd) {
+			if ((! pieceOnStart.IsNone) && pieceOnStart == pieceOnEnd) {
 				continue;
 			}
-			if (! pieceOnStart.IsNull) oldPiecesThatDontFit.Add((pieceOnStart, i));
-			if (! pieceOnEnd.IsNull) newPiecesThatDontFit.Add((pieceOnEnd, i));
+			if (! pieceOnStart.IsNone) oldPiecesThatDontFit.Add((pieceOnStart, i));
+			if (! pieceOnEnd.IsNone) newPiecesThatDontFit.Add((pieceOnEnd, i));
 		}
 
 		if (oldPiecesThatDontFit.Count == 0 && newPiecesThatDontFit.Count == 0) { // Board states are the same, no reason to animate

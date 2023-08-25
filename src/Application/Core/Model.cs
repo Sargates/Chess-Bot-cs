@@ -5,6 +5,7 @@ using ChessBot.Engine;
 using ChessBot.Helpers;
 
 namespace ChessBot.Application;
+using static Zobrist;
 public class Model {
 
 	public View view;
@@ -64,25 +65,36 @@ public class Model {
 	}
 
 	public void AddButtons() {
-		view.AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Freeplay").SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Freeplay").SetLeftCallback(delegate {
 			StartNewGame();
 		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 480, 210, 50), "Human vs. Gatesfish").SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(40, 480, 210, 50), "Human vs. Gatesfish").SetLeftCallback(delegate {
 			StartNewGame(type:Gametype.HvC);
 		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 540, 210, 50), "Human vs. Stockfish").SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(40, 540, 210, 50), "Human vs. Stockfish").SetLeftCallback(delegate {
 			StartNewGame(type:Gametype.HvU);
 		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 600, 210, 50), "Stockfish vs. Stockfish").SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(40, 600, 210, 50), "Stockfish vs. Stockfish").SetLeftCallback(delegate {
 			StartNewGame(type:Gametype.UvU);
 		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 660, 210, 50), "Perft Test"	).SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(40, 660, 210, 50), "Perft Test"	).SetLeftCallback(delegate {
 			Perft.Main();
 		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 540, 210, 50), "Test UndoMove (fast)").SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 360, 210, 50), "Check Get all moves").SetLeftCallback(delegate {
+			MoveGenerator.GetAllMoves(board, board.ActiveColor, true);
+		}));
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 420, 210, 50), "Left/Right to Inc/Dec\nPerft depth").SetLeftCallback(delegate {
+			Perft.maxDepth++;
+		}).SetRightCallback(delegate {
+			Perft.maxDepth--;
+		}));
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 480, 210, 50), "Get Zobrist key").SetLeftCallback(delegate {
+			Console.WriteLine(CalculateZobristKey(board));
+		}));
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 540, 210, 50), "Test UndoMove (fast)").SetLeftCallback(delegate {
 			UnmakeMoveHelper.Fast();
 		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 600, 210, 50), "Test UndoMove (full suite)").SetCallback(delegate {
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 600, 210, 50), "Test UndoMove (full suite)").SetLeftCallback(delegate {
 			UnmakeMoveHelper.FullSuite();
 		}));
 	}
@@ -100,9 +112,6 @@ public class Model {
 			Piece pieceTaken = (move.Flag==Move.EnPassantCaptureFlag) ? (board.InactiveColor|Piece.Pawn) : board.GetSquare(move.TargetSquare);
 
 			board.MakeMove(move);
-
-
-			view.TimeOfLastMove = view.fTimeElapsed;
 
 			opponentInCheck = MoveGenerator.IsSquareAttacked(board, board.ActiveColor == Piece.White ? board.whiteKingPos : board.blackKingPos, board.ActiveColor);
 			bool canOpponentRespond = MoveGenerator.GetAllMoves(board, board.ActiveColor).Length != 0; // Negated for readability

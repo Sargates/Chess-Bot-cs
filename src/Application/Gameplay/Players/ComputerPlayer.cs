@@ -44,6 +44,7 @@ public class ComputerPlayer : Player {
 			}
 
 			if (IsSearching) {
+				model.view.TimeOfLastMove = model.view.fTimeElapsed;
 				Move bestmove = Think();
 				// If the bot gets a manual update request it means the board state has changed and the previous move is garbage
 				if (! ExitFlag && ! ShouldManualUpdate) OnMoveChosen(bestmove);

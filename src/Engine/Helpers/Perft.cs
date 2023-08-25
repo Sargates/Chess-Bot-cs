@@ -1,54 +1,63 @@
+using System.Diagnostics;
 using ChessBot.Application;
 using ChessBot.Engine;
 
 namespace ChessBot.Helpers;
 public static class Perft {
-	public static int[] depthList = new int[23];
-	static int maxDepth = 4;
+	public static List<int> depthList = new List<int>();
+	public static int maxDepth = 5;
+
+	static Model? model;
+	static Board? board;
 	public static void Main() {
 		GetDepth();
 	}
 
 	public static void GetDepth() {
-		Model model = MainController.Instance.model;
-		depthList = new int[23];
+		model = MainController.Instance.model;
+		board = BoardHelper.GetBoardCopy(model.board);
+		depthList.Clear();
+		depthList.Add(1);
+		for (int i=1; i<=maxDepth; i++) { depthList.Add(0); }
 
-		depthList[0] = 1;
-		CountMove(model, 1);
 
+		DateTime time = DateTime.UtcNow;
+		double startTime = ((DateTimeOffset)time).ToUnixTimeMilliseconds()/1000.0;
+		depthList[maxDepth] = CountMove(maxDepth);
+		time = DateTime.UtcNow;
+		double finishTime = ((DateTimeOffset)time).ToUnixTimeMilliseconds()/1000.0;
 
 		Console.WriteLine();
-		for (int i=0; i<depthList.Length; i++) {
+		for (int i=0; i<depthList.Count; i++) {
 			Console.WriteLine($"Depth {i}: {depthList[i]}");
 		}
+		Console.WriteLine($"Time elapsed: {finishTime-startTime}");
 	}
 
-	public static int CountMove(Model model, int depth) {
-		if (depth > maxDepth) { return 1; }
-		List<Move> totalMoves = new List<Move>();
-		int subsequentSum = 0;
-		for (int i=0; i<64; i++) {
-			Piece piece = model.board.GetSquare(i);
-			if ((piece.IsNull) || piece.Color != model.board.ActiveColor) { continue; }
-			totalMoves.AddRange(MoveGenerator.GetMoves(model.board, i));
+	public static int CountMove(int depth) {
+		Debug.Assert(board!=null);
+		Move[] totalMoves;
+		totalMoves = MoveGenerator.GetAllMoves(board, board.ActiveColor);
+		if (depth == 1) { return totalMoves.Length; }
+
+		if (depth == maxDepth) {
+			totalMoves = MoveGenerator.GetAllMoves(board, board.ActiveColor, true);
 		}
 
-		for (int i=0; i<totalMoves.Count; i++) {
+		int subsequentSum = 0;
+
+		for (int i=0; i<totalMoves.Length; i++) {
 			Move move = totalMoves[i];
-			model.board.MakeMove(move);
+			board.MakeMove(move);
 
-			depthList[depth] += 1;
-
-			// Console.WriteLine();
-			// ConsoleHelper.Write(BoardHelper.IndexToSquareName(move.StartSquare), ConsoleColor.Red);
-			int x = CountMove(model, depth + 1);
+			depthList[maxDepth-depth+1] += 1;
+			int x = CountMove(depth-1);
 			subsequentSum += x;
-			// ConsoleHelper.Write(BoardHelper.IndexToSquareName(move.StartSquare), ConsoleColor.Red);
-			if (depth == 1) {
-				Console.WriteLine($"{BoardHelper.IndexToSquareName(move.StartSquare)}{BoardHelper.IndexToSquareName(move.TargetSquare)}: {x}");
+			if (depth == maxDepth) {
+				Console.WriteLine($"{move}: {x}");
 			}
 
-			model.board.SetPrevState();
+			board.UndoMove();
 		}
 
 

@@ -144,6 +144,10 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 		squareClicked = GetSquareMouseIsOver();
 		if (squareClicked == -1) { //! Case 1
 			view.ui.DeselectActiveSquare();
+			//* If mouse button is released outside of board, reset clicks
+			if (IsLeftReleased) { mouseClickInfo[0] = -1; mouseClickInfo[1] = -1; };
+			if (IsRightReleased) { mouseClickInfo[2] = -1; mouseClickInfo[3] = -1; };
+
 			return;
 		} //* Passes guard clause if the click was in bounds
 		clickedPiece = model.board.GetSquare(squareClicked);
@@ -237,8 +241,8 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 			}
 		}
 
-		if (mouseClickInfo[1] != -1) { mouseClickInfo[0] = -1; mouseClickInfo[1] = -1; }; //* If a button was released, reset the mouse info for that button
-		if (mouseClickInfo[3] != -1) { mouseClickInfo[2] = -1; mouseClickInfo[3] = -1; }; //* If a button was released, reset the mouse info for that button
+		if (IsLeftReleased) { mouseClickInfo[0] = -1; mouseClickInfo[1] = -1; }; //* If a button was released, reset the mouse info for that button
+		if (IsRightReleased) { mouseClickInfo[2] = -1; mouseClickInfo[3] = -1; }; //* If a button was released, reset the mouse info for that button
 		return;
 
 		//* Cases for left button press (see writeup)
@@ -257,7 +261,6 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 		switch (PressedKey) {
 			case (int) KeyboardKey.KEY_Z :{
 				if ((model.ActivePlayer.Computer?.IsSearching ?? false)) { break; }
-				if (model.board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get second previous state, is null"); return; }
 				//* If there is exactly one human, undo two moves
 				if ((((model.humanColor >> 0) & 1) ^ ((model.humanColor >> 1) & 1)) == 1) {
 
@@ -295,27 +298,7 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 				break;
 			}
 			case (int) KeyboardKey.KEY_O :{
-				Console.WriteLine();
-				int maxOut = 20;
-				LinkedListNode<Gamestate>? currNode = model.board.stateHistory.First;
-				if (model.board.stateHistory.Count > maxOut) {
-					for (int i=0; i<model.board.stateHistory.Count-maxOut; i++) {
-						if (currNode==null) break; // Never happens, compiler gives warning
-						currNode = currNode.Next;
-					}
-				}
-
-				while (currNode != null) {
-					if (currNode == model.board.currentStateNode) {
-						ConsoleHelper.WriteLine($"{currNode.Value}", ConsoleColor.Red);
-					} else
-					if (currNode == model.board.currentStateNode.Previous || currNode == model.board.currentStateNode.Next) {
-						ConsoleHelper.WriteLine($"{currNode.Value}", ConsoleColor.Yellow);
-					} else {
-						ConsoleHelper.WriteLine($"{currNode.Value}");
-					}
-					currNode = currNode.Next;
-				}
+				BoardHelper.PrintGamestateHistory(model.board, 20);
 				break;
 			}
 			case (int) KeyboardKey.KEY_I :{

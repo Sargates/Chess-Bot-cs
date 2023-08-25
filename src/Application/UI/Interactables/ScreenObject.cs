@@ -16,9 +16,14 @@ public abstract class ScreenObject : IRenderable, IUpdatable {
 	public Vector2 Size => new Vector2(_Rect.width, _Rect.height);
 	public Vector2 Position => new Vector2(_Rect.x, _Rect.y);
 	public bool IsHoveringOver => 0 <= (Raylib.GetMouseX()-_Rect.x) && (Raylib.GetMouseX()-_Rect.x) <= _Rect.width && 0 <= (Raylib.GetMouseY()-_Rect.y) && (Raylib.GetMouseY()-_Rect.y) <= _Rect.height;
-	public virtual ScreenObject SetCallback(Action callback) {
+	public virtual ScreenObject SetLeftCallback(Action callback) {
 		LeftPressed = callback;
 		LeftReleased = delegate{};
+		return this;
+	}
+	public virtual ScreenObject SetRightCallback(Action callback) {
+		RightPressed = callback;
+		RightReleased = delegate{};
 		return this;
 	}
 	public virtual void OnLeftPressed() {

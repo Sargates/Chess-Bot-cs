@@ -15,10 +15,25 @@ public class Board {
 	public int forwardDir(int color) => color == Piece.White ? 8 : -8;
 	public bool whiteToMove;
 
-	public int enPassantIndex;
 
-	public int whiteKingPos;
-	public int blackKingPos;
+	public List<int>[][] piecePositions = new List<int>[][]{
+		new List<int>[]{new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>()},
+		new List<int>[]{new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>()}
+	};
+	public List<int> GetPiecePositions(Piece piece) => piecePositions[piece.ColorAsBinary][piece.Type-1]; // Minus 1 because We don't keep track of Piece.None types
+
+	public int whiteKingPos {
+		get {
+			return GetPiecePositions(Piece.WhiteKing)[0];
+		}
+	}
+	public int blackKingPos{
+		get {
+			return GetPiecePositions(Piece.BlackKing)[0];
+		}
+	}
+
+
 
 
 
@@ -45,10 +60,6 @@ public class Board {
 		// board = FenToBoard(fenString);
 		Debug.Assert(board!=null);
 		// board = FenToBoard(this.currentFen.fenBoard);
-		for (int i = 0; i < board.Length; i++) {
-			if (board[i] == (Piece.WhiteKing)) { whiteKingPos = i; }
-			if (board[i] == (Piece.BlackKing)) { blackKingPos = i; }
-		}
 	}
 
 
@@ -93,29 +104,44 @@ public class Board {
 
 		MovePiece(pieceMoved, movedFrom, movedTo);
 
-		// If the move was an enpassant capture
-		if (moveFlag == Move.EnPassantCaptureFlag) {
-			board[enPassantIndex - forwardDir(pieceMoved.Color)] = 0;
+		if (pieceTaken != Piece.None && moveFlag != Move.EnPassantCaptureFlag) {
+			var positions = GetPiecePositions(pieceTaken);
+			positions.Remove(movedTo);
 		}
 
-		enPassantIndex = -1; // Ok to set this to -1 here because of how En-Passant works
+		// If the move was an enpassant capture
+		if (moveFlag == Move.EnPassantCaptureFlag) {
+			var temp = GetPiecePositions(pieceTaken);
+			temp.Remove(currentState.enPassantIndex - forwardDir(pieceMoved.Color));
+			board[currentState.enPassantIndex - forwardDir(pieceMoved.Color)] = 0;
+		}
+
+		int enPassantIndex = -1; // Ok to set this to -1 here because of how En-Passant works
 		// Set Enpassant square
 		if (moveFlag == Move.PawnTwoUpFlag) {
 			enPassantIndex = movedFrom + forwardDir(pieceMoved.Color);
 		}
 
 		// Is a promotion
-		if (moveFlag == Move.PromoteToQueenFlag) {
-			board[movedTo] = pieceMoved.Color|Piece.Queen;
-		}
-		if (moveFlag == Move.PromoteToKnightFlag) {
-			board[movedTo] = pieceMoved.Color|Piece.Knight;
-		}
-		if (moveFlag == Move.PromoteToRookFlag) {
-			board[movedTo] = pieceMoved.Color|Piece.Rook;
-		}
-		if (moveFlag == Move.PromoteToBishopFlag) {
-			board[movedTo] = pieceMoved.Color|Piece.Bishop;
+		if (move.IsPromotion) {
+			Piece promotedTo = Piece.None;
+			if (moveFlag == Move.PromoteToQueenFlag) {
+				promotedTo = pieceMoved.Color|Piece.Queen;
+			}
+			if (moveFlag == Move.PromoteToKnightFlag) {
+				promotedTo = pieceMoved.Color|Piece.Knight;
+			}
+			if (moveFlag == Move.PromoteToRookFlag) {
+				promotedTo = pieceMoved.Color|Piece.Rook;
+			}
+			if (moveFlag == Move.PromoteToBishopFlag) {
+				promotedTo = pieceMoved.Color|Piece.Bishop;
+			}
+			board[movedTo] = promotedTo;
+			var temp = GetPiecePositions(pieceMoved);
+			temp.Remove(movedTo);
+			temp = GetPiecePositions(promotedTo);
+			temp.Add(movedTo);
 		}
 
 		// If move is a castle, move rook
@@ -181,6 +207,8 @@ public class Board {
 			currentState.moveMade = move;
 			currentState.pieceTaken = pieceTaken;
 			currentState.pieceMoved = pieceMoved;
+			if (pieceTaken == Piece.None && pieceMoved.Type != Piece.Pawn) { newGamestate.halfMoveCount = currentState.halfMoveCount+1; }
+			newGamestate.fullMoveCount = currentState.fullMoveCount+1;
 			newGamestate.enPassantIndex = enPassantIndex;
 			newGamestate.ID = stateHistory.Count;
 			newGamestate.castleRights = currentState.castleRights & castlesToKeep;
@@ -236,9 +264,10 @@ public class Board {
 	}
 	public void MovePiece(Piece piece, int movedFrom, int movedTo) {
 		//* modify bitboards here
+		var temp = GetPiecePositions(piece);
+		temp.Remove(movedFrom);
+		temp.Add(movedTo);
 
-		if (board[movedFrom] == (Piece.WhiteKing)) { whiteKingPos = movedTo; }
-		if (board[movedFrom] == (Piece.BlackKing)) { blackKingPos = movedTo; }
 		board[movedTo] = board[movedFrom];
 		board[movedFrom] = Piece.None;
 	}
@@ -262,17 +291,23 @@ public class Board {
 		MovePiece(pieceMoved, movedFrom, movedTo);
 
 		if (currentState.pieceTaken != Piece.None && moveFlag != Move.EnPassantCaptureFlag) {
+			var positions = GetPiecePositions(pieceTaken);
+			positions.Add(movedFrom);
 			board[movedFrom] = pieceTaken;
 		}
 		
 		// If the move was an enpassant capture
-		enPassantIndex = -1;
 		if (moveFlag == Move.EnPassantCaptureFlag) {
+			var positions = GetPiecePositions(pieceTaken);
+			positions.Add(movedFrom - forwardDir(pieceMoved.Color));
 			board[movedFrom - forwardDir(pieceMoved.Color)] = currentState.pieceTaken;
-			enPassantIndex = currentState.enPassantIndex;
 		}
 
 		if (move.IsPromotion) {
+			var positions = GetPiecePositions(pieceMoved);
+			positions.Remove(movedFrom);
+			positions = GetPiecePositions(pieceMoved.Color|Piece.Pawn);
+			positions.Add(movedTo);
 			board[movedFrom] = 0;
 			board[movedTo] = currentState.pieceMoved;
 		}
@@ -352,18 +387,6 @@ public class Board {
 		MakeMove(currentState.moveMade, true);
 		currentStateNode = currentStateNode.Next;
 	}
-	public static void PrintBoard(Piece[] board) {
-		Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-		for(int i=7; i>-1; i--) {
-			string line = "|";
-			for(int j=7; j>-1; j--) {
-				line += $" {BoardHelper.PieceEnumToFenChar(board[8*i+j])} |";
-			}
-			Console.WriteLine($" {line} {i+1}");
-			Console.WriteLine(" +---+---+---+---+---+---+---+---+");
-		}
-		Console.WriteLine("   a   b   c   d   e   f   g   h");
-	}
 	// public void UnmakeMove(Move move) {
 	// 	if (currentStateNode.Previous == null) {
 	// 		throw new Exception("Tried to unmake move with no previous board state");
@@ -396,7 +419,6 @@ public class Board {
 
 	// }
 
-	
 	public Piece GetSquare(int index) {
 		if (! (0 <= index && index < 64) ) { throw new Exception("Board index out of bounds"); }
 		return board[index];

@@ -14,12 +14,12 @@ public class MoveGenerator {
 
 		Piece piece = board.GetSquare(index);
 
-		if (currentChecks[(piece.Color == Piece.White) ? 0 : 1].Length == 2) { // King is double checks, must move king
+		if (currentChecks[piece.ColorAsBinary].Length == 2) { // King is double checks, must move king
 			return moves;
 		}
 
 		Coord coord = new Coord(index);
-		Coord delta = new Coord(board.forwardDir(piece.Color));
+		Coord delta = new Coord(board.forwardDir(piece.Color)+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
 		Coord newPos = coord+delta;
 		if (newPos.IsInBounds()) {
 			Piece pawnOneUp = board.GetSquare(newPos.SquareIndex);
@@ -32,24 +32,26 @@ public class MoveGenerator {
 			}
 		}
 
-		delta = new Coord(+1, Math.Sign(board.forwardDir(piece.Color)));
+		delta = new Coord(+1+board.forwardDir(piece.Color)+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
 		newPos = coord+delta;
 		if (newPos.IsInBounds()) {
 			Piece pawnAttackPositive = board.GetSquare(newPos.SquareIndex);
+			// Console.WriteLine($"{board.currentState.enPassantIndex} {pawnAttackPositive}");
 			if ((pawnAttackPositive.Type != Piece.None) && pawnAttackPositive.Color != piece.Color ) {
 				moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
-			} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index + 1) != piece.Color)) {
+			} else if ((newPos.SquareIndex == board.currentState.enPassantIndex && board.GetSquare(index + 1) != piece.Color)) {
 				moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
 			}
 		}
 
-		delta = new Coord(-1, Math.Sign(board.forwardDir(piece.Color)));
+		delta = new Coord(-1+board.forwardDir(piece.Color)+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
 		newPos = coord+delta;
 		if (newPos.IsInBounds()) {
 			Piece pawnAttackNegative = board.GetSquare(newPos.SquareIndex);
+			// Console.WriteLine($"{board.currentState.enPassantIndex} {pawnAttackNegative}");
 			if ((pawnAttackNegative.Type != Piece.None) && pawnAttackNegative.Color != piece.Color ) {
 				moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
-			} else if ((newPos.SquareIndex == board.enPassantIndex && board.GetSquare(index - 1) != piece.Color)) {
+			} else if ((newPos.SquareIndex == board.currentState.enPassantIndex && board.GetSquare(index - 1) != piece.Color)) {
 				moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
 			}
 		}
@@ -67,12 +69,16 @@ public class MoveGenerator {
 				// if the colorToMove's king is in the same file as both pawns and say a rook, en-passant capture would be illegal,
 				// We need to cache the piece that's taken, remove it from the board, and check if the pawn to move is pinned by an enemy piece,
 
-				int enemyPawnIndex = board.enPassantIndex - board.forwardDir(piece.Color);
+				int enemyPawnIndex = board.currentState.enPassantIndex - board.forwardDir(piece.Color);
 				Piece enemyPawn = board.board[enemyPawnIndex];
 				board.board[enemyPawnIndex] = Piece.None;
 				(int, int)[] pins = MoveGenerator.GetCheckData(board, piece.Color == Piece.White ? board.whiteKingPos : board.blackKingPos, piece.Color).Item2;
 				board.board[enemyPawnIndex] = enemyPawn;
-				if (pins.Length == 0) { continue; }
+				bool shouldRemove = false;
+				foreach ((int i, int dir) pin in pins) {
+					if (i == index) { shouldRemove = true; }
+				}
+				if (! shouldRemove) { continue; }
 			}
 
 
@@ -88,7 +94,7 @@ public class MoveGenerator {
 
 		Piece piece = board.GetSquare(index);
 		Coord coord = new Coord(index);
-		if (currentChecks[(piece.Color == Piece.White) ? 0 : 1].Length == 2) { // King is double checks, must move king
+		if (currentChecks[piece.ColorAsBinary].Length == 2) { // King is double checks, must move king
 			return moves;
 		}
 		if (! (pinsBySquare[index] == 0 )) { // Knights can never move when pinned
@@ -115,7 +121,7 @@ public class MoveGenerator {
 
 		Piece piece = board.GetSquare(index);
 		Coord coord = new Coord(index);
-		if (currentChecks[(piece.Color == Piece.White) ? 0 : 1].Length == 2) { // King is double checks, must move king
+		if (currentChecks[piece.ColorAsBinary].Length == 2) { // King is double checks, must move king
 			return moves;
 		}
 		
@@ -152,7 +158,7 @@ public class MoveGenerator {
 
 		Piece piece = board.GetSquare(index);
 		Coord coord = new Coord(index);
-		if (currentChecks[(piece.Color == Piece.White) ? 0 : 1].Length == 2) { // King is double checks, must move king
+		if (currentChecks[piece.ColorAsBinary].Length == 2) { // King is double checks, must move king
 			return moves;
 		}
 		
@@ -190,7 +196,7 @@ public class MoveGenerator {
 		Piece piece = board.GetSquare(index);
 		Coord coord = new Coord(index);
 
-		if (currentChecks[(piece.Color == Piece.White) ? 0 : 1].Length == 2) { // King is double checks, must move king
+		if (currentChecks[piece.ColorAsBinary].Length == 2) { // King is double checks, must move king
 			return moves;
 		}
 
@@ -292,7 +298,6 @@ public class MoveGenerator {
 
 		return moves;
 	}
-
 	public static Move[] GetMoves(Board board, int index) { // ! check edgecases
 
 
@@ -308,7 +313,7 @@ public class MoveGenerator {
 			// Console.WriteLine($"{pin.squareIndex} {pin.dirFromKing}");
 		}
 		// Console.WriteLine(kingPos);
-		currentChecks[(piece.Color == Piece.White) ? 0 : 1] = checkData.Item3;
+		currentChecks[piece.ColorAsBinary] = checkData.Item3;
 		
 		
 
@@ -323,7 +328,7 @@ public class MoveGenerator {
 		};
 
 
-		if (piece.Type == Piece.King || currentChecks[(piece.Color == Piece.White) ? 0 : 1].Length == 2) { //* Check if each end square is in attacked for each king move
+		if (piece.Type == Piece.King || currentChecks[piece.ColorAsBinary].Length == 2) { //* Check if each end square is in attacked for each king move
 			//* Combined `if king in double check` logic because outcome is the same (moves should be empty if king is in doublecheck)
 			for (int i=moves.Count-1; i>-1; i--) {
 				Move move = moves[i];
@@ -342,8 +347,8 @@ public class MoveGenerator {
 		for (int i=moves.Count-1; i>-1; i--) { //* Check each move against needed squares to block the check
 			Move move = moves[i];
 			bool NotHit = true;
-			int checkingPosition = currentChecks[(piece.Color == Piece.White) ? 0 : 1][0].checkerPos;
-			int dirFromKing = currentChecks[(piece.Color == Piece.White) ? 0 : 1][0].dirFromKing;
+			int checkingPosition = currentChecks[piece.ColorAsBinary][0].checkerPos;
+			int dirFromKing = currentChecks[piece.ColorAsBinary][0].dirFromKing;
 			while (checkingPosition != kingPos) { //* Start at position of checker, subtract dirFromKing until checkingPosition == kingPos
 				if (move.TargetSquare == checkingPosition) {
 					NotHit = false;
@@ -358,12 +363,18 @@ public class MoveGenerator {
 		return moves.ToArray();
 	}
 
-	public static Move[] GetAllMoves(Board board, int color) {
+	public static Move[] GetAllMoves(Board board, int color, bool sort=false) {
 		List<Move> totalMoves = new List<Move>();
+		
 
-		for (int i=0; i<64;i++) {
-			if (board.GetSquare(i) != Piece.None && board.GetSquare(i).Color != color) continue;
-			totalMoves.AddRange(GetMoves(board, i));
+		foreach (Piece piece in (color == Piece.White ? Piece.pieceArray[0..6] : Piece.pieceArray[6..12])) {
+			foreach (int index in board.GetPiecePositions(piece)) {
+				totalMoves.AddRange(GetMoves(board, index));
+			}
+		}
+
+		if (sort) {
+			return totalMoves.OrderBy(x => (int)board.GetSquare(x.StartSquare)).ThenBy(x => (int)x.Flag).ToArray();
 		}
 
 		return totalMoves.ToArray();
@@ -398,7 +409,7 @@ public class MoveGenerator {
 
 				Piece attackingSquare = board.GetSquare(testedPos);
 
-				if (attackingSquare.IsNull) {
+				if (attackingSquare.IsNone) {
 					continue;
 				}
 
@@ -439,7 +450,7 @@ public class MoveGenerator {
 
 
 			Piece endPiece = board.GetSquare(newPos.SquareIndex);
-			if (endPiece.IsNull) {
+			if (endPiece.IsNone) {
 				continue;
 			}
 

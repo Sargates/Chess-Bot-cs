@@ -49,21 +49,20 @@ public class BoardHelper {
 		return 8*rankNames.IndexOf(rank) + fileNames.IndexOf(file);
 
 	}
-
-	
 	public static void UpdateFromState(Board board, Fen state) {
 		board.board = FenToBoard(state.fenBoard);
 		for (int i = 0; i < board.board.Length; i++) {
-			if (board.board[i] == (Piece.WhiteKing)) { board.whiteKingPos = i; }
-			if (board.board[i] == (Piece.BlackKing)) { board.blackKingPos = i; }
+			Piece piece = board.GetSquare(i);
+			if (piece.IsNone) continue;
+			// Console.WriteLine($"{board.GetPiecePositions(piece)}");
+			List<int> temp = board.GetPiecePositions(piece);
+			temp.Add(i);
+
 		}
 		board.whiteToMove = state.fenColor == 'w';
-		board.enPassantIndex = BoardHelper.NameToSquareIndex(state.enpassantSquare);
+		board.currentState.enPassantIndex = BoardHelper.NameToSquareIndex(state.enpassantSquare);
 		board.currentState.castleRights = state.castleRights;
-
 	}
-
-
 	public static Piece[] FenToBoard(string fen) {
 		Piece[] board = new Piece[64];
 		Piece file = 0; Piece rank = 7;
@@ -107,6 +106,47 @@ public class BoardHelper {
 		}
 		return o;
 	}
+	public static Board GetBoardCopy(Board board) {
+		return new Board(new Fen(board).ToFEN());
+	}
+
+	public static void PrintBoard(Piece[] board) {
+		Console.WriteLine(" +---+---+---+---+---+---+---+---+");
+		for(int i=7; i>-1; i--) {
+			string line = "|";
+			for(int j=7; j>-1; j--) {
+				line += $" {BoardHelper.PieceEnumToFenChar(board[8*i+j])} |";
+			}
+			Console.WriteLine($" {line} {i+1}");
+			Console.WriteLine(" +---+---+---+---+---+---+---+---+");
+		}
+		Console.WriteLine("   a   b   c   d   e   f   g   h");
+	}
+
+	public static void PrintGamestateHistory(Board board, int maxOut) {
+		LinkedListNode<Gamestate>? currNode = board.stateHistory.First;
+		if (board.stateHistory.Count > maxOut) {
+			for (int i=0; i<board.stateHistory.Count-maxOut; i++) {
+				if (currNode==null) break; // Never happens, compiler gives warning
+				currNode = currNode.Next;
+			}
+		}
+
+		Console.WriteLine();
+		while (currNode != null) {
+			if (currNode == board.currentStateNode) {
+				ConsoleHelper.WriteLine($"{currNode.Value}", ConsoleColor.Red);
+			} else
+			if (currNode == board.currentStateNode.Previous || currNode == board.currentStateNode.Next) {
+				ConsoleHelper.WriteLine($"{currNode.Value}", ConsoleColor.Yellow);
+			} else {
+				ConsoleHelper.WriteLine($"{currNode.Value}");
+			}
+			currNode = currNode.Next;
+		}
+	}
+
+
 
 	
 	public static int FenCharToPieceEnum(char pieceEnum) {

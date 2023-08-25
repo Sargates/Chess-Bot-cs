@@ -32,6 +32,7 @@ public class UCIPlayer : ComputerPlayer {
 			}
 
 			if (IsSearching) {
+				model.view.TimeOfLastMove = model.view.fTimeElapsed;
 				Move bestMove = Think();
 				// If the bot gets a manual update request it means the board state has changed and the previous move is garbage
 				if (! ExitFlag && ! ShouldManualUpdate && ! model.SuspendPlay) {

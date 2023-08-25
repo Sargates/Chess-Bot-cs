@@ -6,9 +6,7 @@ namespace ChessBot.Engine;
 public struct Fen {
 
 	public const string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-	public readonly bool isStartPos = false;
 
-	public Move moveMade; // Move made on current state, current state + moveMade yields new FEN string
 
 	public string fenBoard;
 	public char fenColor;
@@ -35,8 +33,7 @@ public struct Fen {
 	public const int blackKingCastle  = 0b0010;
 	public const int blackQueenCastle = 0b0001;
 
-	public Fen(string fenString) {
-		if (fenString == startpos) isStartPos = true;
+	public Fen(string fenString=startpos) {
 		String[] splitFenString = fenString.Split(' ');
 
 		try {
@@ -50,12 +47,22 @@ public struct Fen {
 			enpassantSquare = splitFenString[3];
 			halfMoveCount = Int32.Parse(splitFenString[4]);
 			fullMoveCount = Int32.Parse(splitFenString[5]);
-			moveMade = new Move(0);
 		} catch {
 			throw new Exception("Invalid Fen string");
 		}
 	}
-	public Fen(string fenString, Move move) : this(fenString) { this.moveMade = move; }
+	public Fen(Board board) {
+		fenBoard = BoardHelper.BoardToFen(board);
+		fenColor = board.ActiveColor==Piece.White ? 'w' : 'b';
+
+		castleRights = board.currentState.castleRights;
+		enpassantSquare = "-";
+		if (board.currentState.enPassantIndex != -1) {
+			enpassantSquare = BoardHelper.IndexToSquareName(board.currentState.enPassantIndex);
+		}
+		halfMoveCount = board.currentState.halfMoveCount;
+		fullMoveCount = board.currentState.fullMoveCount;
+	}
 
 	public static int CastleCharToEnum(char castle) {
 		return castle switch {

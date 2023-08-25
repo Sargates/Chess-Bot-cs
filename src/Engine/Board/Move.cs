@@ -22,6 +22,8 @@ public readonly struct Move {
 	public const int targetSquareMask = 0b0000111111000000;
 	public const int flagMask = 0b1111000000000000;
 
+	public Move() { moveValue = 0; }
+
 
 	public Move(ushort moveValue) {
 		this.moveValue = moveValue;
@@ -42,7 +44,7 @@ public readonly struct Move {
 			return Equals((Move) obj);
 	}
 
-	public override int GetHashCode() => base.GetHashCode();
+	public override int GetHashCode() => moveValue.GetHashCode();
 
 	public bool Equals(Move other) {
 		return (this.moveValue & (targetSquareMask | startSquareMask)) == (other.moveValue & (targetSquareMask | startSquareMask));
