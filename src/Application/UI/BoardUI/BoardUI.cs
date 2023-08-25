@@ -159,10 +159,8 @@ public class BoardUI {
 		float triangleHeight = 3.0f/8.0f;
 		float triangleBaseWidth = 1.0f/2.0f;
 
-		MainController controller = MainController.Instance;
 
-
-		float widthFactor = controller.appSettings.uiArrowWidthFactor;
+		float widthFactor = ApplicationSettings.Get().uiArrowWidthFactor;
 		foreach ((int tail, int head) arrow in ArrowsOnBoard) {
 			int tail = arrow.tail; int head = arrow.head;
 

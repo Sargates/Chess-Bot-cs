@@ -8,7 +8,7 @@ public static class AnimationHelper {
 	public static List<PieceAnimation> FromGamestate(Gamestate gamestate, float lag=0) {
 		// Interpolating animation between positions
 		List<PieceAnimation> animations = new List<PieceAnimation>();
-		float tTotal = MainController.Instance.appSettings.uiMoveTime;
+		float tTotal = ApplicationSettings.Get().uiMoveTime;
 
 		animations.Add(new PieceAnimation(gamestate.moveMade.StartSquare, gamestate.moveMade.TargetSquare, gamestate.pieceMoved, tTotal, lag, soundEnum:gamestate.soundPlayed));
 
@@ -33,7 +33,7 @@ public static class AnimationHelper {
 	public static List<PieceAnimation> ReverseFromGamestate(Gamestate gamestate, float lag=0) {
 		// Interpolating animation between positions
 		List<PieceAnimation> animations = new List<PieceAnimation>();
-		float tTotal = MainController.Instance.appSettings.uiMoveTime;
+		float tTotal = ApplicationSettings.Get().uiMoveTime;
 		int soundToPlay = gamestate.soundPlayed;
 
 		// If the sound played is mate (of any kind) switch to a standard move sound when reversing

@@ -17,7 +17,7 @@ public class View : IView {
 
 
 		
-	public View(Vector2 screenSize, Camera2D cam) {
+	public View(Camera2D cam) {
 		ui = new BoardUI();
 		this.camera = cam;
 	}

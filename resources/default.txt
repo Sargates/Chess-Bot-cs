@@ -1,0 +1,5 @@
+uiScreenWidth=1600
+uiScreenHeight=900
+uiSoundVolume=0.4
+uiMoveTime=0.08
+uiArrowWidthFactor=0.25

@@ -22,12 +22,11 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 		}
 	}
 
-	Vector2 screenSize;
 	Camera2D cam;
 	public Model model;
 	public View view;
 	public Random random = new Random();
-	public dynamic appSettings = new ApplicationSettings(FileHelper.GetResourcePath("settings.txt"));
+	public dynamic appSettings = ApplicationSettings.Get();
 
 
 	public float fTimeElapsed = 0.0f;
@@ -48,21 +47,20 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 	public bool IsLeftPressed => (mouseButtonsClicked & 1) == 1;
 
 	private MainController() {
-		screenSize = new Vector2(appSettings.uiScreenWidth, appSettings.uiScreenHeight);
-		View.screenSize = screenSize;
+		View.screenSize = new Vector2(appSettings.uiScreenWidth, appSettings.uiScreenHeight);
 		Raylib.SetConfigFlags(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 		Raylib.SetTraceLogLevel(TraceLogLevel.LOG_FATAL); // Ignore Raylib Errors unless fatal
-		Raylib.InitWindow((int)screenSize.X, (int)screenSize.Y, "Chess");
+		Raylib.InitWindow((int)View.screenSize.X, (int)View.screenSize.Y, "Chess");
 		Raylib.InitAudioDevice();
 		Raylib.SetMasterVolume(appSettings.uiSoundVolume);
 
 		cam = new Camera2D();
-		int screenWidth = (int)screenSize.X;
-		int screenHeight = (int)screenSize.Y;
+		int screenWidth = (int)View.screenSize.X;
+		int screenHeight = (int)View.screenSize.Y;
 		cam.target = new Vector2(0, 0);
-		cam.offset = new Vector2(screenWidth / 2f, screenHeight / 2f);
+		cam.offset = new Vector2(View.screenSize.X / 2f, View.screenSize.Y / 2f);
 		cam.zoom = 1.0f;
-		view = new View(screenSize, cam);
+		view = new View(cam);
 		model = new Model(view);
 
 		Player.OnMoveChosen += model.MakeMoveOnBoard;
@@ -86,7 +84,9 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 
 			if (Raylib.IsWindowResized()) {
 				view.camera.offset = new Vector2(Raylib.GetScreenWidth() / 2f, Raylib.GetScreenHeight() / 2f);
-				View.screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+				appSettings.uiScreenWidth = Raylib.GetScreenWidth();
+				appSettings.uiScreenHeight = Raylib.GetScreenHeight();
+				View.screenSize = new Vector2(appSettings.uiScreenWidth, appSettings.uiScreenHeight);
 			}
 
 			Raylib.BeginDrawing();
@@ -118,7 +118,7 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 	public int GetSquareMouseIsOver() {
 
 		int squareClicked = -1;
-		Vector2 pos = Raylib.GetMousePosition() - screenSize/2;
+		Vector2 pos = Raylib.GetMousePosition() - View.screenSize/2;
 
 		Vector2 boardPos = (pos/BoardUI.squareSize);
 		if (view.ui.IsFlipped) { boardPos *= -1; }
@@ -324,11 +324,9 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 	}
 
 	public void SaveApplicationSettings() {
+		if (! File.Exists(FileHelper.GetResourcePath("settings.txt"))) { return; }
 		using (StreamWriter writer = new StreamWriter(FileHelper.GetResourcePath("settings.txt"))) {
-			writer.WriteLine($"uiScreenWidth={View.screenSize.X}");
-			writer.WriteLine($"uiScreenHeight={View.screenSize.Y}");
 			foreach (var pair in appSettings._dictionary) {
-				if (pair.Key == "uiScreenWidth" || pair.Key == "uiScreenHeight") continue;
 				writer.WriteLine($"{pair.Key}={pair.Value}");
 			}
 		}

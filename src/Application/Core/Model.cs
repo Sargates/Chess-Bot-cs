@@ -27,14 +27,9 @@ public class Model {
 
 
 	// Player System //////////////////////////////
-	public enum Gametype {
-		HvH, // 	Human vs. Human
-		HvC, // 	Human vs. Computer
-		HvU, // 	Human vs. UCI
-		CvC, //  Computer vs. Computer
-		CvU, //  Computer vs. UCI
-		UvU, // 	  UCI vs. UCI
-	}
+
+	// Human, Computer, UCI
+	public enum Gametype { HvH, HvC, HvU, CvC, CvU, UvU }
 	public Gametype activeGameType = Gametype.HvH;
 	public int gameIndex = 0;
 	public ChessPlayer whitePlayer = new ChessPlayer();
@@ -46,9 +41,6 @@ public class Model {
 	public Model(View view) {
 		this.view = view;
 
-		
-
-		
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 			stockfishExeExt = "stockfish.exe";
 		} else
@@ -77,11 +69,11 @@ public class Model {
 		view.AddToPipeline(new Button(new Rectangle(40, 600, 210, 50), "Stockfish vs. Stockfish").SetLeftCallback(delegate {
 			StartNewGame(type:Gametype.UvU);
 		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 660, 210, 50), "Perft Test"	).SetLeftCallback(delegate {
-			Perft.Main();
+		view.AddToPipeline(new Button(new Rectangle(40, 660, 210, 50), "Reset settings").SetLeftCallback(delegate {
+			ApplicationSettings.ResetDefaultSettings();
 		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 360, 210, 50), "Check Get all moves").SetLeftCallback(delegate {
-			MoveGenerator.GetAllMoves(board, board.ActiveColor, true);
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 360, 210, 50), "Perft Test"	).SetLeftCallback(delegate {
+			Perft.Main();
 		}));
 		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 420, 210, 50), "Left/Right to Inc/Dec\nPerft depth").SetLeftCallback(delegate {
 			Perft.maxDepth++;
@@ -91,12 +83,12 @@ public class Model {
 		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 480, 210, 50), "Get Zobrist key").SetLeftCallback(delegate {
 			Console.WriteLine(CalculateZobristKey(board));
 		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 540, 210, 50), "Test UndoMove (fast)").SetLeftCallback(delegate {
-			UnmakeMoveHelper.Fast();
-		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 600, 210, 50), "Test UndoMove (full suite)").SetLeftCallback(delegate {
-			UnmakeMoveHelper.FullSuite();
-		}));
+		// view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 540, 210, 50), "Test UndoMove (fast)").SetLeftCallback(delegate {
+		// 	UnmakeMoveHelper.Fast();
+		// }));
+		// view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 600, 210, 50), "Test UndoMove (full suite)").SetLeftCallback(delegate {
+		// 	UnmakeMoveHelper.FullSuite();
+		// }));
 	}
 
 

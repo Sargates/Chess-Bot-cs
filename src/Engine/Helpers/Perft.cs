@@ -38,7 +38,7 @@ public static class Perft {
 		Debug.Assert(board!=null);
 		Move[] totalMoves;
 		totalMoves = MoveGenerator.GetAllMoves(board, board.ActiveColor);
-		if (depth == 1) { return totalMoves.Length; }
+		if (depth <= 1) { return totalMoves.Length; }
 
 		if (depth == maxDepth) {
 			totalMoves = MoveGenerator.GetAllMoves(board, board.ActiveColor, true);

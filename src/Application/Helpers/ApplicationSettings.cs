@@ -1,12 +1,26 @@
 using System.Dynamic;
+using ChessBot.Helpers;
 
 namespace ChessBot.Application;
 public class ApplicationSettings : DynamicObject {
+	private static dynamic? singleton;
 	public readonly IDictionary<string, object?> _dictionary;
 
-	public ApplicationSettings(string filePath) {
-		if (! File.Exists(filePath)) { File.Create(filePath); }
-		_dictionary = LoadSettingsFromFile(filePath);
+	private ApplicationSettings() {
+		string path = FileHelper.GetResourcePath("settings.txt");
+		if (! File.Exists(path)) { File.Copy(FileHelper.GetResourcePath("default.txt"), path); }
+		_dictionary = LoadSettingsFromFile(path);
+	}
+
+	public static dynamic Get() {
+		singleton ??= new ApplicationSettings();
+		return singleton;
+	}
+
+	public static void ResetDefaultSettings() {
+		File.Delete(FileHelper.GetResourcePath("settings.txt"));
+		// singleton = new ApplicationSettings();
+		Console.WriteLine("Settings reset to default, relaunch application to take effect");
 	}
 
 	public override bool TrySetMember(SetMemberBinder binder, object? value) {
