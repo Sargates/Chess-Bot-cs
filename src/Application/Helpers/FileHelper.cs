@@ -29,6 +29,17 @@ public static class FileHelper {
 		return File.ReadAllText(GetResourcePath(localPath));
 	}
 
+	public static void WriteResourcePath(string localPath, string data) {
+		WriteResourcePath(localPath, data.Split("\n"));
+	}
+	public static void WriteResourcePath(string localPath, string[] data) {
+		using (StreamWriter writer = new StreamWriter(FileHelper.GetResourcePath(localPath))) {
+			foreach (string line in data) {
+				writer.WriteLine(line);
+			}
+		}
+	}
+
 	// Thanks to https://github.com/dotnet/runtime/issues/17938
 	public static void OpenUrl(string url) {
 		try {

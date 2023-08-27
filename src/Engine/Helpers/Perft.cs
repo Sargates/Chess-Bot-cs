@@ -5,13 +5,10 @@ using ChessBot.Engine;
 namespace ChessBot.Helpers;
 public static class Perft {
 	public static List<int> depthList = new List<int>();
-	public static int maxDepth = 5;
+	public static int maxDepth = 3;
 
 	static Model? model;
 	static Board? board;
-	public static void Main() {
-		GetDepth();
-	}
 
 	public static void GetDepth() {
 		model = MainController.Instance.model;
@@ -37,12 +34,13 @@ public static class Perft {
 	public static int CountMove(int depth) {
 		Debug.Assert(board!=null);
 		Move[] totalMoves;
-		totalMoves = MoveGenerator.GetAllMoves(board, board.ActiveColor);
+		if (depth == maxDepth) { // Sort all moves if true
+			totalMoves = MoveGenerator.GetAllMoves(board, board.ActiveColor, true);
+		} else {
+			totalMoves = MoveGenerator.GetAllMoves(board, board.ActiveColor);
+		}
 		if (depth <= 1) { return totalMoves.Length; }
 
-		if (depth == maxDepth) {
-			totalMoves = MoveGenerator.GetAllMoves(board, board.ActiveColor, true);
-		}
 
 		int subsequentSum = 0;
 

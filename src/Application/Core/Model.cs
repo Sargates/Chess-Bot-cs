@@ -49,6 +49,7 @@ public class Model {
 		} else {
 			throw new Exception("This program can only run on Windows and Linux");
 		}
+		// StartNewGame("rnbqkbnr/p1pppppp/8/1p6/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1");
 		StartNewGame();
 		Debug.Assert(board != null);
 		AddButtons();
@@ -72,23 +73,52 @@ public class Model {
 		view.AddToPipeline(new Button(new Rectangle(40, 660, 210, 50), "Reset settings").SetLeftCallback(delegate {
 			ApplicationSettings.ResetDefaultSettings();
 		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 360, 210, 50), "Perft Test"	).SetLeftCallback(delegate {
-			Perft.Main();
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 300, 210, 50), "Test").SetLeftCallback(delegate {
+			// ulong test = 0x2316476349473769;
+			// while (test != 0) {
+			// 	Console.WriteLine(test);
+			// 	BitboardHelper.PopLSB(ref test);
+			// }
+			// Console.WriteLine("End");
+		}));
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 360, 210, 50), "Perft Test").SetLeftCallback(delegate {
+			Perft.GetDepth();
 		}));
 		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 420, 210, 50), "Left/Right to Inc/Dec\nPerft depth").SetLeftCallback(delegate {
 			Perft.maxDepth++;
 		}).SetRightCallback(delegate {
 			Perft.maxDepth--;
 		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 480, 210, 50), "Get Zobrist key").SetLeftCallback(delegate {
-			Console.WriteLine(CalculateZobristKey(board));
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 480, 210, 50), "Undo Test (Fast suite)").SetLeftCallback(delegate {
+			UnmakeMoveHelper.Fast();
 		}));
-		// view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 540, 210, 50), "Test UndoMove (fast)").SetLeftCallback(delegate {
-		// 	UnmakeMoveHelper.Fast();
-		// }));
-		// view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 600, 210, 50), "Test UndoMove (full suite)").SetLeftCallback(delegate {
-		// 	UnmakeMoveHelper.FullSuite();
-		// }));
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 540, 210, 50), "Undo Test (Full suite)").SetLeftCallback(delegate {
+			UnmakeMoveHelper.FullSuite();
+		}));
+
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 600, 210, 50), "Print bitboards").SetLeftCallback(delegate {
+
+			Console.WriteLine();
+			Console.WriteLine("Starting print");
+			string[] b = new string[64];
+			foreach (Piece piece in Piece.pieceArray) {
+				ulong bitboard = board.GetPieceBBoard(piece);
+				for (int i=0;i<64;i++) {
+					if (b[i] == "  " || b[i] == null) b[i] = "  ";
+					if (1 == (1 & (bitboard >> i))) {
+						b[i] = piece.ToString();
+					}
+				}
+			}
+			for (int i=7;i>-1;i--) {
+				for (int j=0;j<8;j++) {
+					int index = 8*i+j;
+					Console.Write($"{b[index]} ");
+				}
+				Console.WriteLine();
+			}
+			Console.WriteLine("Finishing print");
+		}));
 	}
 
 

@@ -19,7 +19,7 @@ public class MoveGenerator {
 		}
 
 		Coord coord = new Coord(index);
-		Coord delta = new Coord(board.forwardDir(piece.Color)+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
+		Coord delta = BoardHelper.GetAbsoluteDirection(board.forwardDir(piece.Color));
 		Coord newPos = coord+delta;
 		if (newPos.IsInBounds()) {
 			Piece pawnOneUp = board.GetSquare(newPos.SquareIndex);
@@ -32,7 +32,7 @@ public class MoveGenerator {
 			}
 		}
 
-		delta = new Coord(+1+board.forwardDir(piece.Color)+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
+		delta = BoardHelper.GetAbsoluteDirection(+1+board.forwardDir(piece.Color));
 		newPos = coord+delta;
 		if (newPos.IsInBounds()) {
 			Piece pawnAttackPositive = board.GetSquare(newPos.SquareIndex);
@@ -44,7 +44,7 @@ public class MoveGenerator {
 			}
 		}
 
-		delta = new Coord(-1+board.forwardDir(piece.Color)+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
+		delta = BoardHelper.GetAbsoluteDirection(-1+board.forwardDir(piece.Color));
 		newPos = coord+delta;
 		if (newPos.IsInBounds()) {
 			Piece pawnAttackNegative = board.GetSquare(newPos.SquareIndex);
@@ -72,12 +72,14 @@ public class MoveGenerator {
 				int enemyPawnIndex = board.currentState.enPassantIndex - board.forwardDir(piece.Color);
 				Piece enemyPawn = board.board[enemyPawnIndex];
 				board.board[enemyPawnIndex] = Piece.None;
-				(int, int)[] pins = MoveGenerator.GetCheckData(board, piece.Color == Piece.White ? board.whiteKingPos : board.blackKingPos, piece.Color).Item2;
+				int kingIndex = piece.Color == Piece.White ? board.whiteKingPos : board.blackKingPos;
+				(int, int)[] pins = MoveGenerator.GetCheckData(board, kingIndex, piece.Color).Item2;
 				board.board[enemyPawnIndex] = enemyPawn;
 				bool shouldRemove = false;
 				foreach ((int i, int dir) pin in pins) {
-					if (i == index) { shouldRemove = true; }
+					if (pin.i == index) { shouldRemove = true; }
 				}
+				// Console.WriteLine($"{board.currentState.enPassantIndex}, {enemyPawnIndex}, {index}, {kingIndex}, {string.Join(", ", pins)}, {shouldRemove}");
 				if (! shouldRemove) { continue; }
 			}
 
@@ -102,7 +104,7 @@ public class MoveGenerator {
 		}
 
 		foreach (int direction in new int[]{ 6, 15, 17, 10, -6, -15, -17, -10 }) {
-			Coord delta = new Coord(direction+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
+			Coord delta = BoardHelper.GetAbsoluteDirection(direction);
 			// TODO: Change for compat. with PrecomputedMoveData
 			Coord newPos = coord + delta;
 			if (! newPos.IsInBounds()) { continue; } // Passes guard clause if in bounds
@@ -130,7 +132,7 @@ public class MoveGenerator {
 			if (! (pinsBySquare[index] == 0  || pinsBySquare[index] == direction || pinsBySquare[index] == -direction)) { // value of 0 means piece is not pinned
 				continue;
 			}
-			Coord delta = new Coord(direction+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
+			Coord delta = BoardHelper.GetAbsoluteDirection(direction);
 			// TODO: Change for compat. with PrecomputedMoveData
 			for (int i=1;i<8;i++) {
 				Coord newPos = coord + delta*i;
@@ -167,7 +169,7 @@ public class MoveGenerator {
 			if (! (pinsBySquare[index] == 0  || pinsBySquare[index] == direction || pinsBySquare[index] == -direction)) { // value of 0 means piece is not pinned
 				continue;
 			}
-			Coord delta = new Coord(direction+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
+			Coord delta = BoardHelper.GetAbsoluteDirection(direction);
 			// TODO: Change for compat. with PrecomputedMoveData
 			for (int i=1;i<8;i++) {
 				Coord newPos = coord + delta*i;
@@ -205,7 +207,7 @@ public class MoveGenerator {
 			if (! (pinsBySquare[index] == 0  || pinsBySquare[index] == direction || pinsBySquare[index] == -direction)) { // value of 0 means piece is not pinned
 				continue;
 			}
-			Coord delta = new Coord(direction+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
+			Coord delta = BoardHelper.GetAbsoluteDirection(direction);
 			// TODO: Change for compat. with PrecomputedMoveData
 			for (int i=1;i<8;i++) {
 				Coord newPos = coord + (delta * i);
@@ -235,7 +237,7 @@ public class MoveGenerator {
 		Piece piece = board.GetSquare(index);
 		Coord coord = new Coord(index);
 		foreach (int direction in new int[] { 9, -7, -9, 7, 8, 1, -8, -1 }) {
-			Coord delta = new Coord(direction+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
+			Coord delta = BoardHelper.GetAbsoluteDirection(direction);
 			Coord newPos = coord + delta;
 			if (! newPos.IsInBounds()) { continue; } // Passes guard clause if in bounds
 
@@ -397,7 +399,7 @@ public class MoveGenerator {
 
 		for (int j=0; j<directions.Length; j++) {
 
-			Coord delta = new Coord(directions[j]+26)-new Coord(26);
+			Coord delta = BoardHelper.GetAbsoluteDirection(directions[j]);
 
 			(int, int) possiblePin = (0, 0);
 			for (int i = 1; i < 8; i++) {

@@ -8,6 +8,16 @@ public class Board {
 
 	public Piece[] board;
 
+	private ulong[,] pieces = new ulong[,] { 
+		{ 0ul, 0ul },	// pawns
+		{ 0ul, 0ul },	// knights
+		{ 0ul, 0ul },	// bishops
+		{ 0ul, 0ul },	// rooks
+		{ 0ul, 0ul },	// queens
+		{ 0ul, 0ul }	// kings
+	};
+
+	public ref ulong GetPieceBBoard(Piece piece) { return ref pieces[piece.Type-1, piece.ColorAsBinary]; } // Minus 1 because We don't keep track of Piece.None types
 
 	// Color Info /////////////////////////////////
 	public int ActiveColor => whiteToMove ? Piece.White : Piece.Black;
@@ -20,16 +30,34 @@ public class Board {
 		new List<int>[]{new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>()},
 		new List<int>[]{new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>()}
 	};
-	public List<int> GetPiecePositions(Piece piece) => piecePositions[piece.ColorAsBinary][piece.Type-1]; // Minus 1 because We don't keep track of Piece.None types
+	public List<int> GetPiecePositions(Piece piece) {
+		List<int> o = new List<int>();
+		ulong pieceLocations = GetPieceBBoard(piece);
+		
+		while (pieceLocations != 0) {
+			int exp = BitboardHelper.PopLSB(ref pieceLocations);
+			o.Add(exp);
+		}
+		// Console.WriteLine($"{pieceLocations}, {string.Join(", ", o)}");
+		return o;
+	}
+	// public List<int> GetPiecePositions(Piece piece) => piecePositions[piece.ColorAsBinary][piece.Type-1]; // Minus 1 because We don't keep track of Piece.None types
+
 
 	public int whiteKingPos {
 		get {
-			return GetPiecePositions(Piece.WhiteKing)[0];
+			ulong bitboard = GetPieceBBoard(Piece.WhiteKing);
+			int o = BitboardHelper.PopLSB(ref bitboard);
+			if (o == 64) throw new Exception("No white king on the board");
+			return o;
 		}
 	}
 	public int blackKingPos{
 		get {
-			return GetPiecePositions(Piece.BlackKing)[0];
+			ulong bitboard = GetPieceBBoard(Piece.BlackKing);
+			int o = BitboardHelper.PopLSB(ref bitboard);
+			if (o == 64) throw new Exception("No black king on the board");
+			return o;
 		}
 	}
 
@@ -103,17 +131,20 @@ public class Board {
 
 
 		MovePiece(pieceMoved, movedFrom, movedTo);
+		// Console.WriteLine($"{pieceMoved}, {pieceTaken}");
 
 		if (pieceTaken != Piece.None && moveFlag != Move.EnPassantCaptureFlag) {
-			var positions = GetPiecePositions(pieceTaken);
-			positions.Remove(movedTo);
+
+			BitboardHelper.ClearSquare(ref GetPieceBBoard(pieceTaken), movedTo);
 		}
 
 		// If the move was an enpassant capture
 		if (moveFlag == Move.EnPassantCaptureFlag) {
-			var temp = GetPiecePositions(pieceTaken);
-			temp.Remove(currentState.enPassantIndex - forwardDir(pieceMoved.Color));
-			board[currentState.enPassantIndex - forwardDir(pieceMoved.Color)] = 0;
+			int captureIndex = currentState.enPassantIndex - forwardDir(pieceMoved.Color);
+
+			BitboardHelper.ClearSquare(ref GetPieceBBoard(pieceTaken), captureIndex);
+
+			board[captureIndex] = 0;
 		}
 
 		int enPassantIndex = -1; // Ok to set this to -1 here because of how En-Passant works
@@ -138,10 +169,10 @@ public class Board {
 				promotedTo = pieceMoved.Color|Piece.Bishop;
 			}
 			board[movedTo] = promotedTo;
-			var temp = GetPiecePositions(pieceMoved);
-			temp.Remove(movedTo);
-			temp = GetPiecePositions(promotedTo);
-			temp.Add(movedTo);
+
+			BitboardHelper.ClearSquare(ref GetPieceBBoard(pieceMoved), movedTo);
+
+			BitboardHelper.SetSquare(ref GetPieceBBoard(promotedTo), movedTo);
 		}
 
 		// If move is a castle, move rook
@@ -264,9 +295,8 @@ public class Board {
 	}
 	public void MovePiece(Piece piece, int movedFrom, int movedTo) {
 		//* modify bitboards here
-		var temp = GetPiecePositions(piece);
-		temp.Remove(movedFrom);
-		temp.Add(movedTo);
+		BitboardHelper.ToggleSquares(ref GetPieceBBoard(piece), movedFrom, movedTo);
+
 
 		board[movedTo] = board[movedFrom];
 		board[movedFrom] = Piece.None;
@@ -284,30 +314,31 @@ public class Board {
 		Piece pieceMoved = currentState.pieceMoved;
 		Piece pieceTaken = currentState.pieceTaken;
 
-		
 		currentState.moveMade = move;
 		currentState.pieceTaken = pieceTaken;
 		currentState.pieceMoved = pieceMoved;
 		MovePiece(pieceMoved, movedFrom, movedTo);
 
 		if (currentState.pieceTaken != Piece.None && moveFlag != Move.EnPassantCaptureFlag) {
-			var positions = GetPiecePositions(pieceTaken);
-			positions.Add(movedFrom);
+			BitboardHelper.SetSquare(ref GetPieceBBoard(pieceTaken), movedFrom);
+
 			board[movedFrom] = pieceTaken;
 		}
 		
 		// If the move was an enpassant capture
 		if (moveFlag == Move.EnPassantCaptureFlag) {
-			var positions = GetPiecePositions(pieceTaken);
-			positions.Add(movedFrom - forwardDir(pieceMoved.Color));
-			board[movedFrom - forwardDir(pieceMoved.Color)] = currentState.pieceTaken;
+			int captureIndex = movedFrom - forwardDir(pieceMoved.Color);
+			BitboardHelper.SetSquare(ref GetPieceBBoard(pieceTaken), captureIndex);
+
+			board[captureIndex] = currentState.pieceTaken;
 		}
 
 		if (move.IsPromotion) {
-			var positions = GetPiecePositions(pieceMoved);
-			positions.Remove(movedFrom);
-			positions = GetPiecePositions(pieceMoved.Color|Piece.Pawn);
-			positions.Add(movedTo);
+			Piece promotedTo = pieceMoved.Color|Piece.Queen;
+			BitboardHelper.ClearSquare(ref GetPieceBBoard(promotedTo), movedFrom);
+
+
+			BitboardHelper.SetSquare(ref GetPieceBBoard(pieceMoved), movedTo);
 			board[movedFrom] = 0;
 			board[movedTo] = currentState.pieceMoved;
 		}

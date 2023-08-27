@@ -6,7 +6,7 @@ using ChessBot.Engine;
 using ChessBot.Helpers;
 
 namespace ChessBot.Application;
-using static MoveGenerator;
+using static PrecomputedMoveData;
 
 
 public class MainController { // I would use `AppController` but OmniSharp's autocomplete keeps giving me `AppContext`
@@ -51,6 +51,7 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 	public bool IsLeftPressed => (mouseButtonsClicked & 1) == 1;
 
 	private MainController() {
+		ulong test = PrecomputedMoveData.bishopMoves[0]; // Used to initialize precomputed move data
 		View.screenSize = new Vector2(appSettings.uiScreenWidth, appSettings.uiScreenHeight);
 		Raylib.SetConfigFlags(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 		Raylib.SetTraceLogLevel(TraceLogLevel.LOG_FATAL); // Ignore Raylib Errors unless fatal

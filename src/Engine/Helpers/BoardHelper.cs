@@ -50,15 +50,30 @@ public class BoardHelper {
 
 	}
 	public static void UpdateFromState(Board board, Fen state) {
-		board.board = FenToBoard(state.fenBoard);
-		for (int i = 0; i < board.board.Length; i++) {
-			Piece piece = board.GetSquare(i);
-			if (piece.IsNone) continue;
-			// Console.WriteLine($"{board.GetPiecePositions(piece)}");
-			List<int> temp = board.GetPiecePositions(piece);
-			temp.Add(i);
+		board.board = new Piece[64];
+		// Populate board with pieces according to FEN string
+		Piece file = 0; Piece rank = 7;
+		foreach (char c in state.fenBoard) {
+			if (c == '/') { rank--; file = 0; continue; }
+			Piece index = 8*rank+file;
 
+			if (char.IsNumber(c)) {
+
+				file += int.Parse($"{c}");
+				continue;
+			}
+
+			Piece piece = BoardHelper.FenCharToPieceEnum(c);
+			
+			board.board[index] = piece;
+			// BitboardHelper.SetSquare(ref board.piecesByType[piece.Type-1], index);
+			// BitboardHelper.SetSquare(ref board.piecesByColor[piece.ColorAsBinary], index);
+			BitboardHelper.SetSquare(ref board.GetPieceBBoard(piece), index);
+			// Console.WriteLine($"{index}: {board.GetBBoardByType(piece.Type)}");
+			
+			file += 1;
 		}
+
 		board.whiteToMove = state.fenColor == 'w';
 		board.currentState.enPassantIndex = BoardHelper.NameToSquareIndex(state.enpassantSquare);
 		board.currentState.castleRights = state.castleRights;
@@ -82,7 +97,6 @@ public class BoardHelper {
 
 		return board;
 	}
-
 	public static string BoardToFen(Board board) {
 		string o = "";
 		int gap = 0;
@@ -109,7 +123,9 @@ public class BoardHelper {
 	public static Board GetBoardCopy(Board board) {
 		return new Board(new Fen(board).ToFEN());
 	}
-
+	public static Coord GetAbsoluteDirection(int index) {
+		return new Coord(index+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
+	}
 	public static void PrintBoard(Piece[] board) {
 		Console.WriteLine(" +---+---+---+---+---+---+---+---+");
 		for(int i=7; i>-1; i--) {
