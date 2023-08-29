@@ -112,6 +112,25 @@ public class UCIEngine {
 		send($"{uciGameFormat}");
 	}
 
+	public Dictionary<string, int> GoPerft(int depth) {
+		send($"go perft {depth}");
+		Dictionary<string, int> moves = new Dictionary<string, int>();
+
+		var tries = 0;
+		while (true) {
+			if (tries > MAX_TRIES) {
+				throw new Exception("Max tries Exceeded");
+			}
+
+			var data = readLineAsList();
+
+			if (data.Count <= 1) {
+				return moves;
+			}
+			moves.Add(data[0].Replace(":", ""), int.Parse(data[1]));
+			tries++;
+		}
+	}
 	public string GetFenPosition() {
 		send("d");
 		var tries = 0;

@@ -14,11 +14,11 @@ public class Model {
 	public readonly string[] botMatchStartFens;
 
 	public Piece[] oldBoard = new Piece[64];
-	public void SetOldBoard() { oldBoard = board.board.ToArray(); }
+	// public void SetOldBoard() { oldBoard = board.board.ToArray(); }
 
 
 
-	public string stockfishExeExt;
+	public static string stockfishExeExt = "STOCKFISH_PATH_NOT_SET";
 
 	public int humanColor = 0b00; // 0b10 for white, 0b01 for black, 0b11 for both
 
@@ -42,15 +42,15 @@ public class Model {
 		this.view = view;
 
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-			stockfishExeExt = "stockfish.exe";
+			Model.stockfishExeExt = "stockfish.exe";
 		} else
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-			stockfishExeExt = "stockfish";
+			Model.stockfishExeExt = "stockfish";
 		} else {
 			throw new Exception("This program can only run on Windows and Linux");
 		}
-		// StartNewGame("rnbqkbnr/p1pppppp/8/1p6/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1");
-		StartNewGame();
+		// StartNewGame();
+		StartNewGame("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
 		Debug.Assert(board != null);
 		AddButtons();
 
@@ -73,16 +73,21 @@ public class Model {
 		view.AddToPipeline(new Button(new Rectangle(40, 660, 210, 50), "Reset settings").SetLeftCallback(delegate {
 			ApplicationSettings.ResetDefaultSettings();
 		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 300, 210, 50), "Test").SetLeftCallback(delegate {
-			// ulong test = 0x2316476349473769;
-			// while (test != 0) {
-			// 	Console.WriteLine(test);
-			// 	BitboardHelper.PopLSB(ref test);
-			// }
-			// Console.WriteLine("End");
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 240, 210, 50), "Test").SetLeftCallback(delegate {
+			string fen = Perft.testedFens.ElementAt(2).Key;
+			SetBoardPosition(fen);
+			WaveFunctionCollapse.CalculateMoveDiscrepancy(fen, 6);
+		}));
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 300, 210, 50), "Get discrepancy").SetLeftCallback(delegate {
+			// Perft.TestSpecific(6);
+			foreach (string fen in Perft.testedFens.Keys) {
+				int depth = int.Parse(Perft.testedFens[fen].Last().Key);
+				ConsoleHelper.WriteLine($"Testing Fen: {fen}", ConsoleColor.Magenta);
+				WaveFunctionCollapse.CalculateMoveDiscrepancy(fen, depth);
+			}
 		}));
 		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 360, 210, 50), "Perft Test").SetLeftCallback(delegate {
-			Perft.GetDepth();
+			Perft.Test();
 		}));
 		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 420, 210, 50), "Left/Right to Inc/Dec\nPerft depth").SetLeftCallback(delegate {
 			Perft.maxDepth++;
@@ -95,32 +100,14 @@ public class Model {
 		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 540, 210, 50), "Undo Test (Full suite)").SetLeftCallback(delegate {
 			UnmakeMoveHelper.FullSuite();
 		}));
-
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 600, 210, 50), "Print bitboards").SetLeftCallback(delegate {
-
-			Console.WriteLine();
-			Console.WriteLine("Starting print");
-			string[] b = new string[64];
-			foreach (Piece piece in Piece.pieceArray) {
-				ulong bitboard = board.GetPieceBBoard(piece);
-				for (int i=0;i<64;i++) {
-					if (b[i] == "  " || b[i] == null) b[i] = "  ";
-					if (1 == (1 & (bitboard >> i))) {
-						b[i] = piece.ToString();
-					}
-				}
-			}
-			for (int i=7;i>-1;i--) {
-				for (int j=0;j<8;j++) {
-					int index = 8*i+j;
-					Console.Write($"{b[index]} ");
-				}
-				Console.WriteLine();
-			}
-			Console.WriteLine("Finishing print");
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 600, 210, 50), "Print FEN").SetLeftCallback(delegate {
+			Console.WriteLine(new Fen(board));
 		}));
-	}
+		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 660, 210, 50), "Print bitboards").SetLeftCallback(delegate {
+			BoardHelper.PrintBoard(board);
+		}));
 
+	}
 
 	// Below methods handle the changing state of the board
 	public void MakeMoveOnBoard(Move move, bool animate=true) {
@@ -193,13 +180,14 @@ public class Model {
 
 	public void ExitPlayerThreads() { whitePlayer.RaiseExitFlag(); blackPlayer.RaiseExitFlag(); }
 	public void JoinPlayerThreads() { whitePlayer.Join(); blackPlayer.Join(); }
-	public void SetBoardPosition() { SetBoardPosition(Fen.startpos); }
+	public void ResetBoardPosition() { SetBoardPosition(Fen.startpos); }
 	public void SetBoardPosition(string fenString) {
 		// if (currentBoard != null) SetOldBoard();
 		board = new Board(fenString);
-
 		whitePlayer.UCI?.RaiseManualUpdateFlag();
 		blackPlayer.UCI?.RaiseManualUpdateFlag();
+		
+		view.ui.pieceBitboards = board.pieces;
 	}
 	public void SetPlayerTypes(Gametype type) {
 		if (activeGameType != type) {
@@ -260,17 +248,15 @@ public class Model {
 		SetBoardPosition(fenString);
 		ConsoleHelper.WriteLine($"\nGame number {gameIndex} started\nFEN: {fenString}", ConsoleColor.DarkYellow);
 		SetPlayerTypes(type);
-		view.ui.boardToRender = board.board;
 		view.ui.IsFlipped = humanColor == 0b01; // if white is not a player and black is a player
 		gameIndex++;
-		view.ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(oldBoard, board.board, 0.2f));
+		// view.ui.activeAnimations.AddRange(AnimationHelper.FromBoardChange(oldBoard, board.board, 0.2f));
 		SuspendPlay = false;
 	}
 	public void AnimateSingleRewind() {
 		if (board.currentStateNode.Previous == null) { Console.WriteLine("Cannot get first previous state, is null"); return; }
 
 		board.SetPrevState();
-		view.ui.boardToRender = board.board;
 		whitePlayer.UCI?.RaiseManualUpdateFlag();
 		blackPlayer.UCI?.RaiseManualUpdateFlag();
 
@@ -281,7 +267,6 @@ public class Model {
 
 		view.ui.activeAnimations.AddRange(AnimationHelper.FromGamestate(board.currentState));
 		board.SetNextState();
-		view.ui.boardToRender = board.board;
 		whitePlayer.UCI?.RaiseManualUpdateFlag();
 		blackPlayer.UCI?.RaiseManualUpdateFlag();
 

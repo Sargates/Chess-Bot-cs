@@ -24,7 +24,12 @@ public class MoveGenerator {
 		if (newPos.IsInBounds()) {
 			Piece pawnOneUp = board.GetSquare(newPos.SquareIndex);
 			if (pawnOneUp == Piece.None) {
-				moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
+				if (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) {
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToQueenFlag));
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToBishopFlag));
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToKnightFlag));
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToRookFlag));
+				} else { moves.Add(new Move(index, newPos.SquareIndex)); }
 				
 				if (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 1 : 6) && board.GetSquare(index + 2*board.forwardDir(piece.Color)) == Piece.None) {
 					moves.Add(new Move(index, index + 2*board.forwardDir(piece.Color), Move.PawnTwoUpFlag));
@@ -38,7 +43,12 @@ public class MoveGenerator {
 			Piece pawnAttackPositive = board.GetSquare(newPos.SquareIndex);
 			// Console.WriteLine($"{board.currentState.enPassantIndex} {pawnAttackPositive}");
 			if ((pawnAttackPositive.Type != Piece.None) && pawnAttackPositive.Color != piece.Color ) {
-				moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
+				if (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) {
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToQueenFlag));
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToBishopFlag));
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToKnightFlag));
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToRookFlag));
+				} else { moves.Add(new Move(index, newPos.SquareIndex)); }
 			} else if ((newPos.SquareIndex == board.currentState.enPassantIndex && board.GetSquare(index + 1) != piece.Color)) {
 				moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
 			}
@@ -50,7 +60,12 @@ public class MoveGenerator {
 			Piece pawnAttackNegative = board.GetSquare(newPos.SquareIndex);
 			// Console.WriteLine($"{board.currentState.enPassantIndex} {pawnAttackNegative}");
 			if ((pawnAttackNegative.Type != Piece.None) && pawnAttackNegative.Color != piece.Color ) {
-				moves.Add(new Move(index, newPos.SquareIndex, (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) ? Move.PromoteToQueenFlag : Move.NoFlag));
+				if (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) {
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToQueenFlag));
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToBishopFlag));
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToKnightFlag));
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToRookFlag));
+				} else { moves.Add(new Move(index, newPos.SquareIndex)); }
 			} else if ((newPos.SquareIndex == board.currentState.enPassantIndex && board.GetSquare(index - 1) != piece.Color)) {
 				moves.Add(new Move(index, newPos.SquareIndex, Move.EnPassantCaptureFlag));
 			}
@@ -70,20 +85,21 @@ public class MoveGenerator {
 				// We need to cache the piece that's taken, remove it from the board, and check if the pawn to move is pinned by an enemy piece,
 
 				int enemyPawnIndex = board.currentState.enPassantIndex - board.forwardDir(piece.Color);
-				Piece enemyPawn = board.board[enemyPawnIndex];
-				board.board[enemyPawnIndex] = Piece.None;
+				Piece enemyPawn = Piece.Pawn | board.InactiveColor;
+
+				BitboardHelper.ClearSquare(ref board.GetPieceBBoard(enemyPawn), enemyPawnIndex);
 				int kingIndex = piece.Color == Piece.White ? board.whiteKingPos : board.blackKingPos;
-				(int, int)[] pins = MoveGenerator.GetCheckData(board, kingIndex, piece.Color).Item2;
-				board.board[enemyPawnIndex] = enemyPawn;
-				bool shouldRemove = false;
+				// Console.WriteLine(board.GetSquare(kingIndex));
+				(bool inCheck, (int i, int dir)[] pins, (int i, int dir)[] checks) = MoveGenerator.GetCheckData(board, kingIndex, piece.Color);
+				BitboardHelper.SetSquare(ref board.GetPieceBBoard(enemyPawn), enemyPawnIndex);
+				bool shouldRemove = pins.Any(x => x.i == index);
 				foreach ((int i, int dir) pin in pins) {
 					if (pin.i == index) { shouldRemove = true; }
 				}
+				// Console.WriteLine($"{move}, {inCheck}, {string.Join(", ", pins)}, {string.Join(", ", checks)}");
 				// Console.WriteLine($"{board.currentState.enPassantIndex}, {enemyPawnIndex}, {index}, {kingIndex}, {string.Join(", ", pins)}, {shouldRemove}");
 				if (! shouldRemove) { continue; }
 			}
-
-
 
 			// Console.WriteLine($"Move removed: {move}");
 			moves.RemoveAt(i);
@@ -351,12 +367,16 @@ public class MoveGenerator {
 			bool NotHit = true;
 			int checkingPosition = currentChecks[piece.ColorAsBinary][0].checkerPos;
 			int dirFromKing = currentChecks[piece.ColorAsBinary][0].dirFromKing;
+			if (move.Flag == Move.EnPassantCaptureFlag) { // Enpassant captures on a different square than was moved to, need to handle that differently
+				if (move.TargetSquare - board.forwardDir(piece.Color) == checkingPosition) {
+					continue;
+				}
+			}
 			while (checkingPosition != kingPos) { //* Start at position of checker, subtract dirFromKing until checkingPosition == kingPos
 				if (move.TargetSquare == checkingPosition) {
 					NotHit = false;
 					break;
 				}
-				
 				checkingPosition -= dirFromKing;
 			}
 
@@ -364,7 +384,6 @@ public class MoveGenerator {
 		}
 		return moves.ToArray();
 	}
-
 	public static Move[] GetAllMoves(Board board, int color, bool sort=false) {
 		List<Move> totalMoves = new List<Move>();
 		
@@ -384,7 +403,6 @@ public class MoveGenerator {
 	public static bool IsSquareAttacked(Board board, int index, int color) {
 		return GetCheckData(board, index, color).Item1;
 	}
-
 
 	public static (bool, (int, int)[], (int, int)[]) GetCheckData(Board board, int index, int color) {
 		//* Credits to Eddie Sharick for this algorithm (adapted from python)

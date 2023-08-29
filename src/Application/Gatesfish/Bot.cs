@@ -11,7 +11,6 @@ public class Bot {
 	Board board;
 	public Bot(Model model) { 
 		this.model = model;
-		board = BoardHelper.GetBoardCopy(model.board);
 		Debug.Assert(board!=null);
 	}
 

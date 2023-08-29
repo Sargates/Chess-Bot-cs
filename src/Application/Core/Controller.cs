@@ -51,7 +51,13 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 	public bool IsLeftPressed => (mouseButtonsClicked & 1) == 1;
 
 	private MainController() {
-		ulong test = PrecomputedMoveData.bishopMoves[0]; // Used to initialize precomputed move data
+		// Used to initialize precomputed move data
+		Type staticClassInfo = typeof(PrecomputedMoveData); 
+		var staticClassConstructorInfo = staticClassInfo.TypeInitializer;  
+		staticClassConstructorInfo?.Invoke(null,null);
+
+		
+		ulong test = PrecomputedMoveData.bishopMoves[0];
 		View.screenSize = new Vector2(appSettings.uiScreenWidth, appSettings.uiScreenHeight);
 		Raylib.SetConfigFlags(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 		Raylib.SetTraceLogLevel(TraceLogLevel.LOG_FATAL); // Ignore Raylib Errors unless fatal
@@ -67,6 +73,13 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 		cam.zoom = 1.0f;
 		view = new View(cam);
 		model = new Model(view);
+
+		// Must be called after model instantiation
+		// Used to initialize WFC performance testing
+		staticClassInfo = typeof(WaveFunctionCollapse); 
+		staticClassConstructorInfo = staticClassInfo.TypeInitializer;  
+		staticClassConstructorInfo?.Invoke(null,null);
+
 
 		Player.OnMoveChosen += model.MakeMoveOnBoard;
 	}

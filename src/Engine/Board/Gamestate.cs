@@ -2,12 +2,12 @@ namespace ChessBot.Engine;
 
 
 public class Gamestate {
-	public int ID = -1; // -1 if not getting set
-	public Move moveMade;		// Move made on the active gamestate
-	public Piece pieceMoved;	// Piece moved by `moveMade`
-	public Piece pieceTaken;	// Piece taken by `moveMade`; Can be `Piece.None`
-	public int soundPlayed;		// Sound played by `moveMade`; Defaults to MoveSounds
-	public int castleRights;	// Castle rights at the current board state; Defaults to all allowed
+	public int ID = -1; 			// -1 if not yet set
+	public Move moveMade;			// Move made on the active gamestate
+	public Piece pieceMoved;		// Piece moved by `moveMade`
+	public Piece pieceTaken;		// Piece taken by `moveMade`; Can be `Piece.None`
+	public int soundPlayed;			// Sound played by `moveMade`; Defaults to MoveSounds
+	public int castleRights;		// Castle rights at the current board state; Defaults to all allowed
 	public int enPassantIndex=-1;	// En-passant index of current state
 	public int halfMoveCount=0;
 	public int fullMoveCount=1;

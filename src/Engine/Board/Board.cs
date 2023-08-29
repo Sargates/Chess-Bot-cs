@@ -6,9 +6,8 @@ namespace ChessBot.Engine;
 
 public class Board {
 
-	public Piece[] board;
 
-	private ulong[,] pieces = new ulong[,] { 
+	public ulong[,] pieces = new ulong[,] { 
 		{ 0ul, 0ul },	// pawns
 		{ 0ul, 0ul },	// knights
 		{ 0ul, 0ul },	// bishops
@@ -25,11 +24,6 @@ public class Board {
 	public int forwardDir(int color) => color == Piece.White ? 8 : -8;
 	public bool whiteToMove;
 
-
-	public List<int>[][] piecePositions = new List<int>[][]{
-		new List<int>[]{new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>()},
-		new List<int>[]{new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>()}
-	};
 	public List<int> GetPiecePositions(Piece piece) {
 		List<int> o = new List<int>();
 		ulong pieceLocations = GetPieceBBoard(piece);
@@ -47,22 +41,25 @@ public class Board {
 	public int whiteKingPos {
 		get {
 			ulong bitboard = GetPieceBBoard(Piece.WhiteKing);
+			if (bitboard == 0) {
+				BoardHelper.PrintBoard(this);
+				throw new Exception("No white king on the board");
+			}
 			int o = BitboardHelper.PopLSB(ref bitboard);
-			if (o == 64) throw new Exception("No white king on the board");
 			return o;
 		}
 	}
-	public int blackKingPos{
+	public int blackKingPos {
 		get {
 			ulong bitboard = GetPieceBBoard(Piece.BlackKing);
+			if (bitboard == 0) {
+				BoardHelper.PrintBoard(this);
+				throw new Exception("No black king on the board");
+			}
 			int o = BitboardHelper.PopLSB(ref bitboard);
-			if (o == 64) throw new Exception("No black king on the board");
 			return o;
 		}
 	}
-
-
-
 
 
 	// State System ///////////////////////////////
@@ -86,39 +83,29 @@ public class Board {
 		// TODO: Add FEN string loading, StartNewGame should be in Controller/cs, board should just be able to load a fen string in place
 		BoardHelper.UpdateFromState(this, fen);
 		// board = FenToBoard(fenString);
-		Debug.Assert(board!=null);
+		// Debug.Assert(board!=null);
 		// board = FenToBoard(this.currentFen.fenBoard);
 	}
 
 
-	// public string GetUCIGameFormat() {
+	public string GetMoveHistory() {
 
-	// 	LinkedListNode<Gamestate>? currNode = stateHistory.First;
-	// 	string o = "";
-	// 	if (currNode is null) {
-	// 		Console.WriteLine("`GetUCIGameFormat` returned default");
-	// 		return "position startpos";
-	// 	}
+		LinkedListNode<Gamestate>? currNode = stateHistory.First;
+		if (currNode == null) {
+			Console.WriteLine("`GetUCIGameFormat` returned default");
+			return "";
+		}
 
-	// 	if (currNode.Value.isStartPos) {
-	// 		o += $"position startpos ";
-	// 	} else if (! currNode.Value.isStartPos) {
-	// 		o += $"position fen {currNode.Value.ToFEN()} ";
-	// 	}
-	// 	if (! currNode.Value.moveMade.IsNull) {
-	// 		o += $"moves {currNode.Value.moveMade}";
-	// 	}
-	// 	currNode = currNode.Next;
+		List<Move> history = new List<Move>();
 
-	// 	while (currNode != null) {
-	// 		if (currNode.Value.moveMade.IsNull) break;
+		while (currNode != null) {
+			if (currNode.Value.moveMade.IsNull) break;
+			history.Add(currNode.Value.moveMade);
+			currNode = currNode.Next;
+		}
 
-	// 		o += $" {currNode.Value.moveMade}";
-	// 		currNode = currNode.Next;
-	// 	}
-
-	// 	return o;
-	// }
+		return string.Join(" ", history);
+	}
 
 	public void MakeMove(Move move, bool quiet=false) { //* Wrapper method for MovePiece, calls MovePiece and handles things like board history, 50 move rule, 3 move repition, 
 		int movedFrom = move.StartSquare;
@@ -129,12 +116,13 @@ public class Board {
 		Piece pieceMoved = GetSquare(movedFrom);
 		Piece pieceTaken = (moveFlag==Move.EnPassantCaptureFlag) ? (InactiveColor|Piece.Pawn) : GetSquare(movedTo);
 
+		if (pieceTaken.Type == Piece.King) { throw new Exception("King was taken"); }
+
 
 		MovePiece(pieceMoved, movedFrom, movedTo);
 		// Console.WriteLine($"{pieceMoved}, {pieceTaken}");
 
 		if (pieceTaken != Piece.None && moveFlag != Move.EnPassantCaptureFlag) {
-
 			BitboardHelper.ClearSquare(ref GetPieceBBoard(pieceTaken), movedTo);
 		}
 
@@ -144,7 +132,7 @@ public class Board {
 
 			BitboardHelper.ClearSquare(ref GetPieceBBoard(pieceTaken), captureIndex);
 
-			board[captureIndex] = 0;
+			// board[captureIndex] = 0;
 		}
 
 		int enPassantIndex = -1; // Ok to set this to -1 here because of how En-Passant works
@@ -155,20 +143,14 @@ public class Board {
 
 		// Is a promotion
 		if (move.IsPromotion) {
-			Piece promotedTo = Piece.None;
-			if (moveFlag == Move.PromoteToQueenFlag) {
-				promotedTo = pieceMoved.Color|Piece.Queen;
-			}
-			if (moveFlag == Move.PromoteToKnightFlag) {
-				promotedTo = pieceMoved.Color|Piece.Knight;
-			}
-			if (moveFlag == Move.PromoteToRookFlag) {
-				promotedTo = pieceMoved.Color|Piece.Rook;
-			}
-			if (moveFlag == Move.PromoteToBishopFlag) {
-				promotedTo = pieceMoved.Color|Piece.Bishop;
-			}
-			board[movedTo] = promotedTo;
+			Piece promotedTo = (moveFlag) switch {
+				Move.PromoteToQueenFlag => pieceMoved.Color|Piece.Queen,
+				Move.PromoteToKnightFlag => pieceMoved.Color|Piece.Knight,
+				Move.PromoteToRookFlag => pieceMoved.Color|Piece.Rook,
+				Move.PromoteToBishopFlag => pieceMoved.Color|Piece.Bishop,
+				_ => throw new Exception("Something went wrong")
+			};
+			// board[movedTo] = promotedTo;
 
 			BitboardHelper.ClearSquare(ref GetPieceBBoard(pieceMoved), movedTo);
 
@@ -180,20 +162,20 @@ public class Board {
 			if (pieceMoved.Color == Piece.White) {
 				switch (movedTo) {
 					case BoardHelper.c1:
-						MovePiece(Piece.Rook, BoardHelper.a1, BoardHelper.d1);
+						MovePiece(Piece.WhiteRook, BoardHelper.a1, BoardHelper.d1);
 						break;
 					case BoardHelper.g1:
-						MovePiece(Piece.Rook, BoardHelper.h1, BoardHelper.f1);
+						MovePiece(Piece.WhiteRook, BoardHelper.h1, BoardHelper.f1);
 						break;
 				}
 			}
 			if (pieceMoved.Color == Piece.Black) {
 				switch (movedTo) {
 					case BoardHelper.c8:
-						MovePiece(Piece.Rook, BoardHelper.a8, BoardHelper.d8);
+						MovePiece(Piece.BlackRook, BoardHelper.a8, BoardHelper.d8);
 						break;
 					case BoardHelper.g8:
-						MovePiece(Piece.Rook, BoardHelper.h8, BoardHelper.f8);
+						MovePiece(Piece.BlackRook, BoardHelper.h8, BoardHelper.f8);
 						break;
 				}
 			}
@@ -229,6 +211,20 @@ public class Board {
 				}
 			}
 		}
+		if (pieceTaken.Type == Piece.Rook) {
+			if (movedTo == BoardHelper.a1) {
+				castlesToKeep -= Fen.whiteQueenCastle;
+			}
+			if (movedTo == BoardHelper.h1) {
+				castlesToKeep -= Fen.whiteKingCastle;
+			}
+			if (movedTo == BoardHelper.a8) {
+				castlesToKeep -= Fen.blackQueenCastle;
+			}
+			if (movedTo == BoardHelper.h8) {
+				castlesToKeep -= Fen.blackKingCastle;
+			}
+		}
 		
 		whiteToMove = !whiteToMove; // ForwardDir / anything related to the active color will be the same up until this point
 
@@ -258,7 +254,7 @@ public class Board {
 		// temp.moveMade = move;
 		// currentStateNode.Value = temp;
 
-		// temp = new Fen(temp.ToFEN());
+		// temp = new Fen(temp.ToString());
 
 		// temp.castlePrivsBin &= castlesToRemove;
 		// temp.enpassantSquare = (enPassantIndex==-1) ? "-" : BoardHelper.IndexToSquareName(enPassantIndex);
@@ -298,8 +294,8 @@ public class Board {
 		BitboardHelper.ToggleSquares(ref GetPieceBBoard(piece), movedFrom, movedTo);
 
 
-		board[movedTo] = board[movedFrom];
-		board[movedFrom] = Piece.None;
+		// board[movedTo] = board[movedFrom];
+		// board[movedFrom] = Piece.None;
 	}
 	public void UndoMove() { // Undoes move attached to previous board state, requires prelimiary check that current state is not beginning of history
 		if (currentStateNode.Previous == null) { throw new Exception("Tried to get previous gamestate when undoing move but previous state is null"); }
@@ -314,54 +310,61 @@ public class Board {
 		Piece pieceMoved = currentState.pieceMoved;
 		Piece pieceTaken = currentState.pieceTaken;
 
-		currentState.moveMade = move;
-		currentState.pieceTaken = pieceTaken;
-		currentState.pieceMoved = pieceMoved;
 		MovePiece(pieceMoved, movedFrom, movedTo);
 
-		if (currentState.pieceTaken != Piece.None && moveFlag != Move.EnPassantCaptureFlag) {
-			BitboardHelper.SetSquare(ref GetPieceBBoard(pieceTaken), movedFrom);
 
-			board[movedFrom] = pieceTaken;
-		}
 		
+		// Console.WriteLine(Convert.ToString((long)GetPieceBBoard(pieceMoved), 2));
+		if (move.IsPromotion) {
+			// Console.WriteLine("Here 3");
+			Piece promotedTo = (moveFlag) switch {
+				Move.PromoteToQueenFlag => pieceMoved.Color|Piece.Queen,
+				Move.PromoteToKnightFlag => pieceMoved.Color|Piece.Knight,
+				Move.PromoteToRookFlag => pieceMoved.Color|Piece.Rook,
+				Move.PromoteToBishopFlag => pieceMoved.Color|Piece.Bishop,
+				_ => throw new Exception("Something went wrong")
+			};
+			BitboardHelper.ClearSquare(ref GetPieceBBoard(promotedTo), movedFrom);
+			BitboardHelper.ClearSquare(ref GetPieceBBoard(pieceMoved), movedFrom); // Needed because pawn isn't on square when move is undone
+			// board[movedTo] = currentState.pieceMoved;
+		}
+		if (currentState.pieceTaken != Piece.None && moveFlag != Move.EnPassantCaptureFlag) {
+			// Console.WriteLine("Here 1");
+
+			BitboardHelper.SetSquare(ref GetPieceBBoard(pieceTaken), movedFrom);
+			// board[movedFrom] = pieceTaken;
+			// Console.WriteLine($"{pieceTaken}, {board[movedFrom]}");
+		}
 		// If the move was an enpassant capture
 		if (moveFlag == Move.EnPassantCaptureFlag) {
+			// Console.WriteLine("Here 2");
 			int captureIndex = movedFrom - forwardDir(pieceMoved.Color);
 			BitboardHelper.SetSquare(ref GetPieceBBoard(pieceTaken), captureIndex);
 
-			board[captureIndex] = currentState.pieceTaken;
+			// board[captureIndex] = currentState.pieceTaken;
 		}
 
-		if (move.IsPromotion) {
-			Piece promotedTo = pieceMoved.Color|Piece.Queen;
-			BitboardHelper.ClearSquare(ref GetPieceBBoard(promotedTo), movedFrom);
-
-
-			BitboardHelper.SetSquare(ref GetPieceBBoard(pieceMoved), movedTo);
-			board[movedFrom] = 0;
-			board[movedTo] = currentState.pieceMoved;
-		}
 
 		// If move is a castle, move rook
 		if (moveFlag == Move.CastleFlag) {
+			// Console.WriteLine("Here 4");
 			if (pieceMoved.Color == Piece.White) {
 				switch (movedFrom) {
 					case BoardHelper.c1:
-						MovePiece(Piece.Rook, BoardHelper.d1, BoardHelper.a1);
+						MovePiece(Piece.WhiteRook, BoardHelper.d1, BoardHelper.a1);
 						break;
 					case BoardHelper.g1:
-						MovePiece(Piece.Rook, BoardHelper.f1, BoardHelper.h1);
+						MovePiece(Piece.WhiteRook, BoardHelper.f1, BoardHelper.h1);
 						break;
 				}
 			}
 			if (pieceMoved.Color == Piece.Black) {
 				switch (movedFrom) {
 					case BoardHelper.c8:
-						MovePiece(Piece.Rook, BoardHelper.d8, BoardHelper.a8);
+						MovePiece(Piece.BlackRook, BoardHelper.d8, BoardHelper.a8);
 						break;
 					case BoardHelper.g8:
-						MovePiece(Piece.Rook, BoardHelper.f8, BoardHelper.h8);
+						MovePiece(Piece.BlackRook, BoardHelper.f8, BoardHelper.h8);
 						break;
 				}
 			}
@@ -452,6 +455,19 @@ public class Board {
 
 	public Piece GetSquare(int index) {
 		if (! (0 <= index && index < 64) ) { throw new Exception("Board index out of bounds"); }
-		return board[index];
+		Piece pieceToDraw = Piece.None;
+		if (BitboardHelper.IsSquareSet(pieces[Piece.Pawn-1, 0], index)) { pieceToDraw = Piece.WhitePawn; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.Knight-1, 0], index)) { pieceToDraw = Piece.WhiteKnight; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.Bishop-1, 0], index)) { pieceToDraw = Piece.WhiteBishop; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.Rook-1, 0], index)) { pieceToDraw = Piece.WhiteRook; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.Queen-1, 0], index)) { pieceToDraw = Piece.WhiteQueen; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.King-1, 0], index)) { pieceToDraw = Piece.WhiteKing; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.Pawn-1, 1], index)) { pieceToDraw = Piece.BlackPawn; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.Knight-1, 1], index)) { pieceToDraw = Piece.BlackKnight; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.Bishop-1, 1], index)) { pieceToDraw = Piece.BlackBishop; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.Rook-1, 1], index)) { pieceToDraw = Piece.BlackRook; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.Queen-1, 1], index)) { pieceToDraw = Piece.BlackQueen; } else
+		if (BitboardHelper.IsSquareSet(pieces[Piece.King-1, 1], index)) { pieceToDraw = Piece.BlackKing; }
+		return pieceToDraw;
 	}
 }

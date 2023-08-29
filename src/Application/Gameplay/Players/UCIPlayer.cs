@@ -6,6 +6,7 @@ namespace ChessBot.Application;
 
 public class UCIPlayer : ComputerPlayer {
 	public UCIEngine engine;
+	string startPos = Fen.startpos;
 	
 
 	public UCIPlayer(
@@ -18,7 +19,8 @@ public class UCIPlayer : ComputerPlayer {
 
 	public override void Start() {
 		engine.Start();
-		engine.SetPosition($"position fen {BoardHelper.BoardToFen(model.board)}");
+		startPos = new Fen(model.board).ToString();
+		engine.SetPosition($"position fen {startPos}");
 		HasStarted = true;
 		ConsoleHelper.WriteLine($"Starting Thread {color}", threadColor);
 		while (true) {
@@ -27,7 +29,7 @@ public class UCIPlayer : ComputerPlayer {
 			if (OnMoveChosen == null) {
 				continue; }
 			if (ShouldManualUpdate) {
-				engine.SetPosition($"position fen {BoardHelper.BoardToFen(model.board)}");
+				engine.SetPosition($"position fen {new Fen(model.board)} moves {model.board.GetMoveHistory}");
 				ShouldManualUpdate = false;
 			}
 
@@ -48,7 +50,7 @@ public class UCIPlayer : ComputerPlayer {
 
 
 	public override Move Think() { // position should already be set
-		string fen = BoardHelper.BoardToFen(model.board);
+		Fen fen = new Fen(model.board);
 		engine.SetPosition($"position fen {fen}");
 		string response = engine.GetBestMoveTime(1500);
 		// Console.WriteLine(response);
@@ -57,6 +59,7 @@ public class UCIPlayer : ComputerPlayer {
 		int targetSquare = BoardHelper.NameToSquareIndex(response.Substring(2, 2));
 		foreach (Move testedMove in MoveGenerator.GetMoves(model.board, startSquare)) {
 			if (testedMove.TargetSquare == targetSquare) {
+				ConsoleHelper.WriteLine($"Move chosen: {testedMove}", threadColor);
 				return testedMove;
 			}
 		}

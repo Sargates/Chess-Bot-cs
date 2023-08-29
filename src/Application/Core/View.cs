@@ -80,7 +80,7 @@ public class View : IView {
 			}
 			if (player.IsSearching) {
 				int period = 1; // in seconds
-				float bias = 0.2f; // percentage of period where output => 0
+				float bias = 0.2f; // percentage of period where output yields 0
 				// Neat little math function to set a bias of how long a value will be 0, bias of 0.2 means it will be 0 for 20% of the perios
 				int output = (int) Math.Floor(1+(1/period)*((fTimeElapsed-TimeOfLastMove)%period) - bias); // No idea why Math.floor returns a double
 				// With a bias of 0.2, the displayed color will be the first color, 20% of the time

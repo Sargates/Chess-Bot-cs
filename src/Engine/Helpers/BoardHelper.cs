@@ -50,7 +50,7 @@ public class BoardHelper {
 
 	}
 	public static void UpdateFromState(Board board, Fen state) {
-		board.board = new Piece[64];
+		// board.board = new Piece[64];
 		// Populate board with pieces according to FEN string
 		Piece file = 0; Piece rank = 7;
 		foreach (char c in state.fenBoard) {
@@ -65,7 +65,7 @@ public class BoardHelper {
 
 			Piece piece = BoardHelper.FenCharToPieceEnum(c);
 			
-			board.board[index] = piece;
+			// board.board[index] = piece;
 			// BitboardHelper.SetSquare(ref board.piecesByType[piece.Type-1], index);
 			// BitboardHelper.SetSquare(ref board.piecesByColor[piece.ColorAsBinary], index);
 			BitboardHelper.SetSquare(ref board.GetPieceBBoard(piece), index);
@@ -97,13 +97,14 @@ public class BoardHelper {
 
 		return board;
 	}
-	public static string BoardToFen(Board board) {
+	public static string BoardToFenBoard(Board board) {
 		string o = "";
 		int gap = 0;
 		for (int i=0; i<8;i++) {
 			for (int j=0; j<8; j++) {
 				int index = 8*(7-i)+j;
-				int pieceEnum = board.GetSquare(index);
+				int pieceEnum=board.GetSquare(index);
+
 				if (pieceEnum == Piece.None) {
 					gap += 1;
 					continue;
@@ -121,17 +122,28 @@ public class BoardHelper {
 		return o;
 	}
 	public static Board GetBoardCopy(Board board) {
-		return new Board(new Fen(board).ToFEN());
+		return new Board(new Fen(board).ToString());
 	}
 	public static Coord GetAbsoluteDirection(int index) {
 		return new Coord(index+26)-new Coord(26); // get relative delta from index that isnt on an edge, 26 is arbitrary
 	}
-	public static void PrintBoard(Piece[] board) {
+	public static void PrintBoard(Board board) {
+		char[] b = new char[64];
+		Array.Fill(b, ' ');
+		foreach (Piece piece in Piece.pieceArray) {
+			ulong bitboard = board.GetPieceBBoard(piece);
+			for (int i=0;i<64;i++) {
+				if (1 == (1 & (bitboard >> i))) {
+					b[i] = BoardHelper.PieceEnumToFenChar(piece);
+				}
+			}
+		}
+
 		Console.WriteLine(" +---+---+---+---+---+---+---+---+");
 		for(int i=7; i>-1; i--) {
 			string line = "|";
-			for(int j=7; j>-1; j--) {
-				line += $" {BoardHelper.PieceEnumToFenChar(board[8*i+j])} |";
+			for(int j=0; j<8; j++) {
+				line += $" {b[8*i+j]} |";
 			}
 			Console.WriteLine($" {line} {i+1}");
 			Console.WriteLine(" +---+---+---+---+---+---+---+---+");

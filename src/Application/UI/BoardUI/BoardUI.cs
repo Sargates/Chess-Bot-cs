@@ -16,7 +16,8 @@ public enum MoveSounds :int {
 	GameEnd=7,
 }
 public class BoardUI {
-	public Piece[] boardToRender = new Piece[64];
+	// public Piece[] boardToRender = new Piece[64];
+	public ulong[,] pieceBitboards = new ulong[6,2];
 
 	public static int squareSize = 100;
 	public static Sound[] sounds = new Sound[0];
@@ -36,6 +37,7 @@ public class BoardUI {
 	public bool[] highlightedSquares = new bool[64];
 	
 	public List<PieceAnimation> activeAnimations = new List<PieceAnimation>();
+
 
 
 	public BoardUI() {
@@ -114,7 +116,7 @@ public class BoardUI {
 			if (anim.ShouldPlaySound) { Raylib.PlaySound(sounds[anim.soundEnum]); }
 		}
 
-		Vector2 cachedRenderPos = Vector2.Zero;
+		Piece draggedPiece = 0;
 		for (int i=0; i<64;i++) {
 			int x = i & 0b111; int y = 7-(i>>3);
 
@@ -124,19 +126,33 @@ public class BoardUI {
 			if (IsFlipped) {
 				renderPosition *= -1;
 			}
+			//	this is the control
+			//	vvv     vvv single out the 1st bit
+			// Console.WriteLine(i);
+			if (BitboardHelper.IsSquareSet(animatedSquares, i)) { continue; }
+
+			Piece pieceToDraw = Piece.None;
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.Pawn-1, 0], i)) { pieceToDraw = Piece.WhitePawn; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.Knight-1, 0], i)) { pieceToDraw = Piece.WhiteKnight; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.Bishop-1, 0], i)) { pieceToDraw = Piece.WhiteBishop; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.Rook-1, 0], i)) { pieceToDraw = Piece.WhiteRook; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.Queen-1, 0], i)) { pieceToDraw = Piece.WhiteQueen; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.King-1, 0], i)) { pieceToDraw = Piece.WhiteKing; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.Pawn-1, 1], i)) { pieceToDraw = Piece.BlackPawn; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.Knight-1, 1], i)) { pieceToDraw = Piece.BlackKnight; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.Bishop-1, 1], i)) { pieceToDraw = Piece.BlackBishop; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.Rook-1, 1], i)) { pieceToDraw = Piece.BlackRook; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.Queen-1, 1], i)) { pieceToDraw = Piece.BlackQueen; } else
+			if (BitboardHelper.IsSquareSet(pieceBitboards[Piece.King-1, 1], i)) { pieceToDraw = Piece.BlackKing; }
 
 			if (SelectedIndex == i && IsDraggingPiece) {
-				cachedRenderPos = renderPosition;
+				draggedPiece = pieceToDraw;
 				continue;
 			}
+			
+			
 
-			// this is the control					if there is no animation render anyway
-			//  vvv      vvv single out the 1st bit   					  vvv	
-			if (1ul == (1ul & (animatedSquares>>i))) {
-				continue;
-			}
-
-			DrawPiece(boardToRender[i], renderPosition);
+			DrawPiece(pieceToDraw, renderPosition);
 		}
 
 		for (int i=activeAnimations.Count-1;i>-1; i--) {
@@ -148,9 +164,8 @@ public class BoardUI {
 
 		if (SelectedIndex != -1 && IsDraggingPiece) {
 			Vector2 mousePos = Raylib.GetMousePosition() - View.screenSize/2; // Mouse position in camera space converted to worldspace (centered at the origin)
-			Vector2 renderedPosition = cachedRenderPos; // center of selected square
 
-			DrawPiece(boardToRender[SelectedIndex], Vector2.Clamp(mousePos, -4*squareSizeV, 4*squareSizeV));
+			DrawPiece(draggedPiece, Vector2.Clamp(mousePos, -4*squareSizeV, 4*squareSizeV));
 
 		}
 	}

@@ -52,7 +52,7 @@ public struct Fen {
 		}
 	}
 	public Fen(Board board) {
-		fenBoard = BoardHelper.BoardToFen(board);
+		fenBoard = BoardHelper.BoardToFenBoard(board);
 		fenColor = board.ActiveColor==Piece.White ? 'w' : 'b';
 
 		castleRights = board.currentState.castleRights;
@@ -86,16 +86,11 @@ public struct Fen {
 		};
 	}
 
-
-	public string ToFEN() {
+	public override string ToString() {
 		string colorToMove = this.fenColor.ToString();
 		string halfMoveCount = $"{this.halfMoveCount}";
 		string fullMoveCount = $"{this.fullMoveCount}";
 
 		return $"{fenBoard} {colorToMove} {castleRightsString} {enpassantSquare} {halfMoveCount} {fullMoveCount}";
-	}
-
-	public override string ToString() {
-		return ToFEN();
 	}
 }
