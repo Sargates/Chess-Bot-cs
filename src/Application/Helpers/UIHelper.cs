@@ -69,28 +69,6 @@ public static class UIHelper {
 		}
 	}
 
-	// public static bool Button(string text, Vector2 centre, Vector2 size)
-	// {
-	//     Rectangle rec = new(centre.X - size.X / 2, centre.Y - size.Y / 2, size.X, size.Y);
-
-	//     Color normalCol = new(40, 40, 40, 255);
-	//     Color hoverCol = new(3, 173, 252, 255);
-	//     Color pressCol = new(2, 119, 173, 255);
-
-	//     bool mouseOver = MouseInRect(rec);
-	//     bool pressed = mouseOver && Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT);
-	//     bool pressedThisFrame = pressed && Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT);
-	//     Color col = mouseOver ? (pressed ? pressCol : hoverCol) : normalCol;
-
-	//     Raylib.DrawRectangleRec(rec, col);
-	//     Color textCol = mouseOver ? Color.WHITE : new Color(180, 180, 180, 255);
-	//     int fontSize = ScaleInt(32);
-
-	//     DrawText(text, centre, fontSize, 1, textCol, AlignH.Centre);
-
-	//     return pressedThisFrame;
-	// }
-
 	static bool MouseInRect(Rectangle rec) {
 		Vector2 mousePos = Raylib.GetMousePosition();
 		return mousePos.X >= rec.x && mousePos.Y >= rec.y && mousePos.X <= rec.x + rec.width && mousePos.Y <= rec.y + rec.height;
@@ -110,10 +88,18 @@ public static class UIHelper {
 		return new Vector2(x, y);
 	}
 
+	public static void DrawRectangleCentered(Vector2 position, Vector2 size, Color color) {
+		Raylib.DrawRectangleV(position-size/2, size, color);
+	}
+
+	public static void DrawRectangleAsBorder(Rectangle rect, Color color, int w) {
+		Vector2 width = new Vector2(w);
+		Raylib.DrawRectangleV(new Vector2(rect.x, rect.y)-width, new Vector2(rect.width, rect.height)+2*width, color);
+	}
+
 	public static void Release() {
 		Raylib.UnloadFont(font);
-		if (SDF_Enabled)
-		{
+		if (SDF_Enabled) {
 			Raylib.UnloadFont(fontSdf);
 			Raylib.UnloadShader(shader);
 		}

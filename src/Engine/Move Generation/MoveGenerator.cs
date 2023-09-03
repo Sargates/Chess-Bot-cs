@@ -25,9 +25,9 @@ public class MoveGenerator {
 			Piece pawnOneUp = board.GetSquare(newPos.SquareIndex);
 			if (pawnOneUp == Piece.None) {
 				if (BoardHelper.RankIndex(index) == (piece.Color == Piece.White ? 6 : 1)) {
+					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToKnightFlag));
 					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToQueenFlag));
 					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToBishopFlag));
-					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToKnightFlag));
 					moves.Add(new Move(index, newPos.SquareIndex, Move.PromoteToRookFlag));
 				} else { moves.Add(new Move(index, newPos.SquareIndex)); }
 				
@@ -316,7 +316,7 @@ public class MoveGenerator {
 
 		return moves;
 	}
-	public static Move[] GetMoves(Board board, int index) { // ! check edgecases
+	public static Move[] GetMoves(Board board, int index) {
 
 
 		Piece piece = board.GetSquare(index);
@@ -332,8 +332,8 @@ public class MoveGenerator {
 		}
 		// Console.WriteLine(kingPos);
 		currentChecks[piece.ColorAsBinary] = checkData.Item3;
-		
-		
+
+
 
 		List<Move> moves = piece.Type switch {
 			Piece.Pawn => GetPawnMoves(board, index),
@@ -367,7 +367,7 @@ public class MoveGenerator {
 			bool NotHit = true;
 			int checkingPosition = currentChecks[piece.ColorAsBinary][0].checkerPos;
 			int dirFromKing = currentChecks[piece.ColorAsBinary][0].dirFromKing;
-			if (move.Flag == Move.EnPassantCaptureFlag) { // Enpassant captures on a different square than was moved to, need to handle that differently
+			if (move.Flag == Move.EnPassantCaptureFlag) { //* Enpassant captures on a different square than was moved to, need to handle that differently
 				if (move.TargetSquare - board.forwardDir(piece.Color) == checkingPosition) {
 					continue;
 				}
@@ -386,7 +386,7 @@ public class MoveGenerator {
 	}
 	public static Move[] GetAllMoves(Board board, int color, bool sort=false) {
 		List<Move> totalMoves = new List<Move>();
-		
+
 
 		foreach (Piece piece in (color == Piece.White ? Piece.pieceArray[0..6] : Piece.pieceArray[6..12])) {
 			foreach (int index in board.GetPiecePositions(piece)) {

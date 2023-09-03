@@ -1,5 +1,6 @@
 using Raylib_cs;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using ChessBot.Engine;
 using ChessBot.Helpers;
@@ -49,8 +50,8 @@ public class Model {
 		} else {
 			throw new Exception("This program can only run on Windows and Linux");
 		}
-		// StartNewGame();
-		StartNewGame("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+		StartNewGame();
+		// StartNewGame("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
 		Debug.Assert(board != null);
 		AddButtons();
 
@@ -58,54 +59,97 @@ public class Model {
 	}
 
 	public void AddButtons() {
-		view.AddToPipeline(new Button(new Rectangle(40, 420, 210, 50), "Freeplay").SetLeftCallback(delegate {
-			StartNewGame();
-		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 480, 210, 50), "Human vs. Gatesfish").SetLeftCallback(delegate {
-			StartNewGame(type:Gametype.HvC);
-		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 540, 210, 50), "Human vs. Stockfish").SetLeftCallback(delegate {
-			StartNewGame(type:Gametype.HvU);
-		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 600, 210, 50), "Stockfish vs. Stockfish").SetLeftCallback(delegate {
-			StartNewGame(type:Gametype.UvU);
-		}));
-		view.AddToPipeline(new Button(new Rectangle(40, 660, 210, 50), "Reset settings").SetLeftCallback(delegate {
-			ApplicationSettings.ResetDefaultSettings();
-		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 240, 210, 50), "Test").SetLeftCallback(delegate {
-			string fen = Perft.testedFens.ElementAt(2).Key;
-			SetBoardPosition(fen);
-			WaveFunctionCollapse.CalculateMoveDiscrepancy(fen, 6);
-		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 300, 210, 50), "Get discrepancy").SetLeftCallback(delegate {
-			// Perft.TestSpecific(6);
-			foreach (string fen in Perft.testedFens.Keys) {
-				int depth = int.Parse(Perft.testedFens[fen].Last().Key);
-				ConsoleHelper.WriteLine($"Testing Fen: {fen}", ConsoleColor.Magenta);
-				WaveFunctionCollapse.CalculateMoveDiscrepancy(fen, depth);
-			}
-		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 360, 210, 50), "Perft Test").SetLeftCallback(delegate {
-			Perft.Test();
-		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 420, 210, 50), "Left/Right to Inc/Dec\nPerft depth").SetLeftCallback(delegate {
-			Perft.maxDepth++;
-		}).SetRightCallback(delegate {
-			Perft.maxDepth--;
-		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 480, 210, 50), "Undo Test (Fast suite)").SetLeftCallback(delegate {
-			UnmakeMoveHelper.Fast();
-		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 540, 210, 50), "Undo Test (Full suite)").SetLeftCallback(delegate {
-			UnmakeMoveHelper.FullSuite();
-		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 600, 210, 50), "Print FEN").SetLeftCallback(delegate {
-			Console.WriteLine(new Fen(board));
-		}));
-		view.AddToPipeline(new Button(new Rectangle(View.screenSize.X-250, 660, 210, 50), "Print bitboards").SetLeftCallback(delegate {
-			BoardHelper.PrintBoard(board);
-		}));
+		view.AddToPipeline(new StackRenderer(new Vector2(40, 420), 
+			new Button(new Rectangle(0, 0, 210, 50), "Freeplay").SetLeftCallback(delegate {
+				StartNewGame();
+			}),
+			new Button(new Rectangle(0, 0, 210, 50), "Human vs. Gatesfish").SetLeftCallback(delegate {
+				StartNewGame(type:Gametype.HvC);
+			}),
+			new Button(new Rectangle(0, 0, 210, 50), "Human vs. Stockfish").SetLeftCallback(delegate {
+				StartNewGame(type:Gametype.HvU);
+			}),
+			new Button(new Rectangle(0, 0, 210, 50), "Stockfish vs. Stockfish").SetLeftCallback(delegate {
+				StartNewGame(type:Gametype.UvU);
+			}),
+			new Button(new Rectangle(0, 0, 210, 50), "Reset settings").SetLeftCallback(delegate {
+				ApplicationSettings.ResetDefaultSettings();
+			}))
+		);
+
+		view.AddToPipeline(new StackRenderer(new Vector2(View.screenSize.X-250, 240), 
+			new Button(new Rectangle(0, 0, 210, 50), "Test").SetLeftCallback(delegate {
+				var kvPair = Perft.testedFens.ElementAt(new Random().Next(Perft.testedFens.Count));
+				string fen = kvPair.Key;
+				SetBoardPosition(fen);
+				WaveFunctionCollapse.CalculateMoveDiscrepancy(new Fen(board).ToString(), int.Parse(Perft.testedFens[fen].Last().Key));
+			}),
+			new Button(new Rectangle(0, 0, 210, 50), "Get discrepancy").SetLeftCallback(delegate {
+				// Perft.TestSpecific(6);
+				foreach (string fen in Perft.testedFens.Keys) {
+					int depth = int.Parse(Perft.testedFens[fen].Last().Key);
+					ConsoleHelper.WriteLine($"Testing Fen: {fen}", ConsoleColor.Magenta);
+					WaveFunctionCollapse.CalculateMoveDiscrepancy(fen, depth);
+				}
+			}),
+			// new Button(new Rectangle(0, 0, 210, 50), "Print RookMoves (d4)").SetLeftCallback(delegate {
+				
+			// }),
+			new Button(new Rectangle(0, 0, 210, 50), "Perft Test (Single)").SetLeftCallback(delegate {
+				var kvPair = Perft.testedFens.ElementAt(3);
+				new Perft(kvPair.Key, int.Parse(kvPair.Value.Last().Key));
+			}),
+			new Button(new Rectangle(0, 0, 210, 50), "Perft Test (Full)").SetLeftCallback(delegate {
+				foreach (var kvPair in Perft.testedFens) {
+					new Perft(kvPair.Key, int.Parse(kvPair.Value.Last().Key));
+				}
+			}),
+			new Button(new Rectangle(0, 0, 210, 50), "Undo Test (Fast suite)").SetLeftCallback(delegate {
+				UnmakeMoveHelper.Fast();
+			}),
+			new Button(new Rectangle(0, 0, 210, 50), "Undo Test (Full suite)").SetLeftCallback(delegate {
+				UnmakeMoveHelper.FullSuite();
+			}),
+			new Button(new Rectangle(0, 0, 210, 50), "Print FEN").SetLeftCallback(delegate {
+				Console.WriteLine(new Fen(board));
+			}),
+			new Button(new Rectangle(0, 0, 210, 50), "Print bitboards").SetLeftCallback(delegate {
+				BoardHelper.PrintBoard(board);
+			}))
+		);
+
+		// var temp = new StackRenderer(new Vector2(View.screenSize.X-250, 200), 
+		// 	new Button(new Rectangle(0, 0, 210, 50), "Test").SetLeftCallback(delegate {
+		// 		string fen = Perft.testedFens.ElementAt(new Random().Next(Perft.testedFens.Count)).Key;
+		// 		SetBoardPosition(fen);
+		// 		view.Draw();
+		// 		WaveFunctionCollapse.CalculateMoveDiscrepancy(new Fen(board).ToString(), 6);
+		// 	}),
+		// 	new Button(new Rectangle(0, 0, 210, 50), "Get discrepancy").SetLeftCallback(delegate {
+		// 		// Perft.TestSpecific(6);
+		// 		foreach (string fen in Perft.testedFens.Keys) {
+		// 			int depth = int.Parse(Perft.testedFens[fen].Last().Key);
+		// 			ConsoleHelper.WriteLine($"Testing Fen: {fen}", ConsoleColor.Magenta);
+		// 			WaveFunctionCollapse.CalculateMoveDiscrepancy(fen, depth);
+		// 		}
+		// 	})
+		// );
+
+		// temp.AddElements(
+		// 	new Button(new Rectangle(0, 0, 210, 50), "Pop last button").SetLeftCallback(delegate {
+		// 		temp.RemoveElement(^1);
+		// 	}),
+		// 	new Button(new Rectangle(0, 0, 210, 50), "Add a Button").SetLeftCallback(delegate {
+		// 		temp.AddElement(
+		// 			new Button(new Rectangle(0, 0, 210, 50), "Added Button").SetLeftCallback(delegate {
+						
+		// 			})
+		// 		);
+		// 	})
+		// );
+
+		// view.AddToPipeline(temp);
+
 
 	}
 

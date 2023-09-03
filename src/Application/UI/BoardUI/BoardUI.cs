@@ -63,8 +63,7 @@ public class BoardUI {
 
 
 	public void DrawBoardBorder() {
-		int w = 12;
-		DrawRectangleCentered(new Vector2(), new Vector2(8*squareSize+2*w), BoardTheme.borderCol);
+		UIHelper.DrawRectangleAsBorder(new Rectangle(-4*squareSize, -4*squareSize, 8*squareSize, 8*squareSize), BoardTheme.borderCol, 12);
 	}
 
 	public void DrawBoardSquares() {
@@ -72,7 +71,7 @@ public class BoardUI {
 			bool IsLight = IsLightSquare(i);			
 			Vector2 squarePos = new Vector2(i & 0b111, 7-(i>>3));
 			Vector2 temp = squareSize * (squarePos - new Vector2(3.5f));
-			DrawRectangleCentered(temp, squareSizeV, IsLight ? BoardTheme.lightCol : BoardTheme.darkCol);
+			UIHelper.DrawRectangleCentered(temp, squareSizeV, IsLight ? BoardTheme.lightCol : BoardTheme.darkCol);
 			Color textColor = (!IsLight) ? BoardTheme.lightCol : BoardTheme.darkCol;
 			if (squarePos.Y == 7) { // If square is on the bottom edge, draw the file
 				UIHelper.DrawText($"{BoardHelper.fileNames[(! IsFlipped ? i&0b111 : 7-i&0b111)]}", temp+(squareSizeV/2)-(3*squareSizeV/128), squareSize/4, 0, textColor, UIHelper.AlignH.Right, UIHelper.AlignV.Bottom);
@@ -81,7 +80,7 @@ public class BoardUI {
 				UIHelper.DrawText($"{BoardHelper.rankNames[(! IsFlipped ? i>>3 : 7-(i>>3))]}", temp-(squareSizeV/2)+(3*squareSizeV/128), squareSize/4, 0, textColor, UIHelper.AlignH.Left, UIHelper.AlignV.Top);
 			}
 			if (highlightedSquares[IsFlipped ? 63-i : i]) {
-				DrawRectangleCentered(temp, squareSizeV, BoardTheme.selectedHighlight);
+				UIHelper.DrawRectangleCentered(temp, squareSizeV, BoardTheme.selectedHighlight);
 			}
 		}
 		foreach (Move move in MovesForSelected) {
@@ -91,7 +90,7 @@ public class BoardUI {
 				temp *= -1;
 			}
 			// squareColors[move.TargetSquare] = IsLightSquare(move.TargetSquare) ? BoardTheme.legalLight : BoardTheme.legalDark;
-			DrawRectangleCentered(temp, squareSizeV, BoardTheme.legalHighlight);
+			UIHelper.DrawRectangleCentered(temp, squareSizeV, BoardTheme.legalHighlight);
 		}
 
 		if (SelectedIndex != -1) {
@@ -101,12 +100,8 @@ public class BoardUI {
 				temp *= -1;
 			}
 			// squareColors[selectedIndex] = IsLightSquare(selectedIndex) ? BoardTheme.selectedLight : BoardTheme.selectedLight; // TODO fix redundant line
-			DrawRectangleCentered(temp, squareSizeV, BoardTheme.movedFromHighlight);
+			UIHelper.DrawRectangleCentered(temp, squareSizeV, BoardTheme.movedFromHighlight);
 		}
-	}
-
-	public void DrawRectangleCentered(Vector2 position, Vector2 size, Color color) {
-		Raylib.DrawRectangleV(position-size/2, size, color);
 	}
 
 	public void DrawPiecesOnBoard() {

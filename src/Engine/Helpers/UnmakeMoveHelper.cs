@@ -17,15 +17,14 @@ public static class UnmakeMoveHelper {
 	public static void Test(string[] allFens) {
 		bool temp = true;
 		foreach (string fenString in allFens) {
-			Console.WriteLine($"Testing: {fenString}");
 			List<Move> failedMoves = new List<Move>();
 			Board board = new Board(fenString);
 			Move[] allMoves = MoveGenerator.GetAllMoves(board, board.ActiveColor);
 			foreach (Move move in allMoves) {
-				ulong[,] oldBoard = BitboardHelper.GetBitboardCopy(board.pieces);
+				ulong[,] oldBoard = BitboardHelper.Copy(board.pieces);
 				board.MakeMove(move);
 				board.UndoMove();
-				ulong[,] newBoard = BitboardHelper.GetBitboardCopy(board.pieces);
+				ulong[,] newBoard = BitboardHelper.Copy(board.pieces);
 				if (! BitboardHelper.SequenceEquals(oldBoard, newBoard)) {
 					if (temp) {
 						temp = false;

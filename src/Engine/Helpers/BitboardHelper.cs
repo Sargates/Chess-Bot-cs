@@ -38,7 +38,7 @@ public static class BitboardHelper {
 	public static bool ContainsSquare(ulong bitboard, int square) {
 		return ((bitboard >> square) & 1) != 0;
 	}
-	public static ulong[,] GetBitboardCopy(ulong[,] array) {
+	public static ulong[,] Copy(ulong[,] array) {
 		int width = array.GetLength(0);
 		int height = array.GetLength(1);
 		ulong[,] copy = new ulong[width, height];
@@ -50,6 +50,16 @@ public static class BitboardHelper {
 		}
 
 		return copy;
+	}
+	public static void PrintBitboard(ulong bitboard) {
+		for (int i=7;i>-1;i--) {
+			for (int j=0; j<8; j++) {
+				int index = 8*i+j;
+				string bit = Convert.ToString((long)((bitboard >> index) & 1ul), 2);
+				Console.Write(bit);
+			}
+			Console.WriteLine();
+		}
 	}
 	// REF: https://stackoverflow.com/a/66696857
 	public static bool SequenceEquals(this ulong[,] a, ulong[,] b) => a.Rank == b.Rank

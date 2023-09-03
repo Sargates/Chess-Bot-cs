@@ -5,12 +5,14 @@ using Newtonsoft.Json;
 
 namespace ChessBot.Helpers;
 
-public static class Perft {
-	public static int maxDepth = 3;
-	public static bool hasFailedBefore;
-
+public class Perft {
 	public static Dictionary<string, Dictionary<string, int>> testedFens;
-	static bool hadError = false;
+	public string fenPosition;
+	public int maxDepth = 3;
+	public Board board;
+	Dictionary<int, int> depthList;
+	Dictionary<string, int> totalNodesByMove;
+	public bool hadError = false;
 
 	static Perft() {
 		Dictionary<string, Dictionary<string, int>>? test;
@@ -22,23 +24,44 @@ public static class Perft {
 		testedFens = test;
 	}
 
-	public static void Test() { for (int i=0; i<testedFens.Count; i++) { TestSpecific(i); } }
+	public Perft(string fenPosition, int depth, bool shouldExec=true) {
+		this.fenPosition = fenPosition;
+		this.board = new Board(fenPosition);
+		PreInit(depth, shouldExec);
+		Debug.Assert(depthList != null);
+		Debug.Assert(totalNodesByMove != null);
+	}
+	public Perft(Board board, int depth, bool shouldExec=true) {
+		this.board = board;
+		this.fenPosition = new Fen(board).ToString();
+		PreInit(depth, shouldExec);
+		Debug.Assert(depthList != null);
+		Debug.Assert(totalNodesByMove != null);
+	}
+	private void PreInit(int depth, bool shouldExec) {
+		maxDepth = depth;
+		depthList = new Dictionary<int, int>();
+		totalNodesByMove = new Dictionary<string, int>();
+		depthList.Add(0, 1);
+		for (int i=1; i<=maxDepth; i++) { depthList.Add(i, 0); }
+		if (shouldExec) Test();
+	}
 
 
-	public static void TestSpecific(int index) {
-		var kvPair = testedFens.ElementAt(index);
-		var fenString = kvPair.Key;
-		var perftResults = kvPair.Value;
+
+	public void Test() {
+		if (! testedFens.ContainsKey(fenPosition)) throw new Exception($"No perft results from fen {fenPosition}");
+		var perftResults = testedFens[fenPosition];
 
 		int depth = int.Parse(perftResults.Last().Key);
 		maxDepth = depth;
 		ConsoleHelper.WriteLine(ConsoleColor.Magenta);
-		ConsoleHelper.WriteLine($"Starting test: {fenString}", ConsoleColor.Magenta);
+		ConsoleHelper.WriteLine($"Starting test: {fenPosition}", ConsoleColor.Magenta);
 
-		Board board = new Board(fenString);
+		Board board = new Board(fenPosition);
 
 		double startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds()/1000.0;
-		(Dictionary<int, int> depthList, Dictionary<string, int> totalNodesByMove) = GetDepth(board, depth);
+		(Dictionary<int, int> depthList, Dictionary<string, int> totalNodesByMove) = GetDepth();
 		double finishTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds()/1000.0;
 
 		ConsoleHelper.WriteLine(ConsoleColor.Magenta);
@@ -57,28 +80,18 @@ public static class Perft {
 			}
 		}
 		ConsoleHelper.WriteLine($"Time elapsed: {finishTime-startTime}", ConsoleColor.Magenta);
-		if (testFailed || !hasFailedBefore) {
-			hasFailedBefore = true;
-			
-			// WaveFunctionCollapse.CalculateMoveDiscrepancy(fenString, depth);
+		if (testFailed) {
+			WaveFunctionCollapse.CalculateMoveDiscrepancy(fenPosition, depth);
 		}
 	}
 
-	public static (Dictionary<int, int> depthList, Dictionary<string, int> totalNodesByMove) GetDepth(Board board, int maxDepth) {
+	public (Dictionary<int, int> depthList, Dictionary<string, int> totalNodesByMove) GetDepth() {
 
-		hadError = false;
-		Dictionary<string, int> totalNodesByMove = new Dictionary<string, int>();
-		Dictionary<int, int> depthList = new Dictionary<int, int>();
-		depthList.Add(0, 1);
-		for (int i=1; i<=maxDepth; i++) { depthList.Add(i, 0); }
-		Perft.maxDepth = maxDepth;
-
-
-		depthList[maxDepth] = CountMove(board, depthList, totalNodesByMove, maxDepth);
+		depthList[maxDepth] = CountMove(maxDepth);
 		return (depthList, totalNodesByMove);
 	}
 
-	public static int CountMove(Board board, Dictionary<int, int> depthList, Dictionary<string, int> totalNodesByMove, int depth) {
+	public int CountMove(int depth) {
 		Debug.Assert(board!=null);
 		Move[] totalMoves;
 
@@ -97,9 +110,8 @@ public static class Perft {
 				board.MakeMove(move);
 
 				depthList[maxDepth-depth+1] += 1;
-				int x = CountMove(board, depthList, totalNodesByMove, depth-1);
+				int x = CountMove(depth-1);
 				if (hadError) {
-					// BoardHelper.PrintBoard(board);
 					ConsoleHelper.WriteLine($"{maxDepth-depth+1}: {move}", ConsoleColor.Magenta);
 					break;
 				}

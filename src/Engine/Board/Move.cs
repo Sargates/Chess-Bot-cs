@@ -25,9 +25,7 @@ public readonly struct Move {
 	public Move() { moveValue = 0; }
 
 
-	public Move(ushort moveValue) {
-		this.moveValue = moveValue;
-	}
+	public Move(ushort moveValue) { this.moveValue = moveValue; }
 
 	public Move(int startSquare, int targetSquare) {
 		this.moveValue = (ushort) ((startSquare & 0x3F) | (targetSquare & 0x3F) << 6);
@@ -41,7 +39,7 @@ public readonly struct Move {
 		if (ReferenceEquals(null, obj)) return false;
 		// if (ReferenceEquals(this, obj)) return true;
 		if (obj.GetType() != this.GetType()) return false;
-			return Equals((Move) obj);
+		return Equals((Move) obj);
 	}
 
 	public override int GetHashCode() => moveValue.GetHashCode();

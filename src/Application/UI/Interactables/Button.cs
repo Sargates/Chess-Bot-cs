@@ -6,9 +6,6 @@ namespace ChessBot.Application;
 
 public class Button : ScreenObject {
 	public string text="Button";
-	public Color color=ColorHelper.HexToColor("#555555ff");
-	public Color highlightColor = ColorHelper.HexToColor("#03adfcff");
-	public Color borderColor = ColorHelper.HexToColor("#333333ff");
 	public int borderThickness;
 
 	public Button(Rectangle rect, string text) : base(rect) {
@@ -26,13 +23,13 @@ public class Button : ScreenObject {
 	}
 	public Button(Rectangle rect, string text, string color) : this(rect, text, ColorHelper.HexToColor(color)) {}
 
-	public override void Draw() {
-		Raylib.DrawRectangleV(Position, Size, this.color);
-		if (IsHoveringOver) { Raylib.DrawRectangleV(Position, Size, this.highlightColor); }
-		UIHelper.DrawText(text, Position+(Size/2), 24, 0, Color.WHITE, UIHelper.AlignH.Center, UIHelper.AlignV.Center);
+	public override void Draw(Vector2 pos) {
+		Raylib.DrawRectangleRec(_Rect, this.color);
+		if (IsHoveringOver) { Raylib.DrawRectangleRec(_Rect, this.highlightColor); }
+		UIHelper.DrawText(text, pos+(Size/2), 24, 0, Color.WHITE, UIHelper.AlignH.Center, UIHelper.AlignV.Center);
 	}
 
-	public override void Update() {
+	public override void Update(float dt) {
 		if (! IsHoveringOver) { return; }
 		if (MainController.Instance.IsLeftPressed) {
 			OnLeftPressed();

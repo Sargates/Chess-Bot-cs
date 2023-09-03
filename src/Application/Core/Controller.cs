@@ -74,11 +74,11 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 		view = new View(cam);
 		model = new Model(view);
 
-		// Must be called after model instantiation
-		// Used to initialize WFC performance testing
-		staticClassInfo = typeof(WaveFunctionCollapse); 
-		staticClassConstructorInfo = staticClassInfo.TypeInitializer;  
-		staticClassConstructorInfo?.Invoke(null,null);
+		// // Must be called after model instantiation
+		// // Used to initialize WFC performance testing
+		// staticClassInfo = typeof(WaveFunctionCollapse); 
+		// staticClassConstructorInfo = staticClassInfo.TypeInitializer;  
+		// staticClassConstructorInfo?.Invoke(null,null);
 
 
 		Player.OnMoveChosen += model.MakeMoveOnBoard;

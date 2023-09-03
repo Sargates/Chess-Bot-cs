@@ -8,9 +8,21 @@ public static class PrecomputedMoveData {
 	public static ulong[][] pawnAttacks = new ulong[2][];
 	public static ulong[] knightMoves = new ulong[64];
 
+	// Used to avoid having to remember `numSquaresToEdge` index
+	private static readonly Dictionary<int, int> knightDeltaToIndex = new Dictionary<int, int>() { {6, 0}, {15, 1}, {17, 2}, {10, 3}, {-6, 4}, {-15, 5}, {-17, 6}, {-10, 7} };
+	private static readonly Dictionary<int, int> slidingDeltaToIndex = new Dictionary<int, int>() { { 8, 0}, {-8, 1}, {1, 2}, {-1, 3}, {9, 4}, {-9, 5}, {7, 6}, {-7, 7} };
+	public static int GetKnightInfo(int index, int direction) { return numSquaresToEdge[index][knightDeltaToIndex[direction]]; }
+	public static int GetSlidingInfo(int index, int direction) { return numSquaresToEdge[index][knightDeltaToIndex[direction]]; }
+
 	public static int[][] numSquaresToEdge = new int[64][];
 	public static ulong[] rookMoves = new ulong[64];
 	public static ulong[] bishopMoves = new ulong[64];
+
+	public static ulong GetPawnMoves(int color, int index) { return pawnMoves[color][index]; }
+	public static ulong GetPawnAttacks(int color, int index) { return pawnMoves[color][index]; }
+	public static ulong GetKnightMoves(int index) { return knightMoves[index]; }
+	public static ulong GetRookMoves(int index) { return rookMoves[index]; }
+	public static ulong GetBishopMoves(int index) { return bishopMoves[index]; }
 
 	static PrecomputedMoveData() {
 		Console.WriteLine("Initializing precomputed move data");
@@ -22,7 +34,7 @@ public static class PrecomputedMoveData {
 		pawnAttacks[0] = new ulong[64];
 		pawnAttacks[1] = new ulong[64];
 
-		// Generate distance to board edge by 
+		// Generate distance to board edge by index
 		for (int i=0; i<64; i++) {
 			int y = i/8;
 			int x = i%8;
@@ -42,7 +54,6 @@ public static class PrecomputedMoveData {
 			numSquaresToEdge[i][7] = Math.Min(south, east);
 		}
 		
-		// int[] knightMoves = new int[] { 15, 17, 17, 15, 10, -6, 6, 10 };
 		//* Generate Non-sliding piece bitboards
 		for (int i=0; i<64; i++) {
 			ref ulong wpM = ref pawnMoves[0][i]; 	// White Pawn moves
@@ -129,45 +140,11 @@ public static class PrecomputedMoveData {
 		// 		iResponse = int.Parse(response);
 		// 	} catch (Exception e) {
 		// 		Console.WriteLine(e);
-		// 		break;
+		// 		continue;
 		// 	}
-		// 	Console.WriteLine("\nWhite Pawn Moves");
-		// 	for (int i=7;i>-1;i--) {
-		// 		for (int j=0; j<8; j++) {
-		// 			int index = 8*i+j;
-		// 			string bit = Convert.ToString((long)((pawnMoves[0][iResponse] >> index) & 1ul), 2);
-		// 			Console.Write(bit);
-		// 		}
-		// 		Console.WriteLine();
-		// 	}
-		// 	Console.WriteLine("\nWhite Pawn Attacks");
-		// 	for (int i=7;i>-1;i--) {
-		// 		for (int j=0; j<8; j++) {
-		// 			int index = 8*i+j;
-		// 			string bit = Convert.ToString((long)((pawnAttacks[0][iResponse] >> index) & 1ul), 2);
-		// 			Console.Write(bit);
-		// 		}
-		// 		Console.WriteLine();
-		// 	}
-		// 	Console.WriteLine("\nBlack Pawn Moves");
-		// 	for (int i=7;i>-1;i--) {
-		// 		for (int j=0; j<8; j++) {
-		// 			int index = 8*i+j;
-		// 			string bit = Convert.ToString((long)((pawnMoves[1][iResponse] >> index) & 1ul), 2);
-		// 			Console.Write(bit);
-		// 		}
-		// 		Console.WriteLine();
-		// 	}
-		// 	Console.WriteLine("\nBlack Pawn Attacks");
-		// 	for (int i=7;i>-1;i--) {
-		// 		for (int j=0; j<8; j++) {
-		// 			int index = 8*i+j;
-		// 			string bit = Convert.ToString((long)((pawnAttacks[1][iResponse] >> index) & 1ul), 2);
-		// 			Console.Write(bit);
-		// 		}
-		// 		Console.WriteLine();
-		// 	}
-
+		// 	Console.WriteLine("\nRook Moves");
+		// 	BitboardHelper.PrintBitboard(rookMoves[iResponse]);
+			
 		// 	response = Console.ReadLine()?.Trim().Replace(Environment.NewLine, "") ?? "exit";
 		// }
 	}

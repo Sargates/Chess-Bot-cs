@@ -16,8 +16,7 @@ public static class WaveFunctionCollapse {
 		int depth = totalDepth;
 		
 		List<string> LineToDiscrepancy = new List<string>();
-		ConsoleHelper.WriteLine($"Finding discrepancy from FEN: {fenPosition}");
-		BoardHelper.PrintBoard(new Board(fenPosition));
+		ConsoleHelper.WriteLine($"Finding discrepancy from FEN: {fenPosition}", ConsoleColor.Magenta);
 		while (true) {
 			if (depth == 0) { throw new Exception("Depth got to zero before loop break"); }
 			engine.SetPosition($"position fen {fenPosition} moves {board.GetMoveHistory()}");
@@ -33,14 +32,13 @@ public static class WaveFunctionCollapse {
 
 			string[] total = stockfishMissing.Concat(engineMissing).ToArray();
 			// // Passes guard clause if no discrepency found in current iteration
-			(Dictionary<int, int> depthList, Dictionary<string, int> totalNodesByMove) = Perft.GetDepth(board, depth);
+			(Dictionary<int, int> depthList, Dictionary<string, int> totalNodesByMove) = new Perft(board, depth, false).GetDepth();
 
 			bool shouldBreak = false;
 			if (engineMissing.Length > 0) {
-				Console.WriteLine(string.Join(", ", engineMissing));
 				ConsoleHelper.WriteLine("Engine is missing a move", ConsoleColor.DarkRed);
 				
-				foreach (string stringMove in stockfishMissing) {
+				foreach (string stringMove in engineMissing) {
 					ConsoleHelper.WriteLine($"Failed to locate move: {stringMove}", ConsoleColor.DarkYellow);
 				}
 				shouldBreak = true;
@@ -48,7 +46,6 @@ public static class WaveFunctionCollapse {
 				
 			} else
 			if (stockfishMissing.Length > 0) {
-				Console.WriteLine(string.Join(", ", stockfishMissing));
 				ConsoleHelper.WriteLine("Stockfish is missing a move", ConsoleColor.DarkRed);
 				
 				foreach (string stringMove in stockfishMissing) {

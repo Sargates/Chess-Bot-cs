@@ -87,7 +87,7 @@ public class View : IView {
 				string[] sequencedColors = { "#2c2c2c", "#ffff00"};
 				playerInfoColor = ColorHelper.HexToColor(sequencedColors[output]);
 			}
-			ui.DrawRectangleCentered(displayPosition, new Vector2(0.8f*BoardUI.squareSize), playerInfoColor);
+			UIHelper.DrawRectangleCentered(displayPosition, new Vector2(0.8f*BoardUI.squareSize), playerInfoColor);
 		}
 	}
 	
