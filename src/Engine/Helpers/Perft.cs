@@ -81,7 +81,7 @@ public class Perft {
 		}
 		ConsoleHelper.WriteLine($"Time elapsed: {finishTime-startTime}", ConsoleColor.Magenta);
 		if (testFailed) {
-			WaveFunctionCollapse.CalculateMoveDiscrepancy(fenPosition, depth);
+			EngineDiscrepancyFinder.CalculateMoveDiscrepancy(fenPosition, depth);
 		}
 	}
 

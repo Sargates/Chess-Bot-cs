@@ -82,28 +82,25 @@ public class Model {
 				var kvPair = Perft.testedFens.ElementAt(new Random().Next(Perft.testedFens.Count));
 				string fen = kvPair.Key;
 				SetBoardPosition(fen);
-				WaveFunctionCollapse.CalculateMoveDiscrepancy(new Fen(board).ToString(), int.Parse(Perft.testedFens[fen].Last().Key));
+				EngineDiscrepancyFinder.CalculateMoveDiscrepancy(new Fen(board).ToString(), int.Parse(Perft.testedFens[fen].Last().Key));
 			}),
 			new Button(new Rectangle(0, 0, 210, 50), "Get discrepancy").SetLeftCallback(delegate {
 				// Perft.TestSpecific(6);
 				foreach (string fen in Perft.testedFens.Keys) {
 					int depth = int.Parse(Perft.testedFens[fen].Last().Key);
 					ConsoleHelper.WriteLine($"Testing Fen: {fen}", ConsoleColor.Magenta);
-					WaveFunctionCollapse.CalculateMoveDiscrepancy(fen, depth);
+					EngineDiscrepancyFinder.CalculateMoveDiscrepancy(fen, depth);
 				}
 			}),
-			// new Button(new Rectangle(0, 0, 210, 50), "Print RookMoves (d4)").SetLeftCallback(delegate {
-				
+			// new Button(new Rectangle(0, 0, 210, 50), "Perft Test (Single)").SetLeftCallback(delegate {
+			// 	var kvPair = Perft.testedFens.ElementAt(3);
+			// 	new Perft(kvPair.Key, int.Parse(kvPair.Value.Last().Key));
 			// }),
-			new Button(new Rectangle(0, 0, 210, 50), "Perft Test (Single)").SetLeftCallback(delegate {
-				var kvPair = Perft.testedFens.ElementAt(3);
-				new Perft(kvPair.Key, int.Parse(kvPair.Value.Last().Key));
-			}),
-			new Button(new Rectangle(0, 0, 210, 50), "Perft Test (Full)").SetLeftCallback(delegate {
-				foreach (var kvPair in Perft.testedFens) {
-					new Perft(kvPair.Key, int.Parse(kvPair.Value.Last().Key));
-				}
-			}),
+			// new Button(new Rectangle(0, 0, 210, 50), "Perft Test (Full)").SetLeftCallback(delegate {
+			// 	foreach (var kvPair in Perft.testedFens) {
+			// 		new Perft(kvPair.Key, int.Parse(kvPair.Value.Last().Key));
+			// 	}
+			// }),
 			new Button(new Rectangle(0, 0, 210, 50), "Undo Test (Fast suite)").SetLeftCallback(delegate {
 				UnmakeMoveHelper.Fast();
 			}),
@@ -123,14 +120,14 @@ public class Model {
 		// 		string fen = Perft.testedFens.ElementAt(new Random().Next(Perft.testedFens.Count)).Key;
 		// 		SetBoardPosition(fen);
 		// 		view.Draw();
-		// 		WaveFunctionCollapse.CalculateMoveDiscrepancy(new Fen(board).ToString(), 6);
+		// 		EngineDiscrepancyFinder.CalculateMoveDiscrepancy(new Fen(board).ToString(), 6);
 		// 	}),
 		// 	new Button(new Rectangle(0, 0, 210, 50), "Get discrepancy").SetLeftCallback(delegate {
 		// 		// Perft.TestSpecific(6);
 		// 		foreach (string fen in Perft.testedFens.Keys) {
 		// 			int depth = int.Parse(Perft.testedFens[fen].Last().Key);
 		// 			ConsoleHelper.WriteLine($"Testing Fen: {fen}", ConsoleColor.Magenta);
-		// 			WaveFunctionCollapse.CalculateMoveDiscrepancy(fen, depth);
+		// 			EngineDiscrepancyFinder.CalculateMoveDiscrepancy(fen, depth);
 		// 		}
 		// 	})
 		// );

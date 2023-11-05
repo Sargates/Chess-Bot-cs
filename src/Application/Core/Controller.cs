@@ -76,7 +76,7 @@ public class MainController { // I would use `AppController` but OmniSharp's aut
 
 		// // Must be called after model instantiation
 		// // Used to initialize WFC performance testing
-		// staticClassInfo = typeof(WaveFunctionCollapse); 
+		// staticClassInfo = typeof(EngineDiscrepancyFinder); 
 		// staticClassConstructorInfo = staticClassInfo.TypeInitializer;  
 		// staticClassConstructorInfo?.Invoke(null,null);
 

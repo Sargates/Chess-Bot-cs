@@ -15,7 +15,6 @@ public static class BitboardHelper {
 	}
 	public static bool IsSquareSet(ulong x, int square) {
 		return (1 == (1 & (x>>square)));
-
 	}
 
 	public static void SetSquare(ref ulong bitboard, int squareIndex) {

@@ -16,6 +16,9 @@ public class Board {
 		{ 0ul, 0ul }	// kings
 	};
 
+	public ulong AllPiecesBitboard => pieces[0,0] | pieces[1,0] | pieces[2,0] | pieces[3,0] | pieces[4,0] | pieces[5,0] | pieces[1,1] | pieces[1,1] | pieces[2,1] | pieces[3,1] | pieces[4,1] | pieces[5,1];
+	public ulong FriendlyPieces(int color) => (color == Piece.White) ? pieces[0,0] | pieces[1,0] | pieces[2,0] | pieces[3,0] | pieces[4,0] | pieces[5,0] : pieces[1,1] | pieces[1,1] | pieces[2,1] | pieces[3,1] | pieces[4,1] | pieces[5,1];
+	public ulong EnemyPieces(int color) => (color == Piece.White) ? pieces[1,1] | pieces[1,1] | pieces[2,1] | pieces[3,1] | pieces[4,1] | pieces[5,1] : pieces[0,0] | pieces[1,0] | pieces[2,0] | pieces[3,0] | pieces[4,0] | pieces[5,0];
 	public ref ulong GetPieceBBoard(Piece piece) { return ref pieces[piece.Type-1, piece.ColorAsBinary]; } // Minus 1 because We don't keep track of Piece.None types
 
 	// Color Info /////////////////////////////////
@@ -23,19 +26,6 @@ public class Board {
 	public int InactiveColor => whiteToMove ? Piece.Black : Piece.White;
 	public int forwardDir(int color) => color == Piece.White ? 8 : -8;
 	public bool whiteToMove;
-
-	public List<int> GetPiecePositions(Piece piece) {
-		List<int> o = new List<int>();
-		ulong pieceLocations = GetPieceBBoard(piece);
-		
-		while (pieceLocations != 0) {
-			int exp = BitboardHelper.PopLSB(ref pieceLocations);
-			o.Add(exp);
-		}
-		// Console.WriteLine($"{pieceLocations}, {string.Join(", ", o)}");
-		return o;
-	}
-	// public List<int> GetPiecePositions(Piece piece) => piecePositions[piece.ColorAsBinary][piece.Type-1]; // Minus 1 because We don't keep track of Piece.None types
 
 
 	public int whiteKingPos {
@@ -82,9 +72,8 @@ public class Board {
 
 		// TODO: Add FEN string loading, StartNewGame should be in Controller/cs, board should just be able to load a fen string in place
 		BoardHelper.UpdateFromState(this, fen);
-		// board = FenToBoard(fenString);
-		// Debug.Assert(board!=null);
-		// board = FenToBoard(this.currentFen.fenBoard);
+		// BitboardHelper.PrintBitboard(FriendlyPieces(Piece.White));
+		// BitboardHelper.PrintBitboard(FriendlyPieces(Piece.Black));
 	}
 
 

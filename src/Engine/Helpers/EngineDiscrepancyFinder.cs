@@ -4,9 +4,9 @@ using ChessBot.Application;
 
 namespace ChessBot.Engine;
 
-public static class WaveFunctionCollapse {
+public static class EngineDiscrepancyFinder {
 	static UCIEngine engine;
-	static WaveFunctionCollapse() {
+	static EngineDiscrepancyFinder() {
 		engine = new UCIEngine(Model.stockfishExeExt);
 		engine.Start();
 	}
